@@ -1,0 +1,3 @@
+• Graphiques accélérés et mise en cache des meilleures charges.
+• Correction des saccades lors du passage entre musculation et cardio, ainsi que de la navigation par onglets.
+• Amélioration des liens Android, de l’inclinaison par défaut et des notifications de mise à jour.

@@ -1,0 +1,3 @@
+• Grafikler hızlandırıldı ve en iyi ağırlık sonuçları önbelleğe alındı.
+• Kuvvet ve kardiyo arasında geçişteki sıçrama ve sekme gezinme sorunları düzeltildi.
+• Android bağlantıları, varsayılan eğim ve güncelleme bildirimleri iyileştirildi.

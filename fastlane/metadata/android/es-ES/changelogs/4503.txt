@@ -1,0 +1,3 @@
+• Gráficos más rápidos y almacenamiento en caché del mejor peso.
+• Corregidos los saltos al cambiar entre fuerza y cardio y la navegación por pestañas.
+• Mejorados los enlaces de Android, la inclinación predeterminada y los avisos de actualización.

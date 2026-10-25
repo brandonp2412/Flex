@@ -1,0 +1,3 @@
+• Diagramme beschleunigt und Bestgewichte zwischengespeichert.
+• Ruckeln beim Wechsel zwischen Kraft- und Cardiotraining und die Tab-Navigation behoben.
+• Android-Links, Steigungsstandardwerte und Update-Hinweise verbessert.

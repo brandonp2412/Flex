@@ -531,5 +531,6 @@
   "1790404468": "• Usare Brandon Dick nei riferimenti dell’app\n• fix(l10n): sincronizzare le note di rilascio tradotte più recenti",
   "1790414297": "• fix(l10n): localizzare le note di rilascio più recenti",
   "1790477503": "• Completate le traduzioni e le correzioni dell’icona dell’app",
-  "1791796031": "• Testo dei suggerimenti nei grafici centrato e visualizzazione ai bordi corretta.\n• Spaziatura della cronologia grafici e dei filtri migliorata; ora vengono mostrati 30 punti per impostazione predefinita.\n• Migrazione dell’archiviazione del peso corporeo completata.\n• Dati degli allenamenti per i test degli screenshot corretti.\n• Build Android migrata a Kotlin integrato; rimossi hook e file di sviluppo obsoleti."
+  "1791796031": "• Testo dei suggerimenti nei grafici centrato e visualizzazione ai bordi corretta.\n• Spaziatura della cronologia grafici e dei filtri migliorata; ora vengono mostrati 30 punti per impostazione predefinita.\n• Migrazione dell’archiviazione del peso corporeo completata.\n• Dati degli allenamenti per i test degli screenshot corretti.\n• Build Android migrata a Kotlin integrato; rimossi hook e file di sviluppo obsoleti.",
+  "1792721242": "• Grafici più veloci e memorizzazione del peso migliore.\n• Risolti gli scatti passando da forza a cardio e migliorata la navigazione tra schede.\n• Corretti i link Android, la pendenza predefinita e gli avvisi di aggiornamento."
 }

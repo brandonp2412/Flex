@@ -1,0 +1,3 @@
+• Grafici più veloci e memorizzazione del peso migliore.
+• Risolti gli scatti passando da forza a cardio e migliorata la navigazione tra schede.
+• Corretti i link Android, la pendenza predefinita e gli avvisi di aggiornamento.
