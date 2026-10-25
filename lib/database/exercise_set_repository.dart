@@ -52,6 +52,8 @@ ExerciseSetView _toExerciseSetView(AppDatabase database, TypedResult row) {
     exercise,
     category: category?.name,
     planId: workout?.planId,
+    strengthUnit:
+        row.readTableOrNull(database.settings)?.strengthUnit ?? 'last-entry',
   );
 }
 
@@ -60,8 +62,11 @@ ExerciseSetView exerciseSetView(
   Exercise exercise, {
   String? category,
   int? planId,
+  String strengthUnit = 'last-entry',
 }) {
-  final unit = exercise.displayUnit;
+  final unit = exercise.kind == 'strength' && strengthUnit != 'last-entry'
+      ? strengthUnit
+      : exercise.displayUnit;
 
   return ExerciseSetView(
     id: set.id,
@@ -90,6 +95,7 @@ JoinedSelectStatement<HasResultSet, dynamic> _exerciseSetQuery(
   OrderingMode order = OrderingMode.desc,
 }) {
   return database.select(database.exerciseSets).join([
+    leftOuterJoin(database.settings, const Constant(true)),
     innerJoin(
       database.exercises,
       database.exercises.id.equalsExp(database.exerciseSets.exerciseId),
@@ -146,7 +152,20 @@ JoinedSelectStatement<HasResultSet, dynamic> _filteredExerciseSetQuery(
   final isCardio = exercises.kind.equals('cardio');
   final reps = ifNull(sets.reps, const Constant(0.0));
   final load = ifNull(sets.loadKg, const Constant(0.0));
-  final weight = exercises.displayUnit.caseMatch<double>(
+  final preferredUnit = ifNull(
+    database.settings.strengthUnit,
+    const Constant('last-entry'),
+  );
+  final unit = exercises.kind.caseMatch<String>(
+    when: {
+      const Constant('strength'): preferredUnit.caseMatch<String>(
+        when: {const Constant('last-entry'): exercises.displayUnit},
+        orElse: preferredUnit,
+      ),
+    },
+    orElse: exercises.displayUnit,
+  );
+  final weight = unit.caseMatch<double>(
     when: {
       const Constant('lb'): load / const Constant(0.45359237),
       const Constant('stone'): load / const Constant(6.35029318),
@@ -315,12 +334,16 @@ Stream<Map<int, PreviousExerciseDay>> watchPreviousExerciseDays(
                s.reps AS reps, s.load_kg AS load_kg,
                s.distance_metres AS distance_metres,
                s.duration_ms AS duration_ms, s.incline AS incline,
-               e.kind AS kind, e.display_unit AS unit
+               e.kind AS kind,
+               CASE WHEN e.kind = 'strength'
+                     AND settings.strength_unit <> 'last-entry'
+                 THEN settings.strength_unit ELSE e.display_unit END AS unit
         FROM latest_days
         JOIN exercise_sets s ON s.exercise_id = latest_days.exercise_id
           AND s.timestamp >= CAST(strftime('%s', latest_days.day, 'utc') AS INTEGER)
           AND s.timestamp < CAST(strftime('%s', date(latest_days.day, '+1 day'), 'utc') AS INTEGER)
         JOIN exercises e ON e.id = s.exercise_id
+        LEFT JOIN settings ON 1 = 1
         ORDER BY s.timestamp, s.id
         ''',
         variables: [
@@ -332,6 +355,7 @@ Stream<Map<int, PreviousExerciseDay>> watchPreviousExerciseDays(
           database.planExercises,
           database.exerciseSets,
           database.exercises,
+          database.settings,
         },
       )
       .watch()

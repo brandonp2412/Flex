@@ -647,13 +647,9 @@ class _StartPlanPageState extends State<StartPlanPage>
 
   void _update(ExerciseSetView exerciseSet) {
     final settings = context.read<Setting>();
-    if (settings.strengthUnit == 'last-entry' && !exerciseSet.cardio ||
-        settings.cardioUnit == 'last-entry' && exerciseSet.cardio)
-      _unit = exerciseSet.unit;
-    else if (exerciseSet.cardio)
-      _unit = settings.cardioUnit;
-    else
-      _unit = settings.strengthUnit;
+    _unit = exerciseSet.cardio && settings.cardioUnit != 'last-entry'
+        ? settings.cardioUnit
+        : exerciseSet.unit;
 
     _reps.text = toString(exerciseSet.reps);
     _weight.text = toString(exerciseSet.weight);
@@ -819,7 +815,11 @@ class _StartPlanPageState extends State<StartPlanPage>
         _update(defaults);
       } else {
         _clear();
-        _unit = exercise.displayUnit;
+        final settings = context.read<Setting>();
+        _unit =
+            exercise.kind == 'strength' && settings.strengthUnit != 'last-entry'
+            ? settings.strengthUnit
+            : exercise.displayUnit;
       }
     }
 
