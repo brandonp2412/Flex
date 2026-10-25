@@ -1,0 +1,92 @@
+name: Deploy to Microsoft Store
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit or branch to deploy
+        required: false
+        type: string
+        default: main
+
+permissions:
+  contents: read
+
+env:
+  PUB_SUMMARY_ONLY: true
+
+jobs:
+  deploy-windows-store:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Setup Flutter from submodule
+        run: |
+          git submodule update --init --recursive flutter
+          chmod +x flutter/bin/*
+          echo "$env:GITHUB_WORKSPACE\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          flutter\bin\flutter config --no-analytics
+
+      - name: Get Flutter dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Run build_runner
+        run: dart run build_runner build -d
+
+      - name: Build MSIX
+        run: flutter pub run msix:create
+
+      - name: Setup .NET 9.0
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Setup Microsoft Store CLI
+        uses: microsoft/setup-msstore-cli@cc9910a8d59f2eb55cbb83df0a3800cf3b5300e0 # v1.4
+
+      - name: Configure Microsoft Store CLI
+        env:
+          MSSTORE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          MSSTORE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          MSSTORE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          MSSTORE_SELLER_ID: ${{ secrets.SELLER_ID }}
+        run: msstore reconfigure --tenantId $env:MSSTORE_TENANT_ID --clientId $env:MSSTORE_CLIENT_ID --clientSecret $env:MSSTORE_CLIENT_SECRET --sellerId $env:MSSTORE_SELLER_ID
+
+      - name: Prepare Microsoft Store for submission
+        timeout-minutes: 45
+        shell: pwsh
+        env:
+          PRODUCT_ID: ${{ secrets.PRODUCT_ID }}
+        run: ./scripts/finalize-msstore-rollout.ps1 -ProductId $env:PRODUCT_ID
+
+      - name: Publish to Microsoft Store
+        shell: pwsh
+        env:
+          PRODUCT_ID: ${{ secrets.PRODUCT_ID }}
+        run: |
+          $packages = @(Get-ChildItem -Path "build/windows/x64/runner/Release" -Filter "*.msix" -File -Recurse)
+          if ($packages.Count -ne 1) {
+            throw "Expected exactly one generated MSIX package, found $($packages.Count)."
+          }
+          $package = $packages[0]
+          $packageDirectory = $package.Directory.FullName
+          Write-Host "Publishing $($package.FullName) to Microsoft Store product $env:PRODUCT_ID"
+          & msstore publish . --inputDirectory $packageDirectory --appId $env:PRODUCT_ID
+          if ($LASTEXITCODE -ne 0) {
+            throw "Microsoft Store publish failed with exit code $LASTEXITCODE."
+          }
+          & msstore submission status $env:PRODUCT_ID
+          if ($LASTEXITCODE -ne 0) {
+            throw "Microsoft Store submission status verification failed with exit code $LASTEXITCODE."
+          }

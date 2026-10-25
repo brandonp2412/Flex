@@ -1,0 +1,2 @@
+• Flexify artık Flex olarak adlandırılıyor.
+• Kuvvet antrenmanlarında ve geçmişte ağırlık birimleri düzeltildi; grafik eksenleri ve masaüstü geçmiş görünümü iyileştirildi.

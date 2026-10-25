@@ -1,0 +1,2 @@
+• Flexify heißt jetzt Flex.
+• Die gewählte Gewichtseinheit wird im Krafttraining und Verlauf berücksichtigt; Diagrammachsen und Desktop-Verlauf wurden verbessert.

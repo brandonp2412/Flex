@@ -88,10 +88,10 @@ flutter_launcher_icons:
     image_path: assets/ic_launcher.png
 msix_config:
   msstore_appId: 9P13THVK7F69
-  display_name: Flex
+  display_name: "Flex: Gym tracker"
   publisher_display_name: Brandon Dick
   identity_name: FrisbeeSoftware.Flexify
-  msix_version: 1.0.288.0
+  msix_version: 1.0.289.0
   logo_path: assets/ic_launcher.png
   trim_logo: false
   publisher: CN=BB0811CB-EED5-441C-BE1B-D31F391F76DE

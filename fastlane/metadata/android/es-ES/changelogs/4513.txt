@@ -1,0 +1,2 @@
+• Flexify ahora se llama Flex.
+• Corregimos las unidades de peso en fuerza e historial y mejoramos los ejes de las gráficas y el historial de escritorio.
