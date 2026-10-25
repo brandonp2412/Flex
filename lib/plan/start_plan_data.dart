@@ -70,6 +70,7 @@ Stream<StartPlanData> watchStartPlanData(
             database.workouts,
             database.workouts.id.equalsExp(database.exerciseSets.workoutId),
           ),
+          leftOuterJoin(database.settings, const Constant(true)),
         ])
         ..addColumns([defaultId, previousDay])
         ..where(database.plans.id.equals(planId))
@@ -102,6 +103,9 @@ Stream<StartPlanData> watchStartPlanData(
         exercise,
         category: category,
         planId: row.readTableOrNull(database.workouts)?.planId,
+        strengthUnit:
+            row.readTableOrNull(database.settings)?.strengthUnit ??
+            'last-entry',
       );
       if (set.id == row.read(defaultId)) defaults[exercise.id] = view;
       if (set.workoutId == workout.id)

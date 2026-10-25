@@ -105,6 +105,56 @@ void main() {
     },
   );
 
+  testWidgets('selected pounds stay pounds after saving a strength set', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    final database = harness.database;
+    final planId = await database.plans.insertOne(planFixture());
+    await insertPlanExerciseFixture(
+      database,
+      planId: planId,
+      exercise: 'Bench press',
+      unit: 'kg',
+    );
+    await insertExerciseSetFixture(
+      database,
+      'Bench press',
+      reps: 5,
+      weight: 100,
+    );
+    await database.settings.update().write(
+      const SettingsCompanion(
+        strengthUnit: Value('lb'),
+        explainedPermissions: Value(true),
+        notificationPermissionRequested: Value(true),
+        notifications: Value(false),
+        restTimers: Value(false),
+      ),
+    );
+    final plan =
+        await (database.plans.select()..where((row) => row.id.equals(planId)))
+            .getSingle();
+    await harness.pump(tester, StartPlanPage(plan: plan));
+    await tester.pumpAndSettle();
+
+    final weight = textFieldWithLabel('Weight (lb)');
+    expect(weight, findsOneWidget);
+    expect(
+      double.parse(tester.widget<EditableText>(weight).controller.text),
+      closeTo(220.46, 0.01),
+    );
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(
+      double.parse(tester.widget<EditableText>(weight).controller.text),
+      closeTo(220.46, 0.01),
+    );
+    final sets = await getExerciseSets(database, cardio: false);
+    expect(sets.first.unit, 'lb');
+    expect(sets.first.weight, closeTo(220.46, 0.01));
+  });
+
   testWidgets('StartPlanPage shows its page chrome on the first frame', (
     WidgetTester tester,
   ) async {

@@ -1,3 +1,4 @@
+import 'package:flex/database/database.dart';
 import 'package:flex/sets/history_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -81,6 +82,22 @@ void main() {
     expect(find.text('1 x 90 kg'), findsOne);
     expect(find.text('4 x 80 kg'), findsOne);
     expect(find.text('8 x 70 kg'), findsOne);
+  });
+
+  testWidgets('HistoryPage uses the selected strength unit', (tester) async {
+    final harness = await FlexTestHarness.create();
+    await insertExerciseSetFixture(
+      harness.database,
+      'Bench press',
+      reps: 5,
+      weight: 45.359237,
+    );
+    await harness.database.settings.update().write(
+      const SettingsCompanion(strengthUnit: Value('lb')),
+    );
+
+    await pumpHistoryPage(tester, harness);
+    expect(find.text('5 x 100 lb'), findsOneWidget);
   });
 
   testWidgets('HistoryPage keeps cardio weight when history is grouped', (

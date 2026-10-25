@@ -172,6 +172,82 @@ void main() {
     },
   );
 
+  test(
+    'strength preference converts existing loads without changing stored kg',
+    () async {
+      final benchId = await addExercise(
+        name: 'Unit Bench',
+        unit: 'kg',
+        cardio: false,
+      );
+      final runId = await addExercise(
+        name: 'Unit Run',
+        unit: 'kg',
+        cardio: true,
+      );
+      final bench = await insertExerciseSet(
+        database,
+        exerciseSet: draft(
+          name: 'Unit Bench',
+          unit: 'kg',
+          created: DateTime(2026, 10, 20),
+          reps: 5,
+          weight: 100,
+        ),
+        exerciseId: benchId,
+      );
+      await insertExerciseSet(
+        database,
+        exerciseSet: draft(
+          name: 'Unit Run',
+          unit: 'kg',
+          cardio: true,
+          created: DateTime(2026, 10, 21),
+          weight: 50,
+        ),
+        exerciseId: runId,
+      );
+
+      await database.settings.update().write(
+        const SettingsCompanion(strengthUnit: Value('lb')),
+      );
+      final history = await getExerciseSets(database);
+      final strength = history.singleWhere((set) => !set.cardio);
+      final cardio = history.singleWhere((set) => set.cardio);
+      expect(strength.unit, 'lb');
+      expect(strength.weight, closeTo(220.462, 0.001));
+      expect(cardio.unit, 'kg');
+      expect(cardio.weight, 50);
+      expect(
+        await getExerciseSets(database, weightGt: 200, cardio: false),
+        hasLength(1),
+      );
+
+      await updateExerciseSet(
+        database,
+        id: bench.id,
+        exerciseSet: strength.copyWith(weight: 225),
+        exerciseId: benchId,
+      );
+      final stored =
+          await (database.exerciseSets.select()
+                ..where((set) => set.id.equals(bench.id)))
+              .getSingle();
+      expect(stored.loadKg, closeTo(102.058, 0.001));
+      expect(
+        (await getExerciseSetById(database, bench.id))!.weight,
+        closeTo(225, 0.001),
+      );
+
+      await database.settings.update().write(
+        const SettingsCompanion(strengthUnit: Value('last-entry')),
+      );
+      final originalUnit = await getExerciseSetById(database, bench.id);
+      expect(originalUnit!.unit, 'kg');
+      expect(originalUnit.weight, closeTo(102.058, 0.001));
+    },
+  );
+
   test('history search and filters use joined exercise metadata', () async {
     final benchId = await addExercise(
       name: 'Cutover Bench',
