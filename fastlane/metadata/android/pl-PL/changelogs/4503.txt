@@ -1,0 +1,3 @@
+• Przyspieszono wykresy i dodano buforowanie najlepszych ciężarów.
+• Naprawiono przeskakiwanie widoku między ćwiczeniami siłowymi a cardio oraz nawigację po kartach.
+• Ulepszono linki Androida, domyślne nachylenie i powiadomienia o aktualizacjach.

@@ -1,0 +1,3 @@
+• Grafieken versneld en hoogste gewichten in de cache opgeslagen.
+• Haperingen bij wisselen tussen kracht en cardio en problemen met tabnavigatie verholpen.
+• Android-links, standaardhelling en updatemeldingen verbeterd.

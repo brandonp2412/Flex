@@ -1,0 +1,3 @@
+• Gráficos mais rápidos e armazenamento em cache da melhor carga.
+• Corrigidos os saltos ao alternar entre treino de força e cardio e a navegação por abas.
+• Melhorados os links no Android, a inclinação padrão e os avisos de atualização.

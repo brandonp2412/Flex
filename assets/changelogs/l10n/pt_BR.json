@@ -531,5 +531,6 @@
   "1790404468": "• Usar Brandon Dick nas referências do app\n• fix(l10n): sincronizar as notas de versão traduzidas mais recentes",
   "1790414297": "• fix(l10n): traduzir as notas de versão mais recentes",
   "1790477503": "• Traduções e correções do ícone do aplicativo concluídas",
-  "1791796031": "• Texto das dicas dos gráficos centralizado e exibição nas bordas corrigida.\n• Espaçamento acima do histórico dos gráficos e nos filtros ajustado; o padrão agora é 30 pontos.\n• Migração do armazenamento do peso corporal concluída.\n• Dados de treino usados nos testes de capturas de tela corrigidos.\n• Compilação Android migrada para Kotlin integrado; arquivos e ganchos de desenvolvimento antigos removidos."
+  "1791796031": "• Texto das dicas dos gráficos centralizado e exibição nas bordas corrigida.\n• Espaçamento acima do histórico dos gráficos e nos filtros ajustado; o padrão agora é 30 pontos.\n• Migração do armazenamento do peso corporal concluída.\n• Dados de treino usados nos testes de capturas de tela corrigidos.\n• Compilação Android migrada para Kotlin integrado; arquivos e ganchos de desenvolvimento antigos removidos.",
+  "1792721242": "• Gráficos mais rápidos e armazenamento em cache da melhor carga.\n• Corrigidos os saltos ao alternar entre treino de força e cardio e a navegação por abas.\n• Melhorados os links no Android, a inclinação padrão e os avisos de atualização."
 }

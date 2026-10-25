@@ -531,5 +531,6 @@
   "96": "- Pratonton bunyi penggera tersuai ketika menetapkannya\n- Refaktor graf kardio\n- Tambah butang kongsi pangkalan data pada tetapan",
   "97": "- Gabungkan tetapan \"Show reorder\" dan \"Show counts\"\n- Refaktor pelan\n- Refaktor halaman graf\n- Refaktor gym_sets",
   "98": "- Baiki kiraan set maksimum pada pelan",
-  "1791796031": "• Teks tip alat carta dijajarkan ke tengah dan paparan berhampiran tepi dibetulkan.\n• Ruang di atas sejarah graf dan pad penapis ditambah baik; bilangan titik lalai kini 30.\n• Pemindahan storan berat badan selesai.\n• Data senaman untuk ujian tangkapan skrin dibetulkan.\n• Binaan Android kini menggunakan Kotlin terbina dalam; cangkuk dan fail pembangunan lama dibuang."
+  "1791796031": "• Teks tip alat carta dijajarkan ke tengah dan paparan berhampiran tepi dibetulkan.\n• Ruang di atas sejarah graf dan pad penapis ditambah baik; bilangan titik lalai kini 30.\n• Pemindahan storan berat badan selesai.\n• Data senaman untuk ujian tangkapan skrin dibetulkan.\n• Binaan Android kini menggunakan Kotlin terbina dalam; cangkuk dan fail pembangunan lama dibuang.",
+  "1792721242": "• Graf dipercepat dan keputusan berat terbaik disimpan dalam cache.\n• Gangguan ketika bertukar antara latihan kekuatan dan kardio serta navigasi tab telah dibaiki.\n• Pautan Android, kecerunan lalai dan pemberitahuan kemas kini ditambah baik."
 }
