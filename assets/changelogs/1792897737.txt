@@ -1,0 +1,7 @@
+• Add devtools_options.yaml
+• Update README.md
+• feat: refine chart axes and desktop history layout
+• fix(ci): deploy Flex Pages independently of release gate
+• fix: complete localized changelogs before manual release (#406)
+• fix: respect strength unit preference in history and workouts (#405)
+• refactor: rename Flexify project to Flex
