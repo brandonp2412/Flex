@@ -1,0 +1,2 @@
+• Flexify agora se chama Flex.
+• Corrigimos as unidades de peso nos treinos de força e no histórico e melhoramos os eixos dos gráficos e o histórico no computador.

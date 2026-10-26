@@ -532,5 +532,6 @@
   "1790414297": "• fix(l10n): traducir las últimas notas de la versión",
   "1790477503": "• Se completaron las traducciones y las correcciones del icono de la aplicación",
   "1791796031": "• Se centró el texto de las ayudas de los gráficos y se corrigió su ajuste en los bordes.\n• Se mejoraron los espacios del historial de gráficos y los filtros; ahora se muestran 30 puntos por defecto.\n• Se completó la migración del almacenamiento del peso corporal.\n• Se corrigieron los datos de entrenamiento usados en las pruebas de capturas.\n• La compilación de Android usa Kotlin integrado; se eliminaron archivos y enlaces de desarrollo obsoletos.",
-  "1792721242": "• Gráficos más rápidos y almacenamiento en caché del mejor peso.\n• Corregidos los saltos al cambiar entre fuerza y cardio y la navegación por pestañas.\n• Mejorados los enlaces de Android, la inclinación predeterminada y los avisos de actualización."
+  "1792721242": "• Gráficos más rápidos y almacenamiento en caché del mejor peso.\n• Corregidos los saltos al cambiar entre fuerza y cardio y la navegación por pestañas.\n• Mejorados los enlaces de Android, la inclinación predeterminada y los avisos de actualización.",
+  "1792897737": "• Flexify ahora se llama Flex.\n• Corregimos las unidades de peso en fuerza e historial y mejoramos los ejes de las gráficas y el historial de escritorio."
 }

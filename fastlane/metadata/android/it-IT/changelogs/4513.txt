@@ -1,0 +1,2 @@
+• Flexify ora si chiama Flex.
+• Corretta l’unità di peso negli allenamenti di forza e nella cronologia; migliorati gli assi dei grafici e la cronologia desktop.

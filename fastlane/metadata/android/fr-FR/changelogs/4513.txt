@@ -1,0 +1,2 @@
+• Flexify devient Flex.
+• Correction des unités de poids en musculation et dans l’historique ; amélioration des axes des graphiques et de l’historique sur ordinateur.

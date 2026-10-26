@@ -1,0 +1,2 @@
+• Aplikacja Flexify nosi teraz nazwę Flex.
+• Poprawiono jednostki ciężaru w treningu siłowym i historii oraz osie wykresów i historię na komputerze.
