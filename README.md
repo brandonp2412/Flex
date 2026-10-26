@@ -14,12 +14,12 @@ A private, offline-first workout tracker for logging gym sessions and building s
 </p>
 </div>
 
-## Train your way
+## Features
 
-- Build workout plans around the exercises and schedule that suit you
+- Build custom workout plans
 - Log weights, reps, cardio, and rest periods as you train
 - Follow your progress with exercise history and graphs
-- Make the app your own with configurable features and light or dark themes
+- Customize the app to your hearts desire
 - Keep your data on your device—Flex works without an internet connection
 
 ## Screenshots
