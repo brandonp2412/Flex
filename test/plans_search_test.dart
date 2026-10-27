@@ -55,6 +55,7 @@ void main() {
       ('monday', [0]),
       ('localized monday', [0]),
       ('BENCH PRESS VARIATION 2', [2]),
+      ('  PRESS   bench ', [0, 1, 2]),
       ('missing', <int>[]),
     ]) {
       expect(

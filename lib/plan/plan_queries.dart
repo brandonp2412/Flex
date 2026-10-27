@@ -9,26 +9,43 @@ List<Plan> filterPlans(
   String search,
   String Function(String) localizeDay,
 ) {
-  if (search.isEmpty) return plans;
+  final query = search.trim().toLowerCase();
+  if (query.isEmpty) return plans;
 
-  final query = search.toLowerCase();
-  final planIds = exercises
-      .where((entry) => entry.exercise.name.toLowerCase().contains(query))
-      .map((entry) => entry.planExercise.planId)
-      .toSet();
+  final terms = query.split(RegExp(r'\s+'));
 
-  return plans.where((plan) {
-    final localizedDays = plan.days
-        .split(',')
-        .where((day) => day.isNotEmpty)
-        .map(localizeDay)
-        .join(' ')
-        .toLowerCase();
-    return plan.title?.toLowerCase().contains(query) == true ||
-        plan.days.toLowerCase().contains(query) ||
-        localizedDays.contains(query) ||
-        planIds.contains(plan.id);
-  }).toList();
+  List<Plan> findMatches(bool flexible) {
+    bool matches(String value) {
+      final normalized = value.toLowerCase();
+      return flexible
+          ? terms.every(normalized.contains)
+          : normalized.contains(query);
+    }
+
+    final matchingPlanIds = exercises
+        .where(
+          (entry) => entry.planExercise.enabled && matches(entry.exercise.name),
+        )
+        .map((entry) => entry.planExercise.planId)
+        .toSet();
+
+    return plans.where((plan) {
+      if (matches(plan.title ?? '') ||
+          matches(plan.days) ||
+          matchingPlanIds.contains(plan.id)) {
+        return true;
+      }
+      final localizedDays = plan.days
+          .split(',')
+          .where((day) => day.isNotEmpty)
+          .map(localizeDay)
+          .join(' ');
+      return matches(localizedDays);
+    }).toList();
+  }
+
+  final exact = findMatches(false);
+  return exact.isNotEmpty || terms.length == 1 ? exact : findMatches(true);
 }
 
 class PlanExerciseDraft {

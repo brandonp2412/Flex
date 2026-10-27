@@ -24,6 +24,23 @@ void main() {
     expect(list.padding!.bottom, fabListPadding);
   });
 
+  testWidgets('PlansPage searches exercise names in any word order', (
+    WidgetTester tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    await pumpPlansPage(tester, harness);
+
+    await tester.enterText(find.byType(SearchBar), '  PRESS   bench ');
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Barbell bench press'), findsOne);
+
+    await tester.enterText(find.byType(SearchBar), 'nonexistent exercise');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Barbell bench press'), findsNothing);
+    expect(find.text('No matching plans'), findsOne);
+  });
+
   testWidgets('PlansPage add button', (WidgetTester tester) async {
     final harness = await FlexTestHarness.create();
     await pumpPlansPage(tester, harness);
