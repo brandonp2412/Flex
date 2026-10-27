@@ -143,12 +143,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
     }
 
-    await navigator.push(
-      FlexPageRoute(
-        settings: RouteSettings(name: 'start-plan:$planId'),
-        builder: (context) => StartPlanPage(plan: plan),
-      ),
-    );
+    await openStartPlan(navigator, plan);
   }
 
   @override

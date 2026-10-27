@@ -26,11 +26,38 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+Future<void> openStartPlan(
+  NavigatorState navigator,
+  Plan plan, {
+  List<PlanExerciseEntry>? initial,
+}) async {
+  StartPlanData? prefetched;
+  try {
+    prefetched = await watchStartPlanData(db, plan.id).first;
+  } catch (error) {
+    debugPrint('StartPlan prefetch failed: $error');
+  }
+  if (!navigator.mounted) return;
+  await navigator.push(
+    FlexPageRoute(
+      settings: RouteSettings(name: 'start-plan:${plan.id}'),
+      builder: (context) =>
+          StartPlanPage(plan: plan, initial: initial, prefetched: prefetched),
+    ),
+  );
+}
+
 class StartPlanPage extends StatefulWidget {
   final Plan plan;
   final List<PlanExerciseEntry>? initial;
+  final StartPlanData? prefetched;
 
-  const StartPlanPage({super.key, required this.plan, this.initial});
+  const StartPlanPage({
+    super.key,
+    required this.plan,
+    this.initial,
+    this.prefetched,
+  });
 
   @override
   createState() => _StartPlanPageState();
@@ -80,6 +107,7 @@ class _StartPlanPageState extends State<StartPlanPage>
   Widget build(BuildContext context) {
     return StreamBuilder<StartPlanData>(
       stream: _stream,
+      initialData: widget.prefetched,
       builder: (context, snapshot) {
         final data = snapshot.data;
         final exercises = data?.exercises ?? widget.initial;
@@ -591,12 +619,21 @@ class _StartPlanPageState extends State<StartPlanPage>
   @override
   void initState() {
     super.initState();
+    _data = widget.prefetched;
     WidgetsBinding.instance.addObserver(this);
     dbVersion.addListener(_reloadDatabaseStreams);
     _stream = _watchData();
     final initial = widget.initial;
     if (initial != null && initial.isNotEmpty)
       _unit = initial.first.exercise.displayUnit;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_data != null && _selectedExerciseId == null) {
+      _select(0, rebuild: false);
+    }
   }
 
   Stream<StartPlanData> _watchData() =>

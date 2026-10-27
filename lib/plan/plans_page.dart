@@ -81,12 +81,7 @@ class PlansPageState extends State<PlansPage>
     final routeName = 'start-plan:${plan.id}';
     if (_routeObserver.currentRouteName == routeName) return;
 
-    await navigator.push(
-      FlexPageRoute(
-        settings: RouteSettings(name: routeName),
-        builder: (context) => StartPlanPage(plan: plan),
-      ),
-    );
+    await openStartPlan(navigator, plan);
   }
 
   @override

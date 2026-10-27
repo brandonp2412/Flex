@@ -6,6 +6,7 @@ import 'package:flex/database/database.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/l10n/locale_preferences.dart';
 import 'package:flex/plan/start_plan_page.dart';
+import 'package:flex/plan/start_plan_data.dart';
 import 'package:flex/plan/start_list.dart';
 import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/stepper_field.dart';
@@ -222,6 +223,92 @@ void main() {
     );
     expect(find.byIcon(Icons.check_circle_outline), findsNothing);
   });
+
+  testWidgets(
+    'prefetched desktop StartPlan has inputs and previews on first frame',
+    (tester) async {
+      final harness = await FlexTestHarness.create();
+      final database = harness.database;
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      await insertExerciseSetFixture(
+        database,
+        'Bench press',
+        created: DateTime(yesterday.year, yesterday.month, yesterday.day, 9),
+        reps: 8,
+        weight: 90,
+      );
+      final id = await database.plans.insertOne(planFixture(title: 'Push day'));
+      await insertPlanExerciseFixture(
+        database,
+        planId: id,
+        exercise: 'Bench press',
+      );
+      final plan =
+          await (database.plans.select()..where((row) => row.id.equals(id)))
+              .getSingle();
+      final prefetched = await watchStartPlanData(database, id).first;
+
+      await harness.pump(
+        tester,
+        StartPlanPage(plan: plan, prefetched: prefetched),
+        surfaceSize: const Size(1200, 800),
+      );
+
+      expect(find.text('8 × 90 kg'), findsOneWidget);
+      expect(find.byKey(const Key('previous-set-scroll')), findsOneWidget);
+      expect(
+        tester.widget<EditableText>(textFieldWithLabel('Reps')).controller.text,
+        '8',
+      );
+      expect(
+        tester
+            .widget<EditableText>(textFieldWithLabel('Weight (kg)'))
+            .controller
+            .text,
+        '90',
+      );
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'opening a plan passes prefetched data to the first route frame',
+    (tester) async {
+      final harness = await FlexTestHarness.create();
+      final database = harness.database;
+      final id = await database.plans.insertOne(
+        planFixture(title: 'Ready plan'),
+      );
+      await insertPlanExerciseFixture(
+        database,
+        planId: id,
+        exercise: 'Bench press',
+      );
+      final plan =
+          await (database.plans.select()..where((row) => row.id.equals(id)))
+              .getSingle();
+      await harness.pump(
+        tester,
+        Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => openStartPlan(Navigator.of(context), plan),
+              child: const Text('Open ready plan'),
+            ),
+          ),
+        ),
+        surfaceSize: const Size(1200, 800),
+      );
+
+      await tester.tap(find.text('Open ready plan'));
+      await tester.pumpAndSettle();
+      expect(find.byType(StartPlanPage), findsOneWidget);
+      expect(
+        tester.widget<StartPlanPage>(find.byType(StartPlanPage)).prefetched,
+        isNotNull,
+      );
+    },
+  );
 
   testWidgets('strength reps remain unchanged when the app resumes', (
     WidgetTester tester,

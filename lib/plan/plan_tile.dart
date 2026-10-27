@@ -4,7 +4,6 @@ import 'package:flex/l10n/l10n.dart';
 import 'package:flex/plan/plan_queries.dart';
 import 'package:flex/plan/start_plan_page.dart';
 import 'package:flex/plan/workout_sessions.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/foundation.dart';
@@ -38,6 +37,7 @@ class PlanTile extends StatefulWidget {
 }
 
 class _PlanTileState extends State<PlanTile> {
+  bool _opening = false;
   @override
   Widget build(BuildContext context) {
     Widget title = Text(context.l10n.daily);
@@ -187,19 +187,22 @@ class _PlanTileState extends State<PlanTile> {
               );
           },
         ),
-        onTap: () {
+        onTap: () async {
           if (widget.selected.isNotEmpty) {
             widget.onSelect(widget.plan.id);
             return;
           }
-
-          widget.navigatorKey.currentState!.push(
-            FlexPageRoute(
-              settings: RouteSettings(name: 'start-plan:${widget.plan.id}'),
-              builder: (context) =>
-                  StartPlanPage(plan: widget.plan, initial: widget.exercises),
-            ),
-          );
+          if (_opening) return;
+          _opening = true;
+          try {
+            await openStartPlan(
+              widget.navigatorKey.currentState!,
+              widget.plan,
+              initial: widget.exercises,
+            );
+          } finally {
+            _opening = false;
+          }
         },
         onLongPress: desktop ? null : () => widget.onSelect(widget.plan.id),
       ),
