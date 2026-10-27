@@ -9,6 +9,9 @@ class AppLocalizationsTr extends AppLocalizations {
   AppLocalizationsTr([String locale = 'tr']) : super(locale);
 
   @override
+  String get removeImage => 'Görseli kaldır';
+
+  @override
   String get showUpdateNotices => 'Güncelleme bildirimlerini göster';
 
   @override
@@ -733,7 +736,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notesLabel => 'Notlar';
 
   @override
-  String get swapWorkout => 'Antrenmanı Değiştir';
+  String get swapWorkout => 'Egzersizi değiştir';
 
   @override
   String get addSet => 'Set Ekle';

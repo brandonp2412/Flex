@@ -9,6 +9,9 @@ class AppLocalizationsId extends AppLocalizations {
   AppLocalizationsId([String locale = 'id']) : super(locale);
 
   @override
+  String get removeImage => 'Hapus gambar';
+
+  @override
   String get showUpdateNotices => 'Tampilkan pemberitahuan pembaruan';
 
   @override
@@ -734,7 +737,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get notesLabel => 'Catatan';
 
   @override
-  String get swapWorkout => 'Tukar latihan';
+  String get swapWorkout => 'Ganti latihan';
 
   @override
   String get addSet => 'Tambah set';

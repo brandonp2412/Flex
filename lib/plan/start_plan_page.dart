@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:flex/app_fab.dart';
@@ -8,6 +7,7 @@ import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/empty_state.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/permissions_page.dart';
@@ -95,12 +95,8 @@ class _StartPlanPageState extends State<StartPlanPage>
             ),
             body: Center(
               child: snapshot.hasError
-                  ? AppEmptyState(
-                      icon: Icons.error_outline,
-                      title: context.l10n.errorLabel,
-                      message: snapshot.error.toString(),
-                    )
-                  : const CircularProgressIndicator(),
+                  ? const AppErrorState()
+                  : const SizedBox.shrink(),
             ),
           );
         }
@@ -374,7 +370,7 @@ class _StartPlanPageState extends State<StartPlanPage>
               onTap: () => selectAll(_seconds),
               textInputAction: TextInputAction.next,
               onFieldSubmitted: (_) {
-                if (_unit == 'kg' || _unit == 'lb' || _unit == 'stone') {
+                if (isWeightUnit(_unit)) {
                   _focusAndSelect(_weightFocus, _weight);
                 } else {
                   _focusAndSelect(_distanceFocus, _distance);
@@ -392,7 +388,7 @@ class _StartPlanPageState extends State<StartPlanPage>
       const SizedBox(height: 8.0),
       Row(
         children: [
-          if (_unit == 'kg' || _unit == 'lb' || _unit == 'stone')
+          if (isWeightUnit(_unit))
             Expanded(child: _weightField())
           else
             Expanded(

@@ -64,7 +64,7 @@ Future<Setting> _pumpIsolatedApp(
 }
 
 Future<void> _tapAddAction(WidgetTester tester) async {
-  for (final label in const ['Add set', 'New exercise', 'New plan', 'Add']) {
+  for (final label in const ['Add set', 'Add exercise', 'New plan', 'Add']) {
     final finder = find.text(label);
     if (finder.evaluate().isNotEmpty) {
       await tester.tap(finder.last);
@@ -77,7 +77,6 @@ Future<void> _tapAddAction(WidgetTester tester) async {
 Future<void> _tapSaveAction(WidgetTester tester) async {
   for (final target in [
     find.text('Save set'),
-    find.text('Save plan'),
     find.text('Save'),
     find.byIcon(Icons.save_rounded),
     find.byIcon(Icons.save),
@@ -850,7 +849,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save plan'));
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
       var plan =
@@ -890,7 +889,7 @@ void main() {
       );
       await tester.tap(find.text('Tue'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save plan'));
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
       plan =
@@ -975,7 +974,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ListTile, 'Swap'));
     await tester.pumpAndSettle();
-    expect(find.text('Swap workout'), findsOneWidget);
+    expect(find.text('Swap exercise'), findsOneWidget);
     await tester.enterText(
       _textFieldWithLabel('Search exercises...'),
       'Arnold press',

@@ -35,7 +35,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Bench press'), findsOne);
-    expect(find.text('2 x 3 kg'), findsOne);
+    expect(find.text('2 × 3 kg'), findsOne);
     final list = tester.widget<ListView>(find.byType(ListView));
     expect((list.padding! as EdgeInsets).top, 0);
     expect((list.padding! as EdgeInsets).bottom, fabListPadding);

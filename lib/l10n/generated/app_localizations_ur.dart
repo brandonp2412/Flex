@@ -9,6 +9,9 @@ class AppLocalizationsUr extends AppLocalizations {
   AppLocalizationsUr([String locale = 'ur']) : super(locale);
 
   @override
+  String get removeImage => 'تصویر ہٹائیں';
+
+  @override
   String get showUpdateNotices => 'اپ ڈیٹ کی اطلاعات دکھائیں';
 
   @override
@@ -735,7 +738,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get notesLabel => 'نوٹس';
 
   @override
-  String get swapWorkout => 'ورک آؤٹ تبدیل کریں';
+  String get swapWorkout => 'ورزش تبدیل کریں';
 
   @override
   String get addSet => 'سیٹ شامل کریں';

@@ -1,12 +1,14 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_fab.dart';
+import 'package:flex/constants.dart';
+import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
+import 'package:flex/editor_content.dart';
+import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
-import 'package:flex/database/database.dart';
+import 'package:flex/main.dart';
+import 'package:flex/unsaved_changes.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,40 +21,8 @@ class AddExercisePage extends StatefulWidget {
   createState() => _AddExercisePageState();
 }
 
-class _AddExercisePageState extends State<AddExercisePage> {
-  bool _dirty = false;
-  bool _allowPop = false;
-
-  void _markDirty() {
-    if (_dirty) return;
-    setState(() => _dirty = true);
-  }
-
-  Future<void> _confirmDiscard(Object? result) async {
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog.adaptive(
-        title: Text(context.l10n.unsavedChanges),
-        content: Text(context.l10n.discardUnsavedChanges),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.actionDiscard),
-          ),
-        ],
-      ),
-    );
-    if (discard != true || !mounted) return;
-    setState(() => _allowPop = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Navigator.of(context).pop(result);
-    });
-  }
-
+class _AddExercisePageState extends State<AddExercisePage>
+    with UnsavedChanges<AddExercisePage> {
   final TextEditingController _nameCtrl = TextEditingController();
   bool _cardio = false;
 
@@ -73,22 +43,16 @@ class _AddExercisePageState extends State<AddExercisePage> {
   Widget build(BuildContext context) {
     settings = context.watch<Setting>();
 
-    return PopScope(
-      canPop: _allowPop || !_dirty,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop || _allowPop || !_dirty) return;
-        unawaited(_confirmDiscard(result));
-      },
+    return guardUnsavedChanges(
       child: Scaffold(
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(title: Text(context.l10n.addExercise)),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
+        body: EditorContent(
           child: Form(
             key: _key,
             child: ListView(
-              padding: const EdgeInsets.only(bottom: 116),
+              padding: editorListPadding(context),
               children: [
                 TextFormField(
                   controller: _nameCtrl,
@@ -97,12 +61,12 @@ class _AddExercisePageState extends State<AddExercisePage> {
                   ),
                   textCapitalization: TextCapitalization.sentences,
                   autofocus: true,
-                  onChanged: (_) => _markDirty(),
+                  onChanged: (_) => markDirty(),
                   validator: (value) => value?.isNotEmpty == true
                       ? null
                       : context.l10n.requiredField,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   key: ValueKey(_unit),
                   decoration: InputDecoration(
@@ -110,35 +74,17 @@ class _AddExercisePageState extends State<AddExercisePage> {
                   ),
                   initialValue: _unit,
                   items: [
-                    DropdownMenuItem(
-                      value: 'kg',
-                      child: Text(context.l10n.kilogramsUnit),
-                    ),
-                    DropdownMenuItem(
-                      value: 'lb',
-                      child: Text(context.l10n.poundsUnit),
-                    ),
-                    DropdownMenuItem(
-                      value: 'stone',
-                      child: Text(context.l10n.stoneUnit),
-                    ),
-                    DropdownMenuItem(
-                      value: 'km',
-                      child: Text(context.l10n.kilometersUnit),
-                    ),
-                    DropdownMenuItem(
-                      value: 'mi',
-                      child: Text(context.l10n.milesUnit),
-                    ),
+                    ...strengthUnitMenuItems(context.l10n),
+                    ...cardioUnitMenuItems(context.l10n),
                   ],
                   onChanged: (String? newValue) {
-                    _markDirty();
+                    markDirty();
                     setState(() {
                       _unit = newValue!;
                     });
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 ListTile(
                   title: Text(
                     _cardio ? context.l10n.cardio : context.l10n.strength,
@@ -151,43 +97,13 @@ class _AddExercisePageState extends State<AddExercisePage> {
                 ),
                 Visibility(
                   visible: settings.showImages,
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextButton.icon(
-                            onPressed: pick,
-                            label: Text(context.l10n.imageLabel),
-                            icon: const Icon(Icons.image),
-                          ),
-                          if (_image != null)
-                            TextButton.icon(
-                              onPressed: () {
-                                _markDirty();
-                                setState(() {
-                                  _image = null;
-                                });
-                              },
-                              label: Text(context.l10n.actionDelete),
-                              icon: const Icon(Icons.delete),
-                            ),
-                        ],
-                      ),
-                      if (_image != null) ...[
-                        const SizedBox(height: 8),
-                        Image.file(
-                          File(_image!),
-                          cacheWidth: 400,
-                          errorBuilder: (context, error, stackTrace) =>
-                              TextButton.icon(
-                                label: Text(context.l10n.imageError),
-                                icon: const Icon(Icons.error),
-                                onPressed: () => pick(),
-                              ),
-                        ),
-                      ],
-                    ],
+                  child: AppImageField(
+                    path: _image,
+                    onPick: pick,
+                    onRemove: () {
+                      markDirty();
+                      setState(() => _image = null);
+                    },
                   ),
                 ),
               ],
@@ -210,14 +126,14 @@ class _AddExercisePageState extends State<AddExercisePage> {
   }
 
   void _setCardio(bool value) {
-    _markDirty();
+    markDirty();
     setState(() {
       _cardio = value;
-      if (value && _isWeightUnit(_unit)) {
+      if (value && isWeightUnit(_unit)) {
         _unit = settings.cardioUnit == 'last-entry'
             ? 'km'
             : settings.cardioUnit;
-      } else if (!value && !_isWeightUnit(_unit)) {
+      } else if (!value && !isWeightUnit(_unit)) {
         _unit = settings.strengthUnit == 'last-entry'
             ? 'kg'
             : settings.strengthUnit;
@@ -225,15 +141,12 @@ class _AddExercisePageState extends State<AddExercisePage> {
     });
   }
 
-  bool _isWeightUnit(String value) =>
-      value == 'kg' || value == 'lb' || value == 'stone';
-
   void pick() async {
     final result = await FilePicker.pickFiles();
     final path = (result.isEmpty ? null : result.single.path);
     if (path == null || !mounted) return;
 
-    _markDirty();
+    markDirty();
     setState(() {
       _image = path;
     });
@@ -248,6 +161,7 @@ class _AddExercisePageState extends State<AddExercisePage> {
       _unit = settings.cardioUnit;
 
     final exercise = await createExerciseDefinition(
+      db,
       name: _nameCtrl.text,
       cardio: _cardio,
       displayUnit: _unit,
@@ -256,7 +170,7 @@ class _AddExercisePageState extends State<AddExercisePage> {
     talker.info('Created exercise definition');
     if (!mounted) return;
 
-    _allowPop = true;
+    allowPop = true;
     Navigator.pop(context, exercise);
   }
 }

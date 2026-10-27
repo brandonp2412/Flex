@@ -144,6 +144,12 @@ abstract class AppLocalizations {
     Locale('zh', 'TW'),
   ];
 
+  /// Action for removing the selected image from an entry or exercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove image'**
+  String get removeImage;
+
   /// Whether to show update notices after upgrading the app.
   ///
   /// In en, this message translates to:
@@ -417,7 +423,7 @@ abstract class AppLocalizations {
   /// Title for a generic delete confirmation dialog.
   ///
   /// In en, this message translates to:
-  /// **'Confirm Delete'**
+  /// **'Confirm delete'**
   String get confirmDelete;
 
   /// Generic confirmation text for deleting one or more records.
@@ -1485,7 +1491,7 @@ abstract class AppLocalizations {
   /// Title for replacing an exercise in a workout.
   ///
   /// In en, this message translates to:
-  /// **'Swap workout'**
+  /// **'Swap exercise'**
   String get swapWorkout;
 
   /// Action and title for adding a workout set.

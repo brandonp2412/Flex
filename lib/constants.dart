@@ -134,3 +134,6 @@ List<String> positiveReinforcementMessages(AppLocalizations l10n) => [
   l10n.recordEncouragement28,
   l10n.recordEncouragement29,
 ];
+
+bool isWeightUnit(String? unit) =>
+    unit == 'kg' || unit == 'lb' || unit == 'stone';

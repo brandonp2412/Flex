@@ -167,7 +167,7 @@ void main() {
     // longPress recognition takes kLongPressTimeout (500ms = ~31 frames at 16ms),
     // then AnimatedSwitcher animates the leading icon (150ms = ~10 frames).
     // Measured baseline: 39 frames.
-    await tester.longPress(find.text('5 x 100 kg'));
+    await tester.longPress(find.text('5 × 100 kg'));
     final frames = await countFramesToSettle(tester);
 
     expect(
@@ -184,12 +184,12 @@ void main() {
     await tester.pumpWidget(historyApp(await settings()));
     await tester.pumpAndSettle();
 
-    await tester.longPress(find.text('5 x 100 kg'));
+    await tester.longPress(find.text('5 × 100 kg'));
     await tester.pumpAndSettle();
 
     // Tap to deselect -- AnimatedSwitcher plays in reverse (150ms = ~10 frames)
     // Measured baseline: 40 frames.
-    await tester.tap(find.text('5 x 100 kg'));
+    await tester.tap(find.text('5 × 100 kg'));
     final frames = await countFramesToSettle(tester);
 
     expect(

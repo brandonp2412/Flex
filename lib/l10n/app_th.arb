@@ -1,4 +1,5 @@
 {
+  "removeImage": "นำรูปภาพออก",
   "showUpdateNotices": "แสดงการแจ้งเตือนการอัปเดต",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "th",
@@ -964,7 +965,7 @@
   "@notesLabel": {
     "description": "Generic notes field label."
   },
-  "swapWorkout": "สลับเวิร์กเอาต์",
+  "swapWorkout": "เปลี่ยนท่าออกกำลังกาย",
   "@swapWorkout": {
     "description": "Title for replacing an exercise in a workout."
   },

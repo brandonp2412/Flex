@@ -1,4 +1,5 @@
 {
+  "removeImage": "Remover imagem",
   "showUpdateNotices": "Mostrar avisos de atualização",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "pt",
@@ -254,7 +255,7 @@
   "useBodyWeight": "Usar peso corporal",
   "noWeightEnteredYet": "Ainda não foi introduzido nenhum peso",
   "notesLabel": "Notas",
-  "swapWorkout": "Trocar treino",
+  "swapWorkout": "Substituir exercício",
   "addSet": "Adicionar série",
   "deleteSet": "Eliminar série",
   "oneRepMaxEstimate": "Uma repetição máxima (estimativa)",

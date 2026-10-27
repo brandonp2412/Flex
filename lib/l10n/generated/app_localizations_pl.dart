@@ -9,6 +9,9 @@ class AppLocalizationsPl extends AppLocalizations {
   AppLocalizationsPl([String locale = 'pl']) : super(locale);
 
   @override
+  String get removeImage => 'Usuń obraz';
+
+  @override
   String get showUpdateNotices => 'Pokazuj powiadomienia o aktualizacjach';
 
   @override
@@ -739,7 +742,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get notesLabel => 'Notatki';
 
   @override
-  String get swapWorkout => 'Zamień trening';
+  String get swapWorkout => 'Zamień ćwiczenie';
 
   @override
   String get addSet => 'Dodaj serię';

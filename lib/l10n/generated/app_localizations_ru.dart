@@ -9,6 +9,9 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get removeImage => 'Удалить изображение';
+
+  @override
   String get showUpdateNotices => 'Показывать уведомления об обновлениях';
 
   @override
@@ -739,7 +742,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notesLabel => 'Заметки';
 
   @override
-  String get swapWorkout => 'Заменить тренировку';
+  String get swapWorkout => 'Заменить упражнение';
 
   @override
   String get addSet => 'Добавить подход';

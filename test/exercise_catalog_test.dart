@@ -14,6 +14,7 @@ void main() {
 
   test('creating an exercise writes only catalog state', () async {
     final exercise = await createExerciseDefinition(
+      db,
       name: 'Catalog-only press',
       cardio: false,
       displayUnit: 'kg',
@@ -27,7 +28,7 @@ void main() {
     expect(exercise.displayUnit, 'kg');
     expect(exercise.image, '/tmp/press.png');
     expect(exercise.defaultRestDurationMs, 90000);
-    expect(await getExerciseCategoryName(exercise), 'Chest');
+    expect(await getExerciseCategoryName(db, exercise), 'Chest');
     expect(
       await (db.exerciseSets.select()
             ..where((set) => set.exerciseId.equals(exercise.id)))
@@ -40,6 +41,7 @@ void main() {
     'rename keeps history and plans attached to the stable exercise id',
     () async {
       final exercise = await createExerciseDefinition(
+        db,
         name: 'Stable lift',
         cardio: false,
         displayUnit: 'kg',
@@ -65,6 +67,7 @@ void main() {
       );
 
       await updateExerciseDefinition(
+        db,
         exerciseId: exercise.id,
         name: 'Renamed stable lift',
         cardio: false,
@@ -96,12 +99,14 @@ void main() {
 
   test('rest image category and graph preferences live on exercises', () async {
     final exercise = await createExerciseDefinition(
+      db,
       name: 'Config lift',
       cardio: false,
       displayUnit: 'kg',
     );
 
     await updateExerciseDefinition(
+      db,
       exerciseId: exercise.id,
       name: exercise.name,
       cardio: false,
@@ -111,6 +116,7 @@ void main() {
       defaultRestDurationMs: 120000,
     );
     await updateExerciseGraphPreferences(
+      db,
       exerciseId: exercise.id,
       metric: 'volume',
       period: 'week',
@@ -123,7 +129,7 @@ void main() {
     expect(updated!.displayUnit, 'lb');
     expect(updated.image, '/tmp/config.png');
     expect(updated.defaultRestDurationMs, 120000);
-    expect(await getExerciseCategoryName(updated), 'Arms');
+    expect(await getExerciseCategoryName(db, updated), 'Arms');
     expect(updated.graphMetric, 'volume');
     expect(updated.graphPeriod, 'week');
     expect(updated.graphLimit, 42);
@@ -142,11 +148,13 @@ void main() {
 
   test('renaming onto an existing exercise merges stable references', () async {
     final source = await createExerciseDefinition(
+      db,
       name: 'Merge source',
       cardio: false,
       displayUnit: 'kg',
     );
     final target = await createExerciseDefinition(
+      db,
       name: 'Merge target',
       cardio: false,
       displayUnit: 'kg',
@@ -194,6 +202,7 @@ void main() {
     );
 
     await updateExerciseDefinition(
+      db,
       exerciseId: source.id,
       name: target.name,
       cardio: false,
@@ -205,7 +214,7 @@ void main() {
     final merged = await findExerciseByIdFixture(db, target.id);
     expect(merged, isA<Exercise>());
     expect(merged!.displayUnit, 'lb');
-    expect(await getExerciseCategoryName(merged), 'Merged');
+    expect(await getExerciseCategoryName(db, merged), 'Merged');
 
     final sets = await db.exerciseSets.select().get();
     expect(sets, hasLength(2));
@@ -224,6 +233,7 @@ void main() {
 
   test('plan editor discovers catalog exercises by stable id', () async {
     final exercise = await createExerciseDefinition(
+      db,
       name: 'Plan-only lift',
       cardio: false,
       displayUnit: 'kg',

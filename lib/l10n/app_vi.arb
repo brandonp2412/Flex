@@ -1,4 +1,5 @@
 {
+  "removeImage": "Xóa hình ảnh",
   "showUpdateNotices": "Hiện thông báo cập nhật",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "vi",
@@ -964,7 +965,7 @@
   "@notesLabel": {
     "description": "Generic notes field label."
   },
-  "swapWorkout": "Đổi buổi tập",
+  "swapWorkout": "Đổi bài tập",
   "@swapWorkout": {
     "description": "Title for replacing an exercise in a workout."
   },

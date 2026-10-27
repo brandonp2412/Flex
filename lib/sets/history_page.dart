@@ -7,16 +7,17 @@ import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/empty_state.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/filters.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
+import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/sets/edit_sets_page.dart';
 import 'package:flex/sets/group_history.dart';
 import 'package:flex/sets/history_list.dart';
 import 'package:flex/utils.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -176,7 +177,7 @@ class _HistoryPageWidgetState extends State<_HistoryPageWidget> {
                 Positioned.fill(
                   child: Column(
                     children: [
-                      if (snapshot.data?.isEmpty == true)
+                      if (!snapshot.hasError && snapshot.data?.isEmpty == true)
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.only(
@@ -193,10 +194,10 @@ class _HistoryPageWidgetState extends State<_HistoryPageWidget> {
                           ),
                         ),
                       if (snapshot.hasError)
-                        Expanded(
-                          child: ErrorWidget(context.l10n.unexpectedError),
-                        ),
-                      if (snapshot.hasData && snapshot.data!.isNotEmpty)
+                        Expanded(child: const AppErrorState()),
+                      if (!snapshot.hasError &&
+                          snapshot.hasData &&
+                          snapshot.data!.isNotEmpty)
                         Expanded(
                           child: Builder(
                             builder: (context) {

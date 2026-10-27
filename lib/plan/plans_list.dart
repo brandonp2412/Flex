@@ -4,14 +4,15 @@ import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/empty_state.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/edit_plan_page.dart';
 import 'package:flex/plan/plan_queries.dart';
 import 'package:flex/plan/plan_tile.dart';
 import 'package:flex/plan/workout_sessions.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/platform_page_route.dart';
+import 'package:flex/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -64,8 +65,10 @@ class _PlansListState extends State<PlansList> {
   Widget build(BuildContext context) {
     return StreamBuilder<List<PlanCount>>(
       stream: _planCountsStream,
-      builder: (context, snapshot) =>
-          _buildList(context, snapshot.data ?? const <PlanCount>[]),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return const AppErrorState();
+        return _buildList(context, snapshot.data ?? const <PlanCount>[]);
+      },
     );
   }
 

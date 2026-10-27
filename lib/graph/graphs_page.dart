@@ -1,4 +1,6 @@
+import 'graph_tile.dart';
 import 'package:drift/drift.dart' hide Column;
+import 'package:flex/app_confirmation.dart';
 import 'package:flex/app_fab.dart';
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
@@ -6,6 +8,7 @@ import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/empty_state.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/graph/add_exercise_page.dart';
 import 'package:flex/graph/cardio_data.dart';
 import 'package:flex/graph/edit_graph_page.dart';
@@ -14,14 +17,12 @@ import 'package:flex/graph/global_progress_page.dart';
 import 'package:flex/graphs_filters.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
+import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/utils.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-
-import 'graph_tile.dart';
 
 void applyGraphSortToNewestFirstSummaries(
   List<GraphExerciseSummary> summaries,
@@ -92,7 +93,7 @@ class GraphsPageState extends State<GraphsPage>
           ? getCardioData(
               name: summary.name,
               target: summary.unit,
-              metric: _isWeightUnit(summary.unit)
+              metric: isWeightUnit(summary.unit)
                   ? CardioMetric.weight
                   : CardioMetric.pace,
             )
@@ -208,22 +209,12 @@ class GraphsPageState extends State<GraphsPage>
         ? await db.bodyWeights.count().getSingle()
         : await countGraphSets([summary.name]);
     if (!mounted) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.confirmDelete),
-        content: Text(context.l10n.deleteGraphRecordsConfirmation(count)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(context.l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(context.l10n.actionDelete),
-          ),
-        ],
-      ),
+    final confirmed = await showAppConfirmation(
+      context,
+      title: context.l10n.confirmDelete,
+      message: context.l10n.deleteGraphRecordsConfirmation(count),
+      actionLabel: context.l10n.actionDelete,
+      destructive: true,
     );
     if (confirmed != true || !mounted) return;
 
@@ -307,9 +298,6 @@ class GraphsPageState extends State<GraphsPage>
     );
   }
 
-  bool _isWeightUnit(String unit) =>
-      unit == 'kg' || unit == 'lb' || unit == 'stone';
-
   Scaffold graphsPage() {
     final desktop = isDesktopLayout(context);
     return Scaffold(
@@ -328,7 +316,7 @@ class GraphsPageState extends State<GraphsPage>
                       ),
                     ),
                     icon: const Icon(Icons.add_rounded),
-                    label: Text(context.l10n.newExercise),
+                    label: Text(context.l10n.addExercise),
                   ),
                 ),
               ],
@@ -341,7 +329,7 @@ class GraphsPageState extends State<GraphsPage>
           stream: _stream,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return ErrorWidget(context.l10n.unexpectedError);
+              return const AppErrorState();
             }
             if (!snapshot.hasData) return const SizedBox();
 

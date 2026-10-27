@@ -1,14 +1,16 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
+import 'package:flex/app_confirmation.dart';
 import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
+import 'package:flex/database/categories.dart';
+import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/database/exercise_catalog.dart';
-import 'package:flex/database/categories.dart';
+import 'package:flex/editor_content.dart';
+import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
-import 'package:flex/database/database.dart';
+import 'package:flex/main.dart';
+import 'package:flex/unsaved_changes.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -22,46 +24,14 @@ class EditGraphPage extends StatefulWidget {
   createState() => _EditGraphPageState();
 }
 
-class _EditGraphPageState extends State<EditGraphPage> {
+class _EditGraphPageState extends State<EditGraphPage>
+    with UnsavedChanges<EditGraphPage> {
   late final TextEditingController name = TextEditingController(
     text: widget.name,
   );
   final TextEditingController minutes = TextEditingController();
   final TextEditingController seconds = TextEditingController();
   final key = GlobalKey<FormState>();
-
-  bool _dirty = false;
-  bool _allowPop = false;
-
-  void _markDirty() {
-    if (_dirty) return;
-    setState(() => _dirty = true);
-  }
-
-  Future<void> _confirmDiscard(Object? result) async {
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog.adaptive(
-        title: Text(context.l10n.unsavedChanges),
-        content: Text(context.l10n.discardUnsavedChanges),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.actionDiscard),
-          ),
-        ],
-      ),
-    );
-    if (discard != true || !mounted) return;
-    setState(() => _allowPop = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Navigator.of(context).pop(result);
-    });
-  }
 
   bool? cardio;
   int? _exerciseId;
@@ -71,32 +41,25 @@ class _EditGraphPageState extends State<EditGraphPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: _allowPop || !_dirty,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop || _allowPop || !_dirty) return;
-        unawaited(_confirmDiscard(result));
-      },
+    return guardUnsavedChanges(
       child: Scaffold(
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: Text(context.l10n.updateAllNamed(widget.name.toLowerCase())),
         ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        body: EditorContent(
           child: Form(
             key: key,
             child: ListView(
-              padding: const EdgeInsets.only(bottom: 116),
+              padding: editorListPadding(context),
               children: [
-                const SizedBox(height: 8.0),
                 TextField(
                   controller: name,
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(labelText: context.l10n.newName),
                   textCapitalization: TextCapitalization.sentences,
-                  onChanged: (_) => _markDirty(),
+                  onChanged: (_) => markDirty(),
                 ),
                 const SizedBox(height: 12.0),
                 Row(
@@ -110,7 +73,7 @@ class _EditGraphPageState extends State<EditGraphPage> {
                         ),
                         keyboardType: TextInputType.number,
                         onTap: () => selectAll(minutes),
-                        onChanged: (_) => _markDirty(),
+                        onChanged: (_) => markDirty(),
                         validator: (value) {
                           if (value == null || value.isEmpty) return null;
                           if (int.tryParse(value) == null)
@@ -131,7 +94,7 @@ class _EditGraphPageState extends State<EditGraphPage> {
                         onTap: () {
                           selectAll(seconds);
                         },
-                        onChanged: (_) => _markDirty(),
+                        onChanged: (_) => markDirty(),
                         validator: (value) {
                           if (value == null || value.isEmpty) return null;
                           if (int.tryParse(value) == null)
@@ -171,7 +134,7 @@ class _EditGraphPageState extends State<EditGraphPage> {
                                   )
                                   .toList(),
                               onChanged: (value) {
-                                _markDirty();
+                                markDirty();
                                 setState(() {
                                   category = value!;
                                 });
@@ -195,7 +158,7 @@ class _EditGraphPageState extends State<EditGraphPage> {
                     ...cardioUnitMenuItems(context.l10n),
                   ],
                   onChanged: (value) {
-                    _markDirty();
+                    markDirty();
                     setState(() {
                       unit = value;
                     });
@@ -220,43 +183,13 @@ class _EditGraphPageState extends State<EditGraphPage> {
                   builder: (context, showImages, child) {
                     return Visibility(
                       visible: showImages,
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              TextButton.icon(
-                                onPressed: pick,
-                                label: Text(context.l10n.imageLabel),
-                                icon: const Icon(Icons.image),
-                              ),
-                              if (image != null)
-                                TextButton.icon(
-                                  onPressed: () {
-                                    _markDirty();
-                                    setState(() {
-                                      image = null;
-                                    });
-                                  },
-                                  label: Text(context.l10n.actionDelete),
-                                  icon: const Icon(Icons.delete),
-                                ),
-                            ],
-                          ),
-                          if (image != null) ...[
-                            const SizedBox(height: 8),
-                            Image.file(
-                              File(image!),
-                              cacheWidth: 400,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  TextButton.icon(
-                                    label: Text(context.l10n.imageError),
-                                    icon: const Icon(Icons.error),
-                                    onPressed: () => pick(),
-                                  ),
-                            ),
-                          ],
-                        ],
+                      child: AppImageField(
+                        path: image,
+                        onPick: pick,
+                        onRemove: () {
+                          markDirty();
+                          setState(() => image = null);
+                        },
                       ),
                     );
                   },
@@ -268,8 +201,8 @@ class _EditGraphPageState extends State<EditGraphPage> {
         ),
         floatingActionButton: AppFab(
           onPressed: save,
-          label: Text(context.l10n.actionUpdate),
-          icon: const Icon(Icons.sync),
+          label: Text(context.l10n.actionSave),
+          icon: const Icon(Icons.save),
         ),
       ),
     );
@@ -294,10 +227,11 @@ class _EditGraphPageState extends State<EditGraphPage> {
     }
 
     final exerciseId =
-        _exerciseId ?? (await getExerciseByName(widget.name))?.id;
+        _exerciseId ?? (await getExerciseByName(db, widget.name))?.id;
     if (exerciseId == null || cardio == null || unit == null) return;
 
     await updateExerciseDefinition(
+      db,
       exerciseId: exerciseId,
       name: name.text.isEmpty ? widget.name : name.text,
       cardio: cardio!,
@@ -314,9 +248,9 @@ class _EditGraphPageState extends State<EditGraphPage> {
   void initState() {
     super.initState();
 
-    getExerciseByName(widget.name).then((exercise) async {
+    getExerciseByName(db, widget.name).then((exercise) async {
       if (exercise == null || !mounted) return;
-      final categoryName = await getExerciseCategoryName(exercise);
+      final categoryName = await getExerciseCategoryName(db, exercise);
       if (!mounted) return;
       setState(() {
         _exerciseId = exercise.id;
@@ -341,7 +275,7 @@ class _EditGraphPageState extends State<EditGraphPage> {
     final path = (result.isEmpty ? null : result.single.path);
     if (path == null || !mounted) return;
 
-    _markDirty();
+    markDirty();
     setState(() {
       image = path;
     });
@@ -349,26 +283,12 @@ class _EditGraphPageState extends State<EditGraphPage> {
 
   Future<bool> confirmUpdate(String title, String content) async {
     if (!mounted) return false;
-    return await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(title),
-            content: Text(content),
-            actions: <Widget>[
-              TextButton.icon(
-                label: Text(context.l10n.actionCancel),
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(dialogContext, false),
-              ),
-              TextButton.icon(
-                label: Text(context.l10n.actionConfirm),
-                icon: const Icon(Icons.check),
-                onPressed: () => Navigator.pop(dialogContext, true),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+    return showAppConfirmation(
+      context,
+      title: title,
+      message: content,
+      actionLabel: context.l10n.actionConfirm,
+    );
   }
 
   Future<void> save() async {
@@ -387,18 +307,15 @@ class _EditGraphPageState extends State<EditGraphPage> {
     await doUpdate();
 
     if (!mounted) return;
-    _allowPop = true;
+    allowPop = true;
     Navigator.pop(context, name.text);
   }
 
   void _setCardio(bool value) {
-    _markDirty();
+    markDirty();
     setState(() {
       cardio = value;
-      if (!value && unit != null && !_isWeightUnit(unit!)) unit = 'kg';
+      if (!value && unit != null && !isWeightUnit(unit!)) unit = 'kg';
     });
   }
-
-  bool _isWeightUnit(String value) =>
-      value == 'kg' || value == 'lb' || value == 'stone';
 }

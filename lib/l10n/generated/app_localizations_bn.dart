@@ -9,6 +9,9 @@ class AppLocalizationsBn extends AppLocalizations {
   AppLocalizationsBn([String locale = 'bn']) : super(locale);
 
   @override
+  String get removeImage => 'ছবি সরান';
+
+  @override
   String get showUpdateNotices => 'আপডেটের বিজ্ঞপ্তি দেখান';
 
   @override
@@ -734,7 +737,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get notesLabel => 'নোট';
 
   @override
-  String get swapWorkout => 'ওয়ার্কআউট বদলান';
+  String get swapWorkout => 'ব্যায়াম বদলান';
 
   @override
   String get addSet => 'সেট যোগ করুন';

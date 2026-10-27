@@ -75,7 +75,7 @@ void main() {
     await tester.tap(find.byTooltip('Delete selected'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Confirm Delete'), findsOne);
+    expect(find.text('Confirm delete'), findsOne);
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
 

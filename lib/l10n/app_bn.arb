@@ -1,4 +1,5 @@
 {
+  "removeImage": "ছবি সরান",
   "showUpdateNotices": "আপডেটের বিজ্ঞপ্তি দেখান",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "bn",
@@ -964,7 +965,7 @@
   "@notesLabel": {
     "description": "Generic notes field label."
   },
-  "swapWorkout": "ওয়ার্কআউট বদলান",
+  "swapWorkout": "ব্যায়াম বদলান",
   "@swapWorkout": {
     "description": "Title for replacing an exercise in a workout."
   },

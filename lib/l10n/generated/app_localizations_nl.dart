@@ -9,6 +9,9 @@ class AppLocalizationsNl extends AppLocalizations {
   AppLocalizationsNl([String locale = 'nl']) : super(locale);
 
   @override
+  String get removeImage => 'Afbeelding verwijderen';
+
+  @override
   String get showUpdateNotices => 'Updatemeldingen tonen';
 
   @override
@@ -737,7 +740,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get notesLabel => 'Notities';
 
   @override
-  String get swapWorkout => 'Training wisselen';
+  String get swapWorkout => 'Oefening wisselen';
 
   @override
   String get addSet => 'Set toevoegen';

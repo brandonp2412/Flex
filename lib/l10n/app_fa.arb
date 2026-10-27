@@ -1,4 +1,5 @@
 {
+  "removeImage": "حذف تصویر",
   "showUpdateNotices": "نمایش اعلان‌های به‌روزرسانی",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "fa",
@@ -964,7 +965,7 @@
   "@notesLabel": {
     "description": "Generic notes field label."
   },
-  "swapWorkout": "جابه‌جایی تمرین",
+  "swapWorkout": "تعویض تمرین",
   "@swapWorkout": {
     "description": "Title for replacing an exercise in a workout."
   },

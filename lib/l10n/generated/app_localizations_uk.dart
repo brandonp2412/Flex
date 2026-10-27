@@ -9,6 +9,9 @@ class AppLocalizationsUk extends AppLocalizations {
   AppLocalizationsUk([String locale = 'uk']) : super(locale);
 
   @override
+  String get removeImage => 'Видалити зображення';
+
+  @override
   String get showUpdateNotices => 'Показувати сповіщення про оновлення';
 
   @override
@@ -737,7 +740,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notesLabel => 'Нотатки';
 
   @override
-  String get swapWorkout => 'Замінити тренування';
+  String get swapWorkout => 'Замінити вправу';
 
   @override
   String get addSet => 'Додати підхід';

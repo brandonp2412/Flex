@@ -1,13 +1,13 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/editor_content.dart';
+import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
-import 'package:flex/responsive.dart';
+import 'package:flex/unsaved_changes.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +19,8 @@ class WeightPage extends StatefulWidget {
   createState() => _WeightPageState();
 }
 
-class _WeightPageState extends State<WeightPage> {
+class _WeightPageState extends State<WeightPage>
+    with UnsavedChanges<WeightPage> {
   final TextEditingController _ctrl = TextEditingController();
   BodyWeight? _previousWeight;
   bool _weightLoaded = false;
@@ -31,6 +32,7 @@ class _WeightPageState extends State<WeightPage> {
     final result = await FilePicker.pickFiles();
     if (result.isEmpty || !mounted) return;
 
+    markDirty();
     setState(() {
       _image = result.single.path;
     });
@@ -45,134 +47,108 @@ class _WeightPageState extends State<WeightPage> {
         ? context.l10n.noWeightEnteredYet
         : '${formatDisplayNumber(context, displayBodyWeight(displayUnit, _previousWeight!.weightKg))} ${displayMeasurementUnit(context.l10n, displayUnit)}';
 
-    return Scaffold(
-      floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text(context.l10n.enterWeight)),
-      body: Form(
-        key: _key,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ListView(
-            padding: const EdgeInsets.only(bottom: 116),
-            children: [
-              TextFormField(
-                controller: _ctrl,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+    return guardUnsavedChanges(
+      child: Scaffold(
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(title: Text(context.l10n.enterWeight)),
+        body: Form(
+          key: _key,
+          child: EditorContent(
+            child: ListView(
+              padding: editorListPadding(context),
+              children: [
+                TextFormField(
+                  controller: _ctrl,
+                  onChanged: (_) => markDirty(),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.weightLabel,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return context.l10n.requiredField;
+                    }
+                    if (parseDisplayNumber(context, value) == null) {
+                      return context.l10n.invalidNumber;
+                    }
+                    return null;
+                  },
+                  autofocus: true,
                 ),
-                decoration: InputDecoration(
-                  labelText: context.l10n.weightLabel,
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: context.l10n.unitLabel,
+                  ),
+                  initialValue: _unit,
+                  items: strengthUnitMenuItems(context.l10n),
+                  onChanged: (String? newValue) {
+                    markDirty();
+                    setState(() {
+                      _unit = newValue!;
+                    });
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return context.l10n.requiredField;
-                  }
-                  if (parseDisplayNumber(context, value) == null) {
-                    return context.l10n.invalidNumber;
-                  }
-                  return null;
-                },
-                autofocus: true,
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: context.l10n.unitLabel),
-                initialValue: _unit,
-                items: strengthUnitMenuItems(context.l10n),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _unit = newValue!;
-                  });
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                key: ValueKey(lastWeightText),
-                initialValue: lastWeightText,
-                decoration: InputDecoration(
-                  labelText: context.l10n.previousWeight,
+                const SizedBox(height: 12),
+                TextFormField(
+                  key: ValueKey(lastWeightText),
+                  initialValue: lastWeightText,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.previousWeight,
+                  ),
+                  enabled: false,
                 ),
-                enabled: false,
-              ),
-              const SizedBox(height: 12),
-              Selector<Setting, bool>(
-                builder: (context, showImages, child) {
-                  return Visibility(
-                    visible: showImages,
-                    child: Column(
-                      children: [
-                        if (_image == null)
-                          TextButton.icon(
-                            onPressed: pick,
-                            label: Text(context.l10n.imageLabel),
-                            icon: const Icon(Icons.image),
-                          ),
-                        if (_image != null) ...[
-                          const SizedBox(height: 8),
-                          Tooltip(
-                            message: context.l10n.longPressToDelete,
-                            child: GestureDetector(
-                              onTap: () => pick(),
-                              onLongPress: isDesktopLayout(context)
-                                  ? null
-                                  : () => setState(() {
-                                      _image = null;
-                                    }),
-                              child: Image.file(
-                                File(_image!),
-                                cacheWidth: 400,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    TextButton.icon(
-                                      label: Text(context.l10n.imageError),
-                                      icon: const Icon(Icons.error),
-                                      onPressed: () => pick(),
-                                    ),
-                              ),
-                            ),
-                          ),
-                          if (isDesktopLayout(context))
-                            TextButton.icon(
-                              onPressed: () => setState(() {
-                                _image = null;
-                              }),
-                              icon: const Icon(Icons.delete_outline),
-                              label: Text(context.l10n.actionRemove),
-                            ),
-                        ],
-                      ],
-                    ),
-                  );
-                },
-                selector: (context, settings) => settings.showImages,
-              ),
-            ],
+                const SizedBox(height: 12),
+                Selector<Setting, bool>(
+                  builder: (context, showImages, child) {
+                    return Visibility(
+                      visible: showImages,
+                      child: AppImageField(
+                        path: _image,
+                        onPick: pick,
+                        onRemove: () {
+                          markDirty();
+                          setState(() => _image = null);
+                        },
+                      ),
+                    );
+                  },
+                  selector: (context, settings) => settings.showImages,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      floatingActionButton: AppFab(
-        onPressed: () async {
-          if (!_key.currentState!.validate()) return;
+        floatingActionButton: AppFab(
+          onPressed: () async {
+            if (!_key.currentState!.validate()) return;
 
-          final settings = context.read<Setting>();
-          if (settings.strengthUnit != 'last-entry')
-            _unit = settings.strengthUnit;
+            final settings = context.read<Setting>();
+            if (settings.strengthUnit != 'last-entry')
+              _unit = settings.strengthUnit;
 
-          final value = parseDisplayNumber(context, _ctrl.text)!;
-          final unit = _unit ?? 'kg';
-          final weightKg = toKg(unit, value);
-          if (weightKg == null) return;
-          await recordBodyWeight(
-            db,
-            timestamp: DateTime.now().toLocal(),
-            weightKg: weightKg,
-            photo: _image,
-          );
+            final value = parseDisplayNumber(context, _ctrl.text)!;
+            final unit = _unit ?? 'kg';
+            final weightKg = toKg(unit, value);
+            if (weightKg == null) return;
+            await recordBodyWeight(
+              db,
+              timestamp: DateTime.now().toLocal(),
+              weightKg: weightKg,
+              photo: _image,
+            );
 
-          if (context.mounted) Navigator.pop(context);
-        },
-        label: Text(context.l10n.actionSave),
-        icon: const Icon(Icons.save),
+            if (context.mounted) {
+              allowPop = true;
+              Navigator.pop(context);
+            }
+          },
+          label: Text(context.l10n.actionSave),
+          icon: const Icon(Icons.save),
+        ),
       ),
     );
   }

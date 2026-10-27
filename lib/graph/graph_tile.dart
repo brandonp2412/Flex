@@ -1,14 +1,15 @@
 import 'dart:io';
 
 import 'package:flex/constants.dart';
+import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/graph/cardio_page.dart';
 import 'package:flex/graph/strength_page.dart';
 import 'package:flex/l10n/l10n.dart';
-import 'package:flex/responsive.dart';
-import 'package:flex/database/database.dart';
-import 'package:flex/utils.dart';
 import 'package:flex/platform_page_route.dart';
+import 'package:flex/responsive.dart';
+import 'package:flex/set_summary.dart';
+import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -36,29 +37,19 @@ class GraphTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String trailing;
-    final unit = displayMeasurementUnit(context.l10n, exerciseSet.unit);
+    final trailing = formatSetSummary(
+      context,
+      unitCode: exerciseSet.unit,
+      cardio: exerciseSet.cardio,
+      weight: exerciseSet.weight,
+      reps: exerciseSet.reps,
+      distance: exerciseSet.distance,
+      duration: exerciseSet.duration,
+      bodyWeight: exerciseSet.bodyWeight,
+    );
     final showImages = context.select<Setting, bool>(
       (settings) => settings.showImages,
     );
-
-    if (exerciseSet.bodyWeight) {
-      trailing = "${formatDisplayNumber(context, exerciseSet.weight)} $unit";
-    } else if (exerciseSet.cardio) {
-      final minutes = exerciseSet.duration.floor();
-      final seconds = ((exerciseSet.duration * 60) % 60)
-          .floor()
-          .toString()
-          .padLeft(2, '0');
-      final value = _isWeightUnit(exerciseSet.unit)
-          ? exerciseSet.weight
-          : exerciseSet.distance;
-      trailing =
-          "${formatDisplayNumber(context, value)} $unit / $minutes:$seconds";
-    } else {
-      trailing =
-          "${formatDisplayNumber(context, exerciseSet.reps)} x ${formatDisplayNumber(context, exerciseSet.weight)} $unit";
-    }
 
     Widget? leading;
 
@@ -175,7 +166,7 @@ class GraphTile extends StatelessWidget {
             final data = await getCardioData(
               target: exerciseSet.unit,
               name: exerciseSet.name,
-              metric: _isWeightUnit(exerciseSet.unit)
+              metric: isWeightUnit(exerciseSet.unit)
                   ? CardioMetric.weight
                   : CardioMetric.pace,
               period: Period.day,
@@ -270,7 +261,4 @@ class GraphTile extends StatelessWidget {
       ),
     );
   }
-
-  bool _isWeightUnit(String unit) =>
-      unit == 'kg' || unit == 'lb' || unit == 'stone';
 }

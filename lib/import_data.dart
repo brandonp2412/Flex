@@ -5,14 +5,14 @@ import 'package:csv/csv.dart';
 import 'package:drift/drift.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_permissions_dialog.dart';
-import 'package:flex/database/database.dart';
-import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/data_portability/graph_csv.dart';
 import 'package:flex/data_portability/import_issue.dart';
+import 'package:flex/database/database.dart';
+import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/l10n/l10n.dart';
-import 'package:flex/main.dart';
 import 'package:flex/logging.dart';
+import 'package:flex/main.dart';
 import 'package:flex/settings/backup_archive.dart';
 import 'package:flex/storage/app_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -347,8 +347,9 @@ class ImportData extends StatelessWidget {
         for (final rawExerciseName in exerciseNames) {
           final exerciseName = rawExerciseName.trim();
           if (exerciseName.isEmpty) continue;
-          var exercise = await getExerciseByName(exerciseName);
+          var exercise = await getExerciseByName(db, exerciseName);
           exercise ??= await createExerciseDefinition(
+            db,
             name: exerciseName,
             cardio: false,
             displayUnit: 'kg',

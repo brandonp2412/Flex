@@ -35,7 +35,7 @@ void main() {
     );
 
     expect(find.text('Bench press'), findsOne);
-    expect(find.text('5 x 20 kg'), findsOne);
+    expect(find.text('5 × 20 kg'), findsOne);
   });
 
   testWidgets('GraphTile formats body weight value', (

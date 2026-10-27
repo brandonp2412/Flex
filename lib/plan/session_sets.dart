@@ -2,9 +2,9 @@ import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/l10n/l10n.dart';
-import 'package:flex/sets/edit_set_page.dart';
-import 'package:flex/utils.dart';
 import 'package:flex/platform_page_route.dart';
+import 'package:flex/set_summary.dart';
+import 'package:flex/sets/edit_set_page.dart';
 import 'package:flutter/material.dart';
 
 /// Strong/Hevy-style strip of the sets already logged in the active workout
@@ -100,7 +100,7 @@ class _SessionSetsState extends State<SessionSets> {
                 onPreviousTap: widget.onPreviousSetTap,
                 number: i + 1,
                 best: false,
-                repsFirst: widget.compact,
+                compact: widget.compact,
               ),
             ),
         ],
@@ -130,7 +130,7 @@ class _SessionSetsState extends State<SessionSets> {
                     exerciseSet: sets[i],
                     number: i + 1,
                     best: sets[i].id == best,
-                    repsFirst: widget.compact,
+                    compact: widget.compact,
                   ),
                 ),
               for (
@@ -145,7 +145,7 @@ class _SessionSetsState extends State<SessionSets> {
                     onPreviousTap: widget.onPreviousSetTap,
                     number: i + 1,
                     best: false,
-                    repsFirst: widget.compact,
+                    compact: widget.compact,
                   ),
                 ),
             ],
@@ -159,7 +159,7 @@ class _SessionSetsState extends State<SessionSets> {
   int? _bestId(List<ExerciseSetView> sets) {
     if (sets.length < 2) return null;
     final cardio = sets.first.cardio;
-    final weightedCardio = cardio && _isWeightUnit(sets.first.unit);
+    final weightedCardio = cardio && isWeightUnit(sets.first.unit);
     final best = sets.reduce((a, b) {
       if (!cardio) return b.weight > a.weight ? b : a;
       if (!weightedCardio) return b.distance > a.distance ? b : a;
@@ -174,9 +174,6 @@ class _SessionSetsState extends State<SessionSets> {
     if (metric <= 0) return null;
     return best.id;
   }
-
-  bool _isWeightUnit(String unit) =>
-      unit == 'kg' || unit == 'lb' || unit == 'stone';
 }
 
 class _SetChip extends StatelessWidget {
@@ -185,7 +182,7 @@ class _SetChip extends StatelessWidget {
   final ValueChanged<PreviousExerciseSet>? onPreviousTap;
   final int number;
   final bool best;
-  final bool repsFirst;
+  final bool compact;
 
   const _SetChip({
     this.exerciseSet,
@@ -193,30 +190,22 @@ class _SetChip extends StatelessWidget {
     this.onPreviousTap,
     required this.number,
     required this.best,
-    required this.repsFirst,
+    required this.compact,
   });
 
   String _value(BuildContext context) {
     final set = exerciseSet;
     final previous = previousSet;
-    final unitCode = set?.unit ?? previous!.unit;
-    final unit = displayMeasurementUnit(context.l10n, unitCode);
-    final cardio = set?.cardio ?? previous!.cardio;
-    final weightValue = set?.weight ?? previous!.weight;
-    if (cardio &&
-        (unitCode == 'kg' || unitCode == 'lb' || unitCode == 'stone')) {
-      final duration = set?.duration ?? previous!.duration;
-      final minutes = duration.floor();
-      final seconds = ((duration * 60) % 60).floor().toString().padLeft(2, '0');
-      return "${formatDisplayNumber(context, weightValue)} $unit / $minutes:$seconds";
-    }
-    if (cardio) {
-      final distance = set?.distance ?? previous!.distance;
-      return "${formatDisplayNumber(context, distance)} $unit";
-    }
-    final weight = "${formatDisplayNumber(context, weightValue)} $unit";
-    final reps = formatDisplayNumber(context, set?.reps ?? previous!.reps);
-    return repsFirst ? "$reps × $weight" : "$weight × $reps";
+    return formatSetSummary(
+      context,
+      unitCode: set?.unit ?? previous!.unit,
+      cardio: set?.cardio ?? previous!.cardio,
+      weight: set?.weight ?? previous!.weight,
+      reps: set?.reps ?? previous!.reps,
+      distance: set?.distance ?? previous!.distance,
+      duration: set?.duration ?? previous!.duration,
+      incline: set == null ? previous!.incline : set.incline,
+    );
   }
 
   @override
@@ -241,9 +230,9 @@ class _SetChip extends StatelessWidget {
             Padding(
               padding: EdgeInsets.fromLTRB(
                 12,
-                repsFirst ? 10 : 8,
+                compact ? 10 : 8,
                 previousSet == null ? 12 : 30,
-                repsFirst ? 10 : 8,
+                compact ? 10 : 8,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -274,7 +263,7 @@ class _SetChip extends StatelessWidget {
             ),
             if (previousSet != null)
               Positioned(
-                top: repsFirst ? 10 : 8,
+                top: compact ? 10 : 8,
                 right: 10,
                 child: Icon(
                   Icons.history_rounded,

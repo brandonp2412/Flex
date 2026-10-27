@@ -1,4 +1,5 @@
 {
+  "removeImage": "이미지 제거",
   "showUpdateNotices": "업데이트 알림 표시",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "ko",

@@ -2,6 +2,11 @@ import 'package:flex/bottom_nav.dart';
 import 'package:flex/responsive.dart';
 import 'package:flutter/material.dart';
 
+double appFabBottomPadding(BuildContext context) =>
+    isDesktopLayout(context) || MediaQuery.viewInsetsOf(context).bottom > 0
+    ? 16
+    : bottomNavHeight;
+
 class AppFab extends StatefulWidget {
   final VoidCallback onPressed;
   final Widget label;
@@ -57,9 +62,7 @@ class _AppFabState extends State<AppFab> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        bottom:
-            widget.bottomPadding ??
-            (isDesktopLayout(context) ? 16 : bottomNavHeight),
+        bottom: widget.bottomPadding ?? appFabBottomPadding(context),
       ),
       child: _extended
           ? FloatingActionButton.extended(

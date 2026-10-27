@@ -9,6 +9,9 @@ class AppLocalizationsMs extends AppLocalizations {
   AppLocalizationsMs([String locale = 'ms']) : super(locale);
 
   @override
+  String get removeImage => 'Alih keluar imej';
+
+  @override
   String get showUpdateNotices => 'Paparkan notis kemas kini';
 
   @override

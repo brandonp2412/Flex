@@ -268,7 +268,7 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    expect(find.text('Save plan'), findsOneWidget);
+    expect(find.text('Save'), findsOneWidget);
     _expectSmoothFrames(report, 'Plans Add');
   });
 }

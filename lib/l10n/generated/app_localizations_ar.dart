@@ -9,6 +9,9 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get removeImage => 'إزالة الصورة';
+
+  @override
   String get showUpdateNotices => 'إظهار إشعارات التحديث';
 
   @override
@@ -729,7 +732,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notesLabel => 'ملاحظات';
 
   @override
-  String get swapWorkout => 'تبديل التمرين';
+  String get swapWorkout => 'استبدال التمرين';
 
   @override
   String get addSet => 'إضافة مجموعة';

@@ -1,11 +1,11 @@
-import 'dart:async';
-
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/day_selector.dart';
+import 'package:flex/editor_content.dart';
 import 'package:flex/empty_state.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/graph/add_exercise_page.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
@@ -14,6 +14,7 @@ import 'package:flex/plan/exercise_tile.dart';
 import 'package:flex/plan/plan_queries.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
+import 'package:flex/unsaved_changes.dart';
 import 'package:flutter/material.dart';
 
 class EditPlanPage extends StatefulWidget {
@@ -25,12 +26,12 @@ class EditPlanPage extends StatefulWidget {
   createState() => _EditPlanPageState();
 }
 
-class _EditPlanPageState extends State<EditPlanPage> {
+class _EditPlanPageState extends State<EditPlanPage>
+    with UnsavedChanges<EditPlanPage> {
   List<bool> _days = [];
   List<PlanExerciseDraft> _exercises = [];
   bool _loading = true;
-  bool _dirty = false;
-  bool _allowPop = false;
+  bool _loadError = false;
   String _search = '';
 
   final _node = FocusNode();
@@ -60,7 +61,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
         return a.exerciseName.compareTo(b.exerciseName);
       });
       _search = '';
-      _dirty = true;
+      dirty = true;
     });
     _searchCtrl.text = '';
   }
@@ -80,15 +81,10 @@ class _EditPlanPageState extends State<EditPlanPage> {
     final desktop = isDesktopLayout(context);
     final colors = Theme.of(context).colorScheme;
 
-    return PopScope(
-      canPop: _allowPop || !_dirty,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop || _allowPop || !_dirty) return;
-        unawaited(_confirmDiscard(result));
-      },
+    return guardUnsavedChanges(
       child: Scaffold(
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: Text(title),
           actions: [
@@ -98,16 +94,15 @@ class _EditPlanPageState extends State<EditPlanPage> {
                 child: FilledButton.icon(
                   onPressed: save,
                   icon: const Icon(Icons.save_rounded),
-                  label: Text(context.l10n.savePlan),
+                  label: Text(context.l10n.actionSave),
                 ),
               ),
           ],
         ),
-        body: ResponsiveContent(
+        body: EditorContent(
           maxWidth: 1040,
-          desktopPadding: const EdgeInsets.fromLTRB(32, 16, 32, 32),
-          mobilePadding: const EdgeInsets.symmetric(horizontal: 16),
           child: ListView(
+            padding: editorListPadding(context, hasFab: !desktop),
             children: [
               if (desktop)
                 Text(
@@ -133,10 +128,10 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       ),
                       controller: _titleCtrl,
                       textCapitalization: TextCapitalization.sentences,
-                      onChanged: (_) => _markDirty(),
+                      onChanged: (_) => markDirty(),
                     ),
                     const SizedBox(height: 16),
-                    DaySelector(daySwitches: _days, onChanged: _markDirty),
+                    DaySelector(daySwitches: _days, onChanged: markDirty),
                   ],
                 ),
               ),
@@ -173,6 +168,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                 borderRadius: desktop ? BorderRadius.circular(14) : null,
                 child: ListTile(
                   leading: IconButton(
+                    tooltip: context.l10n.addExercise,
                     icon: const Icon(Icons.add_rounded),
                     onPressed: addExercise,
                   ),
@@ -188,11 +184,10 @@ class _EditPlanPageState extends State<EditPlanPage> {
                 ),
               ),
               const SizedBox(height: 6),
-              if (_loading)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
-                )
+              if (_loadError)
+                const SizedBox(height: 260, child: AppErrorState())
+              else if (_loading)
+                const SizedBox.shrink()
               else if (exercises.isEmpty)
                 SizedBox(
                   height: 260,
@@ -223,11 +218,10 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       if (id == -1) return;
                       setState(() {
                         _exercises[id] = pe.copyWithPlanExercise(value);
-                        _dirty = true;
+                        dirty = true;
                       });
                     },
                   ),
-              SizedBox(height: desktop ? 40 : 176),
             ],
           ),
         ),
@@ -267,42 +261,22 @@ class _EditPlanPageState extends State<EditPlanPage> {
   }
 
   Future<void> _loadExercises() async {
-    final exercises = await loadPlanExerciseDrafts(widget.plan);
-    if (!mounted) return;
-    setState(() {
-      _exercises = exercises;
-      _loading = false;
-    });
-  }
-
-  void _markDirty() {
-    if (_dirty) return;
-    setState(() => _dirty = true);
-  }
-
-  Future<void> _confirmDiscard(Object? result) async {
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog.adaptive(
-        title: Text(context.l10n.unsavedChanges),
-        content: Text(context.l10n.discardUnsavedChanges),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.actionDiscard),
-          ),
-        ],
-      ),
-    );
-    if (discard != true || !mounted) return;
-    setState(() => _allowPop = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Navigator.of(context).pop(result);
-    });
+    try {
+      final exercises = await loadPlanExerciseDrafts(widget.plan);
+      if (!mounted) return;
+      setState(() {
+        _exercises = exercises;
+        _loading = false;
+        _loadError = false;
+      });
+    } catch (error, stackTrace) {
+      talker.handle(error, stackTrace);
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _loadError = true;
+      });
+    }
   }
 
   Iterable<PlanExercisesCompanion> _orderedExercises(int planId) sync* {
@@ -407,7 +381,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
     );
 
     if (!mounted) return;
-    _allowPop = true;
+    allowPop = true;
     Navigator.pop(context);
   }
 }

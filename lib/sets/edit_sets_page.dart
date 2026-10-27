@@ -1,17 +1,18 @@
-import 'dart:async';
-
 import 'package:drift/drift.dart';
+import 'package:flex/app_confirmation.dart';
 import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
+import 'package:flex/database/categories.dart';
+import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/database/exercise_set_repository.dart';
-import 'package:flex/database/categories.dart';
+import 'package:flex/editor_content.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
-import 'package:flex/database/database.dart';
-import 'package:flex/settings/category_management_page.dart';
-import 'package:flex/utils.dart';
 import 'package:flex/platform_page_route.dart';
+import 'package:flex/settings/category_management_page.dart';
+import 'package:flex/unsaved_changes.dart';
+import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -24,40 +25,8 @@ class EditSetsPage extends StatefulWidget {
   createState() => _EditSetsPageState();
 }
 
-class _EditSetsPageState extends State<EditSetsPage> {
-  bool _dirty = false;
-  bool _allowPop = false;
-
-  void _markDirty() {
-    if (_dirty) return;
-    setState(() => _dirty = true);
-  }
-
-  Future<void> _confirmDiscard(Object? result) async {
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog.adaptive(
-        title: Text(context.l10n.unsavedChanges),
-        content: Text(context.l10n.discardUnsavedChanges),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.actionDiscard),
-          ),
-        ],
-      ),
-    );
-    if (discard != true || !mounted) return;
-    setState(() => _allowPop = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Navigator.of(context).pop(result);
-    });
-  }
-
+class _EditSetsPageState extends State<EditSetsPage>
+    with UnsavedChanges<EditSetsPage> {
   final _reps = TextEditingController();
   final _weight = TextEditingController();
   final _body = TextEditingController();
@@ -87,61 +56,38 @@ class _EditSetsPageState extends State<EditSetsPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return PopScope(
-      canPop: _allowPop || !_dirty,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop || _allowPop || !_dirty) return;
-        unawaited(_confirmDiscard(result));
-      },
+    return guardUnsavedChanges(
       child: Scaffold(
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: Text(l10n.editSets(widget.ids.length)),
           actions: [
             IconButton(
+              tooltip: l10n.deleteSelected,
               icon: const Icon(Icons.delete),
               onPressed: () async {
-                await showDialog(
-                  context: context,
-                  builder: (BuildContext dialogContext) {
-                    return AlertDialog(
-                      title: Text(l10n.confirmDelete),
-                      content: Text(
-                        l10n.deleteEntriesConfirmation(widget.ids.length),
-                      ),
-                      actions: <Widget>[
-                        TextButton.icon(
-                          label: Text(l10n.actionCancel),
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            Navigator.pop(dialogContext);
-                          },
-                        ),
-                        TextButton.icon(
-                          label: Text(l10n.actionDelete),
-                          icon: const Icon(Icons.delete),
-                          onPressed: () async {
-                            Navigator.pop(dialogContext);
-                            await deleteExerciseSets(db, widget.ids);
-                            if (!context.mounted) return;
-                            _allowPop = true;
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ],
-                    );
-                  },
+                final confirmed = await showAppConfirmation(
+                  context,
+                  title: l10n.confirmDelete,
+                  message: l10n.deleteEntriesConfirmation(widget.ids.length),
+                  actionLabel: l10n.actionDelete,
+                  destructive: true,
                 );
+                if (!confirmed || !context.mounted) return;
+                await deleteExerciseSets(db, widget.ids);
+                if (!context.mounted) return;
+                allowPop = true;
+                Navigator.pop(context);
               },
             ),
           ],
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
+        body: EditorContent(
           child: Form(
             key: _key,
             child: ListView(
+              padding: editorListPadding(context),
               children: [
                 TextField(
                   controller: _name,
@@ -150,8 +96,9 @@ class _EditSetsPageState extends State<EditSetsPage> {
                     hintText: _oldNames,
                   ),
                   textCapitalization: TextCapitalization.sentences,
-                  onChanged: (_) => _markDirty(),
+                  onChanged: (_) => markDirty(),
                 ),
+                const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: SegmentedButton<bool>(
@@ -173,7 +120,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                     selected: _cardio == null ? const {} : {_cardio!},
                     onSelectionChanged: (selection) {
                       if (selection.isEmpty) {
-                        _markDirty();
+                        markDirty();
                         setState(() => _cardio = null);
                       } else {
                         _setCardio(selection.first);
@@ -181,8 +128,9 @@ class _EditSetsPageState extends State<EditSetsPage> {
                     },
                   ),
                 ),
+                const SizedBox(height: 12),
                 if (_cardio == true) ...[
-                  if (_isWeightUnit(_unit))
+                  if (isWeightUnit(_unit))
                     TextFormField(
                       controller: _weight,
                       decoration: InputDecoration(
@@ -193,7 +141,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                         decimal: true,
                       ),
                       onTap: () => selectAll(_weight),
-                      onChanged: (_) => _markDirty(),
+                      onChanged: (_) => markDirty(),
                       validator: (value) {
                         if (value == null || value.isEmpty) return null;
                         if (parseDisplayNumber(context, value) == null)
@@ -212,7 +160,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                         decimal: true,
                       ),
                       onTap: () => selectAll(_distance),
-                      onChanged: (_) => _markDirty(),
+                      onChanged: (_) => markDirty(),
                       validator: (value) {
                         if (value == null) return null;
                         if (parseDisplayNumber(context, value) == null)
@@ -234,7 +182,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                             decimal: false,
                           ),
                           onTap: () => selectAll(_minutes),
-                          onChanged: (_) => _markDirty(),
+                          onChanged: (_) => markDirty(),
                           textInputAction: TextInputAction.next,
                           validator: (value) {
                             if (value == null || value.isEmpty) return null;
@@ -256,7 +204,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                             decimal: false,
                           ),
                           onTap: () => selectAll(_seconds),
-                          onChanged: (_) => _markDirty(),
+                          onChanged: (_) => markDirty(),
                           textInputAction: TextInputAction.next,
                           validator: (value) {
                             if (value == null || value.isEmpty) return null;
@@ -279,7 +227,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                       decimal: true,
                     ),
                     onTap: () => selectAll(_incline),
-                    onChanged: (_) => _markDirty(),
+                    onChanged: (_) => markDirty(),
                     validator: (value) {
                       if (value == null) return null;
                       if (double.tryParse(value) == null)
@@ -299,7 +247,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                       decimal: true,
                     ),
                     onTap: () => selectAll(_reps),
-                    onChanged: (_) => _markDirty(),
+                    onChanged: (_) => markDirty(),
                     validator: (value) {
                       if (value == null || value.isEmpty) return null;
                       if (parseDisplayNumber(context, value) == null)
@@ -318,7 +266,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                       decimal: true,
                     ),
                     onTap: () => selectAll(_weight),
-                    onChanged: (_) => _markDirty(),
+                    onChanged: (_) => markDirty(),
                     validator: (value) {
                       if (value == null || value.isEmpty) return null;
                       if (parseDisplayNumber(context, value) == null)
@@ -341,7 +289,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                         decimal: true,
                       ),
                       onTap: () => selectAll(_body),
-                      onChanged: (_) => _markDirty(),
+                      onChanged: (_) => markDirty(),
                       validator: (value) {
                         if (value == null || value.isEmpty) return null;
                         if (parseDisplayNumber(context, value) == null)
@@ -361,7 +309,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                       initialValue: _unit,
                       items: _getUnitItems(context),
                       onChanged: (String? newValue) {
-                        _markDirty();
+                        markDirty();
                         setState(() {
                           _unit = newValue!;
                         });
@@ -389,7 +337,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                                 .toList() ??
                             [],
                         onSelected: (category) {
-                          _markDirty();
+                          markDirty();
                           setState(() => _category = category);
                         },
                         fieldViewBuilder: (context, controller, focusNode, _) =>
@@ -412,7 +360,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
                                 ),
                               ),
                               onChanged: (value) {
-                                _markDirty();
+                                markDirty();
                                 setState(
                                   () =>
                                       _category = value.isEmpty ? null : value,
@@ -451,8 +399,8 @@ class _EditSetsPageState extends State<EditSetsPage> {
         ),
         floatingActionButton: AppFab(
           onPressed: save,
-          label: Text(l10n.actionUpdate),
-          icon: const Icon(Icons.sync),
+          label: Text(l10n.actionSave),
+          icon: const Icon(Icons.save),
         ),
       ),
     );
@@ -469,15 +417,12 @@ class _EditSetsPageState extends State<EditSetsPage> {
   }
 
   void _setCardio(bool value) {
-    _markDirty();
+    markDirty();
     setState(() {
       _cardio = value;
-      if (!value && !_isWeightUnit(_unit)) _unit = 'kg';
+      if (!value && !isWeightUnit(_unit)) _unit = 'kg';
     });
   }
-
-  bool _isWeightUnit(String? value) =>
-      value == 'kg' || value == 'lb' || value == 'stone';
 
   @override
   void dispose() {
@@ -566,7 +511,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
     );
 
     if (pickedTime != null && mounted) {
-      _markDirty();
+      markDirty();
       setState(() {
         _created = DateTime(
           pickedDate.year,
@@ -616,6 +561,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
 
       final exercise = changesExercise
           ? await syncExerciseDefinition(
+              db,
               name: name,
               cardio: cardio,
               displayUnit: unit,
@@ -623,7 +569,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
               image: original.image,
               defaultRestDurationMs: restMs,
             )
-          : await getExerciseByName(original.name);
+          : await getExerciseByName(db, original.name);
       if (exercise == null) continue;
 
       final updated = original.copyWith(
@@ -655,7 +601,7 @@ class _EditSetsPageState extends State<EditSetsPage> {
     }
 
     if (!mounted) return;
-    _allowPop = true;
+    allowPop = true;
     Navigator.pop(context);
   }
 

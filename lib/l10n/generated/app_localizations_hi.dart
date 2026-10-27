@@ -9,6 +9,9 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
+  String get removeImage => 'चित्र हटाएँ';
+
+  @override
   String get showUpdateNotices => 'अपडेट की सूचनाएँ दिखाएँ';
 
   @override
@@ -732,7 +735,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get notesLabel => 'नोट्स';
 
   @override
-  String get swapWorkout => 'वर्कआउट बदलें';
+  String get swapWorkout => 'व्यायाम बदलें';
 
   @override
   String get addSet => 'सेट जोड़ें';

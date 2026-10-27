@@ -9,6 +9,9 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get removeImage => 'Xóa hình ảnh';
+
+  @override
   String get showUpdateNotices => 'Hiện thông báo cập nhật';
 
   @override
@@ -729,7 +732,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notesLabel => 'Ghi chú';
 
   @override
-  String get swapWorkout => 'Đổi buổi tập';
+  String get swapWorkout => 'Đổi bài tập';
 
   @override
   String get addSet => 'Thêm hiệp';

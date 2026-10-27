@@ -1,3 +1,4 @@
+import 'package:flex/app_confirmation.dart';
 import 'dart:io';
 
 import 'package:flex/l10n/l10n.dart';
@@ -28,36 +29,17 @@ class DeleteRecordsButton extends StatelessWidget {
                     title: Text(context.l10n.navGraphs),
                     onTap: () async {
                       Navigator.pop(context);
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text(context.l10n.confirmDelete),
-                            content: Text(
-                              context.l10n.deleteAllGraphsConfirmation,
-                            ),
-                            actions: <Widget>[
-                              TextButton.icon(
-                                label: Text(context.l10n.actionCancel),
-                                icon: const Icon(Icons.close),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                              ),
-                              TextButton.icon(
-                                label: Text(context.l10n.actionDelete),
-                                icon: const Icon(Icons.delete),
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                  await db.delete(db.exerciseSets).go();
-                                  if (!ctx.mounted) return;
-                                  Navigator.pop(ctx);
-                                },
-                              ),
-                            ],
-                          );
-                        },
+                      final confirmed = await showAppConfirmation(
+                        ctx,
+                        title: ctx.l10n.confirmDelete,
+                        message: ctx.l10n.deleteAllGraphsConfirmation,
+                        actionLabel: ctx.l10n.actionDelete,
+                        destructive: true,
                       );
+                      if (!confirmed || !ctx.mounted) return;
+                      await db.delete(db.exerciseSets).go();
+                      if (!ctx.mounted) return;
+                      Navigator.pop(ctx);
                     },
                   ),
                   ListTile(
@@ -65,39 +47,20 @@ class DeleteRecordsButton extends StatelessWidget {
                     title: Text(context.l10n.navPlans),
                     onTap: () async {
                       Navigator.pop(context);
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text(context.l10n.confirmDelete),
-                            content: Text(
-                              context.l10n.deleteAllPlansConfirmation,
-                            ),
-                            actions: <Widget>[
-                              TextButton.icon(
-                                label: Text(context.l10n.actionCancel),
-                                icon: const Icon(Icons.close),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                              ),
-                              TextButton.icon(
-                                label: Text(context.l10n.actionDelete),
-                                icon: const Icon(Icons.delete),
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                  await db.transaction(() async {
-                                    await db.delete(db.planExercises).go();
-                                    await db.delete(db.plans).go();
-                                  });
-                                  if (!ctx.mounted) return;
-                                  Navigator.pop(ctx);
-                                },
-                              ),
-                            ],
-                          );
-                        },
+                      final confirmed = await showAppConfirmation(
+                        ctx,
+                        title: ctx.l10n.confirmDelete,
+                        message: ctx.l10n.deleteAllPlansConfirmation,
+                        actionLabel: ctx.l10n.actionDelete,
+                        destructive: true,
                       );
+                      if (!confirmed || !ctx.mounted) return;
+                      await db.transaction(() async {
+                        await db.delete(db.planExercises).go();
+                        await db.delete(db.plans).go();
+                      });
+                      if (!ctx.mounted) return;
+                      Navigator.pop(ctx);
                     },
                   ),
                   ListTile(
@@ -105,43 +68,24 @@ class DeleteRecordsButton extends StatelessWidget {
                     title: Text(context.l10n.databaseLabel),
                     onTap: () async {
                       Navigator.pop(context);
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text(context.l10n.confirmDelete),
-                            content: Text(
-                              context.l10n.deleteDatabaseConfirmation,
-                            ),
-                            actions: <Widget>[
-                              TextButton.icon(
-                                label: Text(context.l10n.actionCancel),
-                                icon: const Icon(Icons.close),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                              ),
-                              TextButton.icon(
-                                label: Text(context.l10n.actionDelete),
-                                icon: const Icon(Icons.delete),
-                                onPressed: () async {
-                                  final file = await getDatabaseFile();
-                                  await db.close();
-                                  await db.executor.close();
-                                  await file.delete();
-                                  if (defaultTargetPlatform ==
-                                          TargetPlatform.iOS ||
-                                      defaultTargetPlatform ==
-                                          TargetPlatform.android)
-                                    SystemNavigator.pop();
-                                  else
-                                    exit(0);
-                                },
-                              ),
-                            ],
-                          );
-                        },
+                      final confirmed = await showAppConfirmation(
+                        ctx,
+                        title: ctx.l10n.confirmDelete,
+                        message: ctx.l10n.deleteDatabaseConfirmation,
+                        actionLabel: ctx.l10n.actionDelete,
+                        destructive: true,
                       );
+                      if (!confirmed || !ctx.mounted) return;
+                      final file = await getDatabaseFile();
+                      await db.close();
+                      await db.executor.close();
+                      await file.delete();
+                      if (defaultTargetPlatform == TargetPlatform.iOS ||
+                          defaultTargetPlatform == TargetPlatform.android) {
+                        SystemNavigator.pop();
+                      } else {
+                        exit(0);
+                      }
                     },
                   ),
                 ],

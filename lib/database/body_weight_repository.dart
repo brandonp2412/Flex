@@ -1,22 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/measurement_units.dart';
 
-double displayBodyWeight(String unit, double weightKg) {
-  return switch (unit) {
-    'lb' => weightKg / 0.45359237,
-    'stone' => weightKg / 6.35029318,
-    _ => weightKg,
-  };
-}
+double displayBodyWeight(String unit, double weightKg) =>
+    displayLoad(unit, weightKg);
 
-double? toKg(String unit, double value) {
-  return switch (unit) {
-    'kg' => value,
-    'lb' => value * 0.45359237,
-    'stone' => value * 6.35029318,
-    _ => null,
-  };
-}
+double? toKg(String unit, double value) => loadKg(unit, value);
 
 Future<BodyWeight?> getLatestBodyWeight(AppDatabase database) {
   return (database.bodyWeights.select()

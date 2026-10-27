@@ -21,14 +21,14 @@ void main() {
       Scaffold(body: SwapWorkout(planExerciseId: original.id)),
     );
 
-    expect(find.text('Swap workout'), findsOne);
+    expect(find.text('Swap exercise'), findsOne);
 
     await tester.pumpAndSettle();
     expect(find.text('Arnold press'), findsOne);
 
     await tester.tap(find.text('Arnold press'));
     await tester.pumpAndSettle();
-    expect(find.text('Swap workout'), findsNothing);
+    expect(find.text('Swap exercise'), findsNothing);
 
     final updatedPlanExercises =
         await (harness.database.planExercises.select()
@@ -84,7 +84,7 @@ void main() {
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Swap workout'), findsNothing);
+    expect(find.text('Swap exercise'), findsNothing);
     final created =
         await (harness.database.exercises.select()
               ..where((exercise) => exercise.name.equals('Cable reverse fly')))

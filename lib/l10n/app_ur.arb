@@ -1,4 +1,5 @@
 {
+  "removeImage": "تصویر ہٹائیں",
   "showUpdateNotices": "اپ ڈیٹ کی اطلاعات دکھائیں",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "ur",
@@ -964,7 +965,7 @@
   "@notesLabel": {
     "description": "Generic notes field label."
   },
-  "swapWorkout": "ورک آؤٹ تبدیل کریں",
+  "swapWorkout": "ورزش تبدیل کریں",
   "@swapWorkout": {
     "description": "Title for replacing an exercise in a workout."
   },

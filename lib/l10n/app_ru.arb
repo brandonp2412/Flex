@@ -1,4 +1,5 @@
 {
+  "removeImage": "Удалить изображение",
   "showUpdateNotices": "Показывать уведомления об обновлениях",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "ru",
@@ -254,7 +255,7 @@
   "useBodyWeight": "Использовать вес тела",
   "noWeightEnteredYet": "Вес ещё не указан",
   "notesLabel": "Заметки",
-  "swapWorkout": "Заменить тренировку",
+  "swapWorkout": "Заменить упражнение",
   "addSet": "Добавить подход",
   "deleteSet": "Удалить подход",
   "oneRepMaxEstimate": "Максимум на одно повторение (оценка)",

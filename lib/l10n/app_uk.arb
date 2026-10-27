@@ -1,4 +1,5 @@
 {
+  "removeImage": "Видалити зображення",
   "showUpdateNotices": "Показувати сповіщення про оновлення",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "uk",
@@ -973,7 +974,7 @@
   "@notesLabel": {
     "description": "Generic notes field label."
   },
-  "swapWorkout": "Замінити тренування",
+  "swapWorkout": "Замінити вправу",
   "@swapWorkout": {
     "description": "Title for replacing an exercise in a workout."
   },

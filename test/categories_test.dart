@@ -15,6 +15,7 @@ void main() {
   Future<(Exercise, ExerciseSetView)> seedChestSet() async {
     await createCategory('Chest');
     final exercise = await createExerciseDefinition(
+      db,
       name: 'Bench press',
       cardio: false,
       displayUnit: 'kg',
@@ -42,7 +43,7 @@ void main() {
       await renameCategory(category, 'Upper body');
 
       final updated = await findExerciseByIdFixture(db, exercise.id);
-      expect(await getExerciseCategoryName(updated!), 'Upper body');
+      expect(await getExerciseCategoryName(db, updated!), 'Upper body');
       final history = await getExerciseSets(db, search: 'Bench press');
       expect(history.single.category, 'Upper body');
     },

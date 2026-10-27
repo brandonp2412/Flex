@@ -1,4 +1,5 @@
 {
+  "removeImage": "移除图片",
   "showUpdateNotices": "显示更新通知",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "zh_CN",
@@ -254,7 +255,7 @@
   "useBodyWeight": "使用自重",
   "noWeightEnteredYet": "尚未输入重量",
   "notesLabel": "备注",
-  "swapWorkout": "替换训练",
+  "swapWorkout": "更换动作",
   "addSet": "添加一组",
   "deleteSet": "删除此组",
   "oneRepMaxEstimate": "1RM（估算）",

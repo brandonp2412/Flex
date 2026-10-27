@@ -4,10 +4,10 @@ import 'package:flex/l10n/l10n.dart';
 import 'package:flex/plan/plan_queries.dart';
 import 'package:flex/plan/start_plan_page.dart';
 import 'package:flex/plan/workout_sessions.dart';
+import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -126,7 +126,7 @@ class _PlanTileState extends State<PlanTile> {
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
           child: widget.exercises == null
-              ? Text(context.l10n.loadingExercises)
+              ? const SizedBox.shrink()
               : Text(
                   widget.exercises!
                       .map((entry) => entry.exercise.name)

@@ -1,9 +1,10 @@
+import 'package:flex/app_confirmation.dart';
+import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
+import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/settings/settings_page.dart';
-import 'package:flex/database/database.dart';
 import 'package:flex/weight_page.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -97,36 +98,17 @@ class _AppSearchState extends State<AppSearch> {
         key: const ValueKey('deleteButton'),
         icon: const Icon(Icons.delete),
         tooltip: context.l10n.deleteSelected,
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text(context.l10n.confirmDelete),
-                content: Text(
-                  widget.confirmText ??
-                      context.l10n.deleteRecordsConfirmation(sel.length),
-                ),
-                actions: <Widget>[
-                  TextButton.icon(
-                    label: Text(context.l10n.actionCancel),
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  TextButton.icon(
-                    label: Text(context.l10n.actionDelete),
-                    icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      Navigator.pop(context);
-                      widget.onDelete();
-                    },
-                  ),
-                ],
-              );
-            },
+        onPressed: () async {
+          final confirmed = await showAppConfirmation(
+            context,
+            title: context.l10n.confirmDelete,
+            message:
+                widget.confirmText ??
+                context.l10n.deleteRecordsConfirmation(sel.length),
+            actionLabel: context.l10n.actionDelete,
+            destructive: true,
           );
+          if (confirmed && mounted) await widget.onDelete();
         },
       );
     } else if (widget.filter != null) {

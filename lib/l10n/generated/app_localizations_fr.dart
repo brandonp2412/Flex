@@ -9,6 +9,9 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get removeImage => 'Retirer l’image';
+
+  @override
   String get showUpdateNotices => 'Afficher les avis de mise à jour';
 
   @override

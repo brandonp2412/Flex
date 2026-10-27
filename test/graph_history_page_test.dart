@@ -45,22 +45,22 @@ void main() {
 
       final list = tester.widget<ListView>(find.byType(ListView));
       expect((list.padding! as EdgeInsets).top, 0);
-      expect(find.text('2 x 3 kg'), findsOne);
-      expect(find.text('4 x 5 kg'), findsOne);
-      await tester.longPress(find.text('4 x 5 kg'));
+      expect(find.text('2 × 3 kg'), findsOne);
+      expect(find.text('4 × 5 kg'), findsOne);
+      await tester.longPress(find.text('4 × 5 kg'));
       await tester.pumpAndSettle();
       expect(find.text('1 selected'), findsOne);
 
-      await tester.tap(find.text('2 x 3 kg'));
+      await tester.tap(find.text('2 × 3 kg'));
       await tester.pumpAndSettle();
       expect(find.text('2 selected'), findsOne);
       expect(find.byTooltip('Edit selected'), findsOne);
 
       await tester.tap(find.byTooltip('Delete selected'));
       await tester.pumpAndSettle();
-      expect(find.text('Confirm Delete'), findsOne);
+      expect(find.text('Confirm delete'), findsOne);
 
-      await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
       await tester.pumpAndSettle();
 
       final remaining = (await getExerciseSets(
@@ -116,7 +116,7 @@ void main() {
       tabController.animateTo(2, duration: const Duration(milliseconds: 1));
       await tester.pumpAndSettle();
 
-      expect(find.text('5 x 100 kg'), findsOneWidget);
+      expect(find.text('5 × 100 kg'), findsOneWidget);
       expect(find.text('No history yet for Press'), findsNothing);
     },
   );

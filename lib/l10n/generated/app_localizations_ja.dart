@@ -9,6 +9,9 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get removeImage => '画像を削除';
+
+  @override
   String get showUpdateNotices => '更新通知を表示';
 
   @override
@@ -715,7 +718,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get notesLabel => 'メモ';
 
   @override
-  String get swapWorkout => 'トレーニングを入れ替え';
+  String get swapWorkout => '種目を入れ替え';
 
   @override
   String get addSet => 'セットを追加';

@@ -79,9 +79,9 @@ void main() {
     final list = tester.widget<ListView>(find.byType(ListView));
     expect((list.padding! as EdgeInsets).top, 80);
     expect(find.text('Bench press'), findsNWidgets(3));
-    expect(find.text('1 x 90 kg'), findsOne);
-    expect(find.text('4 x 80 kg'), findsOne);
-    expect(find.text('8 x 70 kg'), findsOne);
+    expect(find.text('1 × 90 kg'), findsOne);
+    expect(find.text('4 × 80 kg'), findsOne);
+    expect(find.text('8 × 70 kg'), findsOne);
   });
 
   testWidgets('HistoryPage uses the selected strength unit', (tester) async {
@@ -97,7 +97,7 @@ void main() {
     );
 
     await pumpHistoryPage(tester, harness);
-    expect(find.text('5 x 100 lb'), findsOneWidget);
+    expect(find.text('5 × 100 lb'), findsOneWidget);
   });
 
   testWidgets('HistoryPage keeps cardio weight when history is grouped', (
@@ -120,7 +120,7 @@ void main() {
     await tester.tap(find.text('Sled push (1)'));
     await tester.pumpAndSettle();
 
-    expect(find.text('30 kg / 10:00 '), findsOne);
+    expect(find.text('30 kg / 10:00'), findsOne);
   });
 
   testWidgets('HistoryPage groups every exercise of a day into one card', (
@@ -226,14 +226,14 @@ void main() {
 
     final cards = find.byType(Card);
     expect(cards, findsNWidgets(1));
-    expect(find.text('3 x 40 kg'), findsNothing);
+    expect(find.text('3 × 40 kg'), findsNothing);
 
     await tester.tap(find.text('Bench press (2)'));
     await tester.pumpAndSettle();
 
-    expect(find.text('3 x 40 kg'), findsOneWidget);
+    expect(find.text('3 × 40 kg'), findsOneWidget);
     expect(
-      find.descendant(of: cards, matching: find.text('3 x 40 kg')),
+      find.descendant(of: cards, matching: find.text('3 × 40 kg')),
       findsOneWidget,
     );
     expect(
@@ -307,7 +307,7 @@ void main() {
 
     await pumpHistoryPage(tester, harness, surfaceSize: const Size(1200, 800));
     final gesture = await tester.startGesture(
-      tester.getCenter(find.text('5 x 90 kg')),
+      tester.getCenter(find.text('5 × 90 kg')),
       kind: PointerDeviceKind.mouse,
       buttons: kSecondaryMouseButton,
     );
@@ -341,7 +341,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final gesture = await tester.startGesture(
-      tester.getCenter(find.text('5 x 90 kg')),
+      tester.getCenter(find.text('5 × 90 kg')),
       kind: PointerDeviceKind.mouse,
       buttons: kSecondaryMouseButton,
     );
@@ -362,7 +362,7 @@ void main() {
     );
 
     await pumpHistoryPage(tester, harness);
-    await tester.longPress(find.text('1 x 90 kg'));
+    await tester.longPress(find.text('1 × 90 kg'));
     await tester.pumpAndSettle();
 
     expect(find.byTooltip('Delete selected'), findsOne);
@@ -378,12 +378,12 @@ void main() {
     );
 
     await pumpHistoryPage(tester, harness);
-    await tester.longPress(find.text('1 x 90 kg'));
+    await tester.longPress(find.text('1 × 90 kg'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('Delete selected'));
     await tester.pumpAndSettle();
-    expect(find.text('Confirm Delete'), findsOne);
+    expect(find.text('Confirm delete'), findsOne);
 
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
@@ -458,7 +458,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Squat'), findsNothing);
 
-      await tester.longPress(find.text('5 x 50 kg'));
+      await tester.longPress(find.text('5 × 50 kg'));
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Show menu'));
       await tester.pumpAndSettle();

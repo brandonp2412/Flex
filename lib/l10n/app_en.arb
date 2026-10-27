@@ -1,4 +1,6 @@
 {
+  "removeImage": "Remove image",
+  "@removeImage": {"description": "Action for removing the selected image from an entry or exercise."},
   "showUpdateNotices": "Show update notices",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "en",
@@ -196,7 +198,7 @@
   "@deleteSelected": {
     "description": "Tooltip for deleting the currently selected records."
   },
-  "confirmDelete": "Confirm Delete",
+  "confirmDelete": "Confirm delete",
   "@confirmDelete": {
     "description": "Title for a generic delete confirmation dialog."
   },
@@ -973,7 +975,7 @@
   "@notesLabel": {
     "description": "Generic notes field label."
   },
-  "swapWorkout": "Swap workout",
+  "swapWorkout": "Swap exercise",
   "@swapWorkout": {
     "description": "Title for replacing an exercise in a workout."
   },

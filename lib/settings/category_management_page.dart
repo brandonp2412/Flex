@@ -1,5 +1,7 @@
+import 'package:flex/app_confirmation.dart';
 import 'package:flex/database/categories.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
@@ -22,7 +24,9 @@ class CategoryManagementPage extends StatelessWidget {
       body: StreamBuilder<List<CategorySummary>>(
         stream: watchCategorySummaries(),
         builder: (context, snapshot) {
-          final categories = snapshot.data ?? const [];
+          if (snapshot.hasError) return const AppErrorState();
+          if (!snapshot.hasData) return const SizedBox.shrink();
+          final categories = snapshot.data!;
           if (categories.isEmpty) {
             return Center(child: Text(l10n.noCategories));
           }
@@ -158,24 +162,14 @@ class CategoryManagementPage extends StatelessWidget {
     CategorySummary summary,
   ) async {
     final l10n = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.confirmDelete),
-        content: Text(l10n.deleteCategoryConfirmation(summary.usageCount)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.actionCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.actionDelete),
-          ),
-        ],
-      ),
+    final confirmed = await showAppConfirmation(
+      context,
+      title: l10n.confirmDelete,
+      message: l10n.deleteCategoryConfirmation(summary.usageCount),
+      actionLabel: l10n.actionDelete,
+      destructive: true,
     );
-    if (confirmed ?? false) await deleteCategory(summary.category);
+    if (confirmed) await deleteCategory(summary.category);
   }
 }
 

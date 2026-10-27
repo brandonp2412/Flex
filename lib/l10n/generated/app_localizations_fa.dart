@@ -9,6 +9,9 @@ class AppLocalizationsFa extends AppLocalizations {
   AppLocalizationsFa([String locale = 'fa']) : super(locale);
 
   @override
+  String get removeImage => 'حذف تصویر';
+
+  @override
   String get showUpdateNotices => 'نمایش اعلان‌های به‌روزرسانی';
 
   @override
@@ -731,7 +734,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get notesLabel => 'یادداشت‌ها';
 
   @override
-  String get swapWorkout => 'جابه‌جایی تمرین';
+  String get swapWorkout => 'تعویض تمرین';
 
   @override
   String get addSet => 'افزودن ست';

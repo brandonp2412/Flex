@@ -1,13 +1,14 @@
 import 'package:drift/drift.dart' hide Column;
+import 'package:flex/app_confirmation.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
+import 'package:flex/platform_page_route.dart';
 import 'package:flex/sets/edit_sets_page.dart';
 import 'package:flex/sets/history_list.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -127,24 +128,12 @@ class _GraphHistoryPageState extends State<GraphHistoryPage> {
 
   Future<void> _deleteSelected() async {
     final count = _selection.length;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.confirmDelete),
-        content: Text(context.l10n.deleteRecordsConfirmation(count)),
-        actions: [
-          TextButton.icon(
-            icon: const Icon(Icons.close),
-            label: Text(context.l10n.actionCancel),
-            onPressed: () => Navigator.pop(dialogContext, false),
-          ),
-          TextButton.icon(
-            icon: const Icon(Icons.delete),
-            label: Text(context.l10n.actionDelete),
-            onPressed: () => Navigator.pop(dialogContext, true),
-          ),
-        ],
-      ),
+    final confirmed = await showAppConfirmation(
+      context,
+      title: context.l10n.confirmDelete,
+      message: context.l10n.deleteRecordsConfirmation(count),
+      actionLabel: context.l10n.actionDelete,
+      destructive: true,
     );
     if (confirmed != true || !mounted) return;
 

@@ -1,17 +1,18 @@
 import 'dart:io';
 
+import 'package:flex/app_confirmation.dart';
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
-import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
+import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
+import 'package:flex/set_summary.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/sets/history_page.dart';
 import 'package:flex/utils.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -75,22 +76,12 @@ class _GroupHistoryState extends State<GroupHistory> {
         );
         break;
       case _GroupedHistoryContextAction.delete:
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text(context.l10n.confirmDelete),
-            content: Text(context.l10n.deleteSetConfirmation(exerciseSet.name)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(context.l10n.actionCancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(context.l10n.actionDelete),
-              ),
-            ],
-          ),
+        final confirmed = await showAppConfirmation(
+          context,
+          title: context.l10n.confirmDelete,
+          message: context.l10n.deleteSetConfirmation(exerciseSet.name),
+          actionLabel: context.l10n.actionDelete,
+          destructive: true,
         );
         if (confirmed == true) {
           await deleteExerciseSets(db, [exerciseSet.id]);
@@ -226,21 +217,6 @@ class _GroupHistoryState extends State<GroupHistory> {
     bool showImages,
     bool desktop,
   ) {
-    final minutes = exerciseSet.duration.floor();
-    final seconds = ((exerciseSet.duration * 60) % 60)
-        .floor()
-        .toString()
-        .padLeft(2, '0');
-    final distance = formatDisplayNumber(context, exerciseSet.distance);
-    final reps = formatDisplayNumber(context, exerciseSet.reps);
-    final weight = formatDisplayNumber(context, exerciseSet.weight);
-    final unit = displayMeasurementUnit(context.l10n, exerciseSet.unit);
-    String incline = '';
-    if (exerciseSet.incline != null && exerciseSet.incline! > 0) {
-      incline =
-          '@ ${formatDisplayPercent(context, exerciseSet.incline! / 100, maxDigits: 0)}';
-    }
-
     Widget? leading;
 
     if (showImages && exerciseSet.image != null) {
@@ -279,18 +255,16 @@ class _GroupHistoryState extends State<GroupHistory> {
       );
     }
 
-    String title = "$reps x $weight $unit";
-    if (exerciseSet.cardio &&
-        (exerciseSet.unit == 'kg' ||
-            exerciseSet.unit == 'lb' ||
-            exerciseSet.unit == 'stone')) {
-      title = "$weight $unit / $minutes:$seconds $incline";
-    } else if (exerciseSet.cardio &&
-        (exerciseSet.unit == 'km' ||
-            exerciseSet.unit == 'mi' ||
-            exerciseSet.unit == 'kcal')) {
-      title = "$distance $unit / $minutes:$seconds $incline";
-    }
+    final title = formatSetSummary(
+      context,
+      unitCode: exerciseSet.unit,
+      cardio: exerciseSet.cardio,
+      weight: exerciseSet.weight,
+      reps: exerciseSet.reps,
+      distance: exerciseSet.distance,
+      duration: exerciseSet.duration,
+      incline: exerciseSet.incline,
+    );
 
     final tile = Material(
       color: widget.selected.contains(exerciseSet.id)

@@ -9,6 +9,9 @@ class AppLocalizationsTh extends AppLocalizations {
   AppLocalizationsTh([String locale = 'th']) : super(locale);
 
   @override
+  String get removeImage => 'นำรูปภาพออก';
+
+  @override
   String get showUpdateNotices => 'แสดงการแจ้งเตือนการอัปเดต';
 
   @override
@@ -730,7 +733,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get notesLabel => 'หมายเหตุ';
 
   @override
-  String get swapWorkout => 'สลับเวิร์กเอาต์';
+  String get swapWorkout => 'เปลี่ยนท่าออกกำลังกาย';
 
   @override
   String get addSet => 'เพิ่มเซ็ต';

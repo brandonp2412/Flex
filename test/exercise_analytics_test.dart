@@ -37,8 +37,9 @@ void main() {
       created: testNow.add(const Duration(minutes: 1)),
     );
 
-    final exercise = await getExerciseByName('Bench old');
+    final exercise = await getExerciseByName(db, 'Bench old');
     await updateExerciseDefinition(
+      db,
       exerciseId: exercise!.id,
       name: 'Bench renamed',
       cardio: false,

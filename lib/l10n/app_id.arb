@@ -1,4 +1,5 @@
 {
+  "removeImage": "Hapus gambar",
   "showUpdateNotices": "Tampilkan pemberitahuan pembaruan",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "id",
@@ -964,7 +965,7 @@
   "@notesLabel": {
     "description": "Generic notes field label."
   },
-  "swapWorkout": "Tukar latihan",
+  "swapWorkout": "Ganti latihan",
   "@swapWorkout": {
     "description": "Title for replacing an exercise in a workout."
   },

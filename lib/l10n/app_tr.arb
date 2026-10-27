@@ -1,4 +1,5 @@
 {
+  "removeImage": "Görseli kaldır",
   "showUpdateNotices": "Güncelleme bildirimlerini göster",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "tr",
@@ -254,7 +255,7 @@
   "useBodyWeight": "Vücut ağırlığını kullan",
   "noWeightEnteredYet": "Henüz ağırlık girilmedi",
   "notesLabel": "Notlar",
-  "swapWorkout": "Antrenmanı Değiştir",
+  "swapWorkout": "Egzersizi değiştir",
   "addSet": "Set Ekle",
   "deleteSet": "Seti Sil",
   "oneRepMaxEstimate": "1 Tekrar Maks (1RM) tahmini",

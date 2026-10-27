@@ -9,6 +9,9 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get removeImage => '移除图片';
+
+  @override
   String get showUpdateNotices => '显示更新通知';
 
   @override
@@ -714,7 +717,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesLabel => '备注';
 
   @override
-  String get swapWorkout => '替换训练';
+  String get swapWorkout => '更换动作';
 
   @override
   String get addSet => '添加一组';
@@ -1501,6 +1504,9 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   AppLocalizationsZhCn() : super('zh_CN');
 
   @override
+  String get removeImage => '移除图片';
+
+  @override
   String get showUpdateNotices => '显示更新通知';
 
   @override
@@ -2206,7 +2212,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get notesLabel => '备注';
 
   @override
-  String get swapWorkout => '替换训练';
+  String get swapWorkout => '更换动作';
 
   @override
   String get addSet => '添加一组';
@@ -2993,6 +2999,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   AppLocalizationsZhTw() : super('zh_TW');
 
   @override
+  String get removeImage => '移除圖片';
+
+  @override
   String get showUpdateNotices => '顯示更新通知';
 
   @override
@@ -3698,7 +3707,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get notesLabel => '備註';
 
   @override
-  String get swapWorkout => '替換訓練';
+  String get swapWorkout => '更換動作';
 
   @override
   String get addSet => '新增一組';

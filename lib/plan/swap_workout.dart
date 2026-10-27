@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/graph/add_exercise_page.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -31,7 +32,7 @@ class _SwapWorkoutState extends State<SwapWorkout> {
       });
     });
 
-    _exercises = watchExerciseCatalog();
+    _exercises = watchExerciseCatalog(db);
     _loadUnavailableExercises();
   }
 
@@ -135,7 +136,7 @@ class _SwapWorkoutState extends State<SwapWorkout> {
               stream: _exercises,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return Center(child: Text(context.l10n.unexpectedError));
+                  return const AppErrorState();
                 }
                 if (!snapshot.hasData) {
                   return const SizedBox();

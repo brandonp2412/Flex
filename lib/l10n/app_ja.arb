@@ -1,4 +1,5 @@
 {
+  "removeImage": "画像を削除",
   "showUpdateNotices": "更新通知を表示",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "ja",
@@ -254,7 +255,7 @@
   "useBodyWeight": "自重を使用",
   "noWeightEnteredYet": "重量はまだ入力されていません",
   "notesLabel": "メモ",
-  "swapWorkout": "トレーニングを入れ替え",
+  "swapWorkout": "種目を入れ替え",
   "addSet": "セットを追加",
   "deleteSet": "セットを削除",
   "oneRepMaxEstimate": "1RM（推定）",

@@ -1,4 +1,5 @@
 {
+  "removeImage": "Afbeelding verwijderen",
   "showUpdateNotices": "Updatemeldingen tonen",
   "@showUpdateNotices": {"description": "Whether to show update notices after upgrading the app."},
   "@@locale": "nl",
@@ -254,7 +255,7 @@
   "useBodyWeight": "Lichaamsgewicht gebruiken",
   "noWeightEnteredYet": "Nog geen gewicht ingevoerd",
   "notesLabel": "Notities",
-  "swapWorkout": "Training wisselen",
+  "swapWorkout": "Oefening wisselen",
   "addSet": "Set toevoegen",
   "deleteSet": "Set verwijderen",
   "oneRepMaxEstimate": "1RM (schatting)",

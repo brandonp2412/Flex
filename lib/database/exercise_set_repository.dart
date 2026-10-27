@@ -1,26 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/measurement_units.dart';
 
-/// Converts a stored load in kilograms to the exercise display unit.
-double displayLoad(String unit, double? loadKg) {
-  if (loadKg == null) return 0;
-  return switch (unit) {
-    'lb' => loadKg / 0.45359237,
-    'stone' => loadKg / 6.35029318,
-    _ => loadKg,
-  };
-}
-
-/// Converts a displayed load to kilograms.
-double? loadKg(String unit, double value) {
-  return switch (unit) {
-    'kg' => value,
-    'lb' => value * 0.45359237,
-    'stone' => value * 6.35029318,
-    _ => null,
-  };
-}
+export 'package:flex/measurement_units.dart';
 
 /// Converts a stored distance in metres to the exercise display unit.
 double displayDistance(String unit, double? distanceMetres) {

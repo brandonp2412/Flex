@@ -9,6 +9,9 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
+  String get removeImage => 'Remover imagem';
+
+  @override
   String get showUpdateNotices => 'Mostrar avisos de atualização';
 
   @override
@@ -737,7 +740,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notesLabel => 'Notas';
 
   @override
-  String get swapWorkout => 'Trocar treino';
+  String get swapWorkout => 'Substituir exercício';
 
   @override
   String get addSet => 'Adicionar série';
@@ -1591,6 +1594,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   AppLocalizationsPtBr() : super('pt_BR');
 
   @override
+  String get removeImage => 'Remover imagem';
+
+  @override
   String get showUpdateNotices => 'Mostrar avisos de atualização';
 
   @override
@@ -2315,7 +2321,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get notesLabel => 'Notas';
 
   @override
-  String get swapWorkout => 'Trocar treino';
+  String get swapWorkout => 'Substituir exercício';
 
   @override
   String get addSet => 'Adicionar série';
@@ -3164,6 +3170,9 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
   AppLocalizationsPtPt() : super('pt_PT');
 
   @override
+  String get removeImage => 'Remover imagem';
+
+  @override
   String get showUpdateNotices => 'Mostrar avisos de atualização';
 
   @override
@@ -3892,7 +3901,7 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
   String get notesLabel => 'Notas';
 
   @override
-  String get swapWorkout => 'Trocar treino';
+  String get swapWorkout => 'Substituir exercício';
 
   @override
   String get addSet => 'Adicionar série';

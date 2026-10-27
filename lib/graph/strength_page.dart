@@ -2,22 +2,23 @@ import 'dart:async';
 
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
-import 'package:flex/database/exercise_catalog.dart';
+import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
+import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/graph/edit_graph_page.dart';
 import 'package:flex/graph/flex_line_chart.dart';
-import 'package:flex/graph/graph_options_controls.dart';
-import 'package:flex/graph/graph_metric_chips.dart';
 import 'package:flex/graph/graph_history_page.dart';
+import 'package:flex/graph/graph_metric_chips.dart';
 import 'package:flex/graph/graph_notes_page.dart';
+import 'package:flex/graph/graph_options_controls.dart';
 import 'package:flex/graph/strength_data.dart';
 import 'package:flex/l10n/l10n.dart';
+import 'package:flex/main.dart';
+import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/sets/edit_set_page.dart';
-import 'package:flex/database/database.dart';
 import 'package:flex/utils.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -83,7 +84,7 @@ class _StrengthPageState extends State<StrengthPage> {
   }
 
   Future<void> _loadPreferences() async {
-    final pref = await getExerciseByName(_exerciseName);
+    final pref = await getExerciseByName(db, _exerciseName);
     if (pref == null || !mounted) return;
     setState(() {
       final stored = pref.graphMetric.split(',');
@@ -107,9 +108,10 @@ class _StrengthPageState extends State<StrengthPage> {
 
   Future<void> _savePreferences() async {
     if (widget.bodyWeight) return;
-    final exercise = await getExerciseByName(_exerciseName);
+    final exercise = await getExerciseByName(db, _exerciseName);
     if (exercise == null) return;
     await updateExerciseGraphPreferences(
+      db,
       exerciseId: exercise.id,
       metric: metric.name,
       period: period.name,

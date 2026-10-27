@@ -9,6 +9,9 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get removeImage => 'Remove image';
+
+  @override
   String get showUpdateNotices => 'Show update notices';
 
   @override
@@ -151,7 +154,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteSelected => 'Delete selected';
 
   @override
-  String get confirmDelete => 'Confirm Delete';
+  String get confirmDelete => 'Confirm delete';
 
   @override
   String deleteRecordsConfirmation(int count) {
@@ -730,7 +733,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesLabel => 'Notes';
 
   @override
-  String get swapWorkout => 'Swap workout';
+  String get swapWorkout => 'Swap exercise';
 
   @override
   String get addSet => 'Add set';

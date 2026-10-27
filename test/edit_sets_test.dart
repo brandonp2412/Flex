@@ -124,7 +124,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Pounds (lb)'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Update'));
+    await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
     expect(find.text('Edit 3 sets'), findsNothing);
