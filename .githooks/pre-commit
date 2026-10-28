@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+exec "${BUILDQ:-$HOME/.local/bin/buildq}" --wait --label "Flex pre-commit quality" -- bash -c 'set -euo pipefail; dart format --output=none --set-exit-if-changed lib test integration_test; flutter analyze; flutter test'

@@ -15,6 +15,7 @@ import 'package:flex/timer/timer_page.dart';
 import 'package:flex/timer/timer_progress_widgets.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flex/update_notice.dart';
+import 'package:flex/update_notice_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -66,20 +67,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
       if (mounted)
         messengerKey.currentState!.showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.newVersion(pkg.version)),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            action: SnackBarAction(
-              label: context.l10n.changes,
-              onPressed: () => Navigator.of(
-                context,
-              ).push(FlexPageRoute(builder: (context) => const WhatsNew())),
-            ),
-            duration: const Duration(seconds: 4),
-            persist: false,
+          newVersionSnackBar(
+            context,
+            pkg.version,
+            () => Navigator.of(context)
+                .push(FlexPageRoute(builder: (context) => const WhatsNew())),
           ),
         );
     });

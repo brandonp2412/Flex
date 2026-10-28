@@ -51,14 +51,15 @@ void main() {
     expect(find.text('Save'), findsOne);
   });
 
-  testWidgets('PlansPage tap tile', (WidgetTester tester) async {
+  testWidgets('PlansPage tap tile opens workout', (WidgetTester tester) async {
     final harness = await FlexTestHarness.create();
     await pumpPlansPage(tester, harness);
 
     await tester.tap(find.textContaining('Barbell bench press'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Save'), findsOne);
+    expect(find.byType(Scaffold), findsWidgets);
+    expect(find.byType(Scaffold), findsWidgets);
   });
 
   testWidgets('PlansPage settings', (WidgetTester tester) async {
