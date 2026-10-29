@@ -35,7 +35,7 @@ void main() {
 
     await harness.pump(tester, list(null, null));
     await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text('No plans yet'), findsNothing);
 
     await harness.pump(tester, list(<Plan>[], <PlanExerciseEntry>[]));
