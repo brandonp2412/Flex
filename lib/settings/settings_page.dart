@@ -148,6 +148,11 @@ class _SettingsPageState extends State<SettingsPage>
               ),
             ),
             SizedBox(height: desktop ? 20 : 8),
+            if (_searchCtrl.text.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 2, bottom: 8),
+                child: MadeInNewZealandBadge(),
+              ),
             Expanded(
               child: Padding(
                 padding: desktop
@@ -161,98 +166,82 @@ class _SettingsPageState extends State<SettingsPage>
                         children: filtered,
                       )
                     : isDesktopLayout(context)
-                    ? Column(
-                        children: [
-                          Expanded(
-                            child: GridView.builder(
-                              padding: const EdgeInsets.only(bottom: 24),
-                              gridDelegate:
-                                  const SliverGridDelegateWithMaxCrossAxisExtent(
-                                    maxCrossAxisExtent: 520,
-                                    crossAxisSpacing: 14,
-                                    mainAxisSpacing: 14,
-                                    mainAxisExtent: 112,
-                                  ),
-                              itemCount: _categories.length,
-                              itemBuilder: (context, index) {
-                                final category = _categories[index];
-                                final colors = Theme.of(context).colorScheme;
-                                return Card(
-                                  color: colors.surfaceContainerLow,
-                                  clipBehavior: Clip.antiAlias,
-                                  child: InkWell(
-                                    onTap: () => _openCategory(category.$4),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(20),
-                                      child: Row(
+                    ? GridView.builder(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        gridDelegate:
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 520,
+                              crossAxisSpacing: 14,
+                              mainAxisSpacing: 14,
+                              mainAxisExtent: 112,
+                            ),
+                        itemCount: _categories.length,
+                        itemBuilder: (context, index) {
+                          final category = _categories[index];
+                          final colors = Theme.of(context).colorScheme;
+                          return Card(
+                            color: colors.surfaceContainerLow,
+                            clipBehavior: Clip.antiAlias,
+                            child: InkWell(
+                              onTap: () => _openCategory(category.$4),
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: colors.primaryContainer,
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Icon(
+                                        category.$1,
+                                        color: colors.onPrimaryContainer,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Container(
-                                            width: 48,
-                                            height: 48,
-                                            decoration: BoxDecoration(
-                                              color: colors.primaryContainer,
-                                              borderRadius:
-                                                  BorderRadius.circular(14),
-                                            ),
-                                            child: Icon(
-                                              category.$1,
-                                              color: colors.onPrimaryContainer,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  category.$2,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleMedium
-                                                      ?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
+                                          Text(
+                                            category.$2,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
                                                 ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  category.$3,
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color: colors
-                                                            .onSurfaceVariant,
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
                                           ),
-                                          const Icon(
-                                            Icons.chevron_right_rounded,
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            category.$3,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color:
+                                                      colors.onSurfaceVariant,
+                                                ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                );
-                              },
+                                    const Icon(Icons.chevron_right_rounded),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 12),
-                            child: MadeInNewZealandBadge(),
-                          ),
-                        ],
+                          );
+                        },
                       )
                     : ListView(
                         padding: const EdgeInsets.only(bottom: 116),
@@ -265,8 +254,6 @@ class _SettingsPageState extends State<SettingsPage>
                               onTap: () => _openCategory(category.$4),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          const Center(child: MadeInNewZealandBadge()),
                         ],
                       ),
               ),

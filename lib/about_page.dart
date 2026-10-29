@@ -1,4 +1,5 @@
 import 'package:flex/l10n/l10n.dart';
+import 'package:flex/made_in_new_zealand_badge.dart';
 import 'package:flex/settings/whats_new.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,8 @@ class AboutPage extends StatelessWidget {
               height: 150,
             ),
           ),
+          const Center(child: MadeInNewZealandBadge()),
+          const SizedBox(height: 12),
           ListTile(
             title: Text(context.l10n.donate),
             leading: const Icon(Icons.favorite_outline),

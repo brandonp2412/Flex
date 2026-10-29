@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flex/database/database.dart';
+import 'package:flex/about_page.dart';
 import 'package:flex/settings/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,20 +31,14 @@ void main() {
   ) async {
     await render(tester, surfaceSize: const Size(390, 844));
     const badge = Key('made-in-new-zealand-branding');
-    await tester.scrollUntilVisible(
-      find.byKey(badge),
-      180,
-      scrollable: find
-          .descendant(
-            of: find.byType(ListView).first,
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    await tester.pumpAndSettle();
-
     expect(find.byKey(badge), findsOneWidget);
-    expect(tester.getRect(find.byKey(badge)).width, 200);
+    final rect = tester.getRect(find.byKey(badge));
+    expect(rect.width, 200);
+    expect(
+      rect.top,
+      greaterThan(tester.getRect(find.byType(SearchBar)).bottom),
+    );
+    expect(rect.bottom, lessThan(tester.getRect(find.text('Workouts')).top));
     expect(tester.takeException(), isNull);
   });
 
@@ -55,6 +50,22 @@ void main() {
     expect(
       find.byKey(const Key('made-in-new-zealand-branding')),
       findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('About page shows New Zealand branding beneath the app icon', (
+    WidgetTester tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    await harness.pump(tester, const AboutPage());
+    await tester.pumpAndSettle();
+
+    final badge = find.byKey(const Key('made-in-new-zealand-branding'));
+    expect(badge, findsOneWidget);
+    expect(
+      tester.getRect(badge).top,
+      greaterThan(tester.getRect(find.byType(Image).first).bottom),
     );
     expect(tester.takeException(), isNull);
   });
