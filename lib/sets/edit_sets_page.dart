@@ -7,6 +7,7 @@ import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/editor_content.dart';
+import 'package:flex/responsive.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/platform_page_route.dart';
@@ -55,6 +56,7 @@ class _EditSetsPageState extends State<EditSetsPage>
 
   @override
   Widget build(BuildContext context) {
+    final desktop = isDesktopLayout(context);
     final l10n = context.l10n;
     return guardUnsavedChanges(
       child: Scaffold(
@@ -87,7 +89,7 @@ class _EditSetsPageState extends State<EditSetsPage>
           child: Form(
             key: _key,
             child: ListView(
-              padding: editorListPadding(context),
+              padding: editorListPadding(context, hasFab: !desktop),
               children: [
                 TextField(
                   controller: _name,
@@ -393,15 +395,21 @@ class _EditSetsPageState extends State<EditSetsPage>
                   },
                   selector: (context, settings) => settings.longDateFormat,
                 ),
+                if (desktop) ...[
+                  const SizedBox(height: 24),
+                  DesktopEditorSaveButton(onPressed: save),
+                ],
               ],
             ),
           ),
         ),
-        floatingActionButton: AppFab(
-          onPressed: save,
-          label: Text(l10n.actionSave),
-          icon: const Icon(Icons.save),
-        ),
+        floatingActionButton: desktop
+            ? null
+            : AppFab(
+                onPressed: save,
+                label: Text(l10n.actionSave),
+                icon: const Icon(Icons.save),
+              ),
       ),
     );
   }

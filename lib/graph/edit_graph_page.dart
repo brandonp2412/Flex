@@ -7,6 +7,7 @@ import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/editor_content.dart';
+import 'package:flex/responsive.dart';
 import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -41,6 +42,7 @@ class _EditGraphPageState extends State<EditGraphPage>
 
   @override
   Widget build(BuildContext context) {
+    final desktop = isDesktopLayout(context);
     return guardUnsavedChanges(
       child: Scaffold(
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
@@ -52,7 +54,7 @@ class _EditGraphPageState extends State<EditGraphPage>
           child: Form(
             key: key,
             child: ListView(
-              padding: editorListPadding(context),
+              padding: editorListPadding(context, hasFab: !desktop),
               children: [
                 TextField(
                   controller: name,
@@ -195,15 +197,21 @@ class _EditGraphPageState extends State<EditGraphPage>
                   },
                   selector: (context, settings) => settings.showImages,
                 ),
+                if (desktop) ...[
+                  const SizedBox(height: 24),
+                  DesktopEditorSaveButton(onPressed: save),
+                ],
               ],
             ),
           ),
         ),
-        floatingActionButton: AppFab(
-          onPressed: save,
-          label: Text(context.l10n.actionSave),
-          icon: const Icon(Icons.save),
-        ),
+        floatingActionButton: desktop
+            ? null
+            : AppFab(
+                onPressed: save,
+                label: Text(context.l10n.actionSave),
+                icon: const Icon(Icons.save),
+              ),
       ),
     );
   }

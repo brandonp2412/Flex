@@ -4,6 +4,7 @@ import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/editor_content.dart';
+import 'package:flex/responsive.dart';
 import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -40,6 +41,7 @@ class _WeightPageState extends State<WeightPage>
 
   @override
   Widget build(BuildContext context) {
+    final desktop = isDesktopLayout(context);
     final displayUnit = _unit ?? 'kg';
     final lastWeightText = !_weightLoaded
         ? ''
@@ -56,7 +58,7 @@ class _WeightPageState extends State<WeightPage>
           key: _key,
           child: EditorContent(
             child: ListView(
-              padding: editorListPadding(context),
+              padding: editorListPadding(context, hasFab: !desktop),
               children: [
                 TextFormField(
                   controller: _ctrl,
@@ -118,39 +120,46 @@ class _WeightPageState extends State<WeightPage>
                   },
                   selector: (context, settings) => settings.showImages,
                 ),
+                if (desktop) ...[
+                  const SizedBox(height: 24),
+                  DesktopEditorSaveButton(onPressed: _save),
+                ],
               ],
             ),
           ),
         ),
-        floatingActionButton: AppFab(
-          onPressed: () async {
-            if (!_key.currentState!.validate()) return;
-
-            final settings = context.read<Setting>();
-            if (settings.strengthUnit != 'last-entry')
-              _unit = settings.strengthUnit;
-
-            final value = parseDisplayNumber(context, _ctrl.text)!;
-            final unit = _unit ?? 'kg';
-            final weightKg = toKg(unit, value);
-            if (weightKg == null) return;
-            await recordBodyWeight(
-              db,
-              timestamp: DateTime.now().toLocal(),
-              weightKg: weightKg,
-              photo: _image,
-            );
-
-            if (context.mounted) {
-              allowPop = true;
-              Navigator.pop(context);
-            }
-          },
-          label: Text(context.l10n.actionSave),
-          icon: const Icon(Icons.save),
-        ),
+        floatingActionButton: desktop
+            ? null
+            : AppFab(
+                onPressed: _save,
+                label: Text(context.l10n.actionSave),
+                icon: const Icon(Icons.save),
+              ),
       ),
     );
+  }
+
+  Future<void> _save() async {
+    if (!_key.currentState!.validate()) return;
+
+    final settings = context.read<Setting>();
+    if (settings.strengthUnit != 'last-entry') _unit = settings.strengthUnit;
+
+    final value = parseDisplayNumber(context, _ctrl.text)!;
+    final unit = _unit ?? 'kg';
+    final weightKg = toKg(unit, value);
+    if (weightKg == null) return;
+    await recordBodyWeight(
+      db,
+      timestamp: DateTime.now().toLocal(),
+      weightKg: weightKg,
+      photo: _image,
+    );
+
+    if (mounted) {
+      allowPop = true;
+      Navigator.pop(context);
+    }
   }
 
   @override

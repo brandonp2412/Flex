@@ -11,6 +11,7 @@ import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/editor_content.dart';
+import 'package:flex/responsive.dart';
 import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
@@ -131,6 +132,7 @@ class _EditSetPageState extends State<EditSetPage>
 
   @override
   Widget build(BuildContext context) {
+    final desktop = isDesktopLayout(context);
     final showBodyWeight = context.select<Setting, bool>(
       (settings) => settings.showBodyWeight,
     );
@@ -141,7 +143,7 @@ class _EditSetPageState extends State<EditSetPage>
         resizeToAvoidBottomInset: true,
         appBar: buildAppBar(),
         body: buildBody(showBodyWeight),
-        floatingActionButton: buildSaveButton(),
+        floatingActionButton: desktop ? null : buildSaveButton(),
       ),
     );
   }
@@ -192,7 +194,10 @@ class _EditSetPageState extends State<EditSetPage>
             final showImages = settings.showImages;
 
             return ListView(
-              padding: editorListPadding(context),
+              padding: editorListPadding(
+                context,
+                hasFab: !isDesktopLayout(context),
+              ),
               children: [
                 autocomplete(showBodyWeight),
                 ...exerciseFields(),
@@ -236,6 +241,10 @@ class _EditSetPageState extends State<EditSetPage>
                   ),
                 ),
                 if (showImages) ...[const SizedBox(height: 12), imageField()],
+                if (isDesktopLayout(context)) ...[
+                  const SizedBox(height: 24),
+                  DesktopEditorSaveButton(onPressed: save),
+                ],
               ],
             );
           },

@@ -85,20 +85,7 @@ class _EditPlanPageState extends State<EditPlanPage>
       child: Scaffold(
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
         resizeToAvoidBottomInset: true,
-        appBar: AppBar(
-          title: Text(title),
-          actions: [
-            if (desktop)
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: FilledButton.icon(
-                  onPressed: save,
-                  icon: const Icon(Icons.save_rounded),
-                  label: Text(context.l10n.actionSave),
-                ),
-              ),
-          ],
-        ),
+        appBar: AppBar(title: Text(title)),
         body: EditorContent(
           maxWidth: 1040,
           child: ListView(
@@ -222,6 +209,10 @@ class _EditPlanPageState extends State<EditPlanPage>
                       });
                     },
                   ),
+              if (desktop) ...[
+                const SizedBox(height: 24),
+                DesktopEditorSaveButton(onPressed: save),
+              ],
             ],
           ),
         ),

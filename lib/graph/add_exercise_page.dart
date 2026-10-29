@@ -4,6 +4,7 @@ import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/editor_content.dart';
+import 'package:flex/responsive.dart';
 import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
@@ -41,6 +42,7 @@ class _AddExercisePageState extends State<AddExercisePage>
 
   @override
   Widget build(BuildContext context) {
+    final desktop = isDesktopLayout(context);
     settings = context.watch<Setting>();
 
     return guardUnsavedChanges(
@@ -52,7 +54,7 @@ class _AddExercisePageState extends State<AddExercisePage>
           child: Form(
             key: _key,
             child: ListView(
-              padding: editorListPadding(context),
+              padding: editorListPadding(context, hasFab: !desktop),
               children: [
                 TextFormField(
                   controller: _nameCtrl,
@@ -106,15 +108,21 @@ class _AddExercisePageState extends State<AddExercisePage>
                     },
                   ),
                 ),
+                if (desktop) ...[
+                  const SizedBox(height: 24),
+                  DesktopEditorSaveButton(onPressed: save),
+                ],
               ],
             ),
           ),
         ),
-        floatingActionButton: AppFab(
-          onPressed: save,
-          label: Text(context.l10n.actionSave),
-          icon: const Icon(Icons.save),
-        ),
+        floatingActionButton: desktop
+            ? null
+            : AppFab(
+                onPressed: save,
+                label: Text(context.l10n.actionSave),
+                icon: const Icon(Icons.save),
+              ),
       ),
     );
   }
