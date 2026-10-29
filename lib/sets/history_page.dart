@@ -443,8 +443,8 @@ class _HistoryPageWidgetState extends State<_HistoryPageWidget> {
     );
   }
 
-  Future<List<ExerciseSetView>> _filteredSets({int? rowLimit}) {
-    return getExerciseSets(
+  Future<List<int>> _filteredSetIds() {
+    return getExerciseSetIds(
       db,
       search: search,
       category: category,
@@ -462,15 +462,14 @@ class _HistoryPageWidgetState extends State<_HistoryPageWidget> {
       weightLt: weightLt.text.isEmpty
           ? null
           : parseDisplayNumber(context, weightLt.text),
-      limit: rowLimit,
     );
   }
 
   Future<void> selectAllFiltered() async {
-    final exerciseSets = await _filteredSets();
+    final ids = await _filteredSetIds();
     if (!mounted) return;
     setState(() {
-      _selection.addAll(exerciseSets.map((exerciseSet) => exerciseSet.id));
+      _selection.addAll(ids);
     });
   }
 

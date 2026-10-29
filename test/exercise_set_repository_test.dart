@@ -512,6 +512,85 @@ void main() {
     );
   });
 
+  test('selection ID query matches full history filters', () async {
+    final benchId = await addExercise(
+      name: 'History Select Bench',
+      unit: 'kg',
+      cardio: false,
+      category: 'History Test Push',
+    );
+    final squatId = await addExercise(
+      name: 'History Select Squat',
+      unit: 'kg',
+      cardio: false,
+      category: 'History Test Legs',
+    );
+    final runId = await addExercise(
+      name: 'History Select Run',
+      unit: 'km',
+      cardio: true,
+      category: 'History Test Cardio',
+    );
+    final day = DateTime(2026, 10, 20);
+    for (final (exerciseId, reps, weight, created) in [
+      (benchId, 5.0, 100.0, day),
+      (benchId, 12.0, 30.0, day),
+      (squatId, 8.0, 80.0, day.subtract(const Duration(days: 3))),
+      (runId, 0.0, 0.0, day),
+    ]) {
+      await insertExerciseSet(
+        database,
+        exerciseSet: draft(
+          name: 'Test',
+          unit: exerciseId == runId ? 'km' : 'kg',
+          cardio: exerciseId == runId,
+          created: created,
+          reps: reps,
+          weight: weight,
+        ),
+        exerciseId: exerciseId,
+      );
+    }
+
+    Future<void> expectSameIds({
+      String search = '',
+      String? category,
+      DateTime? startDate,
+      double? repsGt,
+      double? weightGt,
+    }) async {
+      final ids = await getExerciseSetIds(
+        database,
+        search: search,
+        category: category,
+        startDate: startDate,
+        repsGt: repsGt,
+        weightGt: weightGt,
+      );
+      final full = await getExerciseSets(
+        database,
+        search: search,
+        category: category,
+        startDate: startDate,
+        repsGt: repsGt,
+        weightGt: weightGt,
+      );
+      expect(ids.toSet(), full.map((set) => set.id).toSet());
+      expect(ids.length, full.length);
+    }
+
+    await expectSameIds();
+    await expectSameIds(search: 'BENCH');
+    await expectSameIds(category: 'History Test Push', repsGt: 6);
+    await expectSameIds(startDate: day.subtract(const Duration(days: 1)));
+    await expectSameIds(weightGt: 90);
+    await expectSameIds(repsGt: 100, weightGt: 1000);
+    await database.settings.update().write(
+      const SettingsCompanion(strengthUnit: Value('lb')),
+    );
+    await expectSameIds(weightGt: 200);
+  });
+
   test('history ordering uses the timestamp index', () async {
     final queryPlan = await database.customSelect('''
       EXPLAIN QUERY PLAN

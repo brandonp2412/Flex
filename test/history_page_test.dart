@@ -368,6 +368,39 @@ void main() {
     expect(find.byTooltip('Delete selected'), findsOne);
   });
 
+  testWidgets('HistoryPage desktop Select All selects offscreen records', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1440, 900);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final harness = await FlexTestHarness.create();
+    for (var i = 0; i < 125; i++) {
+      await insertExerciseSetFixture(
+        harness.database,
+        'Bench press',
+        reps: i + 1,
+        weight: 50,
+        created: testNow.subtract(Duration(minutes: i)),
+      );
+    }
+
+    await pumpHistoryPage(tester, harness, surfaceSize: const Size(1440, 900));
+    await tester.tap(find.byKey(const Key('desktop-select-all')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('desktop-clear-selection')), findsOneWidget);
+    await tester.tap(find.byTooltip('Delete selected'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('125'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('desktop-clear-selection')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('desktop-clear-selection')), findsNothing);
+  });
+
   testWidgets('HistoryPage deletes', (WidgetTester tester) async {
     final harness = await FlexTestHarness.create();
     await insertExerciseSetFixture(

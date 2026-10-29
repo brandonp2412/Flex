@@ -76,25 +76,37 @@ ExerciseSetView exerciseSetView(
 JoinedSelectStatement<HasResultSet, dynamic> _exerciseSetQuery(
   AppDatabase database, {
   OrderingMode order = OrderingMode.desc,
+  bool idsOnly = false,
 }) {
-  return database.select(database.exerciseSets).join([
+  final sets = database.exerciseSets;
+  final joins = [
     leftOuterJoin(database.settings, const Constant(true)),
     innerJoin(
       database.exercises,
-      database.exercises.id.equalsExp(database.exerciseSets.exerciseId),
+      database.exercises.id.equalsExp(sets.exerciseId),
     ),
     leftOuterJoin(
       database.categories,
       database.categories.id.equalsExp(database.exercises.categoryId),
     ),
-    leftOuterJoin(
-      database.workouts,
-      database.workouts.id.equalsExp(database.exerciseSets.workoutId),
-    ),
-  ])..orderBy([
-    OrderingTerm(expression: database.exerciseSets.timestamp, mode: order),
-    OrderingTerm(expression: database.exerciseSets.id, mode: order),
-  ]);
+    if (!idsOnly)
+      leftOuterJoin(
+        database.workouts,
+        database.workouts.id.equalsExp(sets.workoutId),
+      ),
+  ];
+  final query = idsOnly
+      ? database.selectOnly(sets).join(joins)
+      : database.select(sets).join(joins);
+  if (idsOnly) {
+    query.addColumns([sets.id]);
+  } else {
+    query.orderBy([
+      OrderingTerm(expression: sets.timestamp, mode: order),
+      OrderingTerm(expression: sets.id, mode: order),
+    ]);
+  }
+  return query;
 }
 
 JoinedSelectStatement<HasResultSet, dynamic> _filteredExerciseSetQuery(
@@ -111,8 +123,9 @@ JoinedSelectStatement<HasResultSet, dynamic> _filteredExerciseSetQuery(
   double? weightGt,
   double? weightLt,
   int? limit,
+  bool idsOnly = false,
 }) {
-  final query = _exerciseSetQuery(database);
+  final query = _exerciseSetQuery(database, idsOnly: idsOnly);
   final sets = database.exerciseSets;
   final exercises = database.exercises;
   for (final term
@@ -224,6 +237,52 @@ Future<List<ExerciseSetView>> getExerciseSets(
     limit: limit,
   ).get();
   return rows.map((row) => _toExerciseSetView(database, row)).toList();
+}
+
+/// Loads the identifiers of every set matching the History filters.
+Future<List<int>> getExerciseSetIds(
+  AppDatabase database, {
+  String search = '',
+  String? category,
+  DateTime? startDate,
+  DateTime? endDate,
+  double? repsGt,
+  double? repsLt,
+  double? weightGt,
+  double? weightLt,
+}) async {
+  if (search.trim().isEmpty &&
+      category == null &&
+      repsGt == null &&
+      repsLt == null &&
+      weightGt == null &&
+      weightLt == null) {
+    final sets = database.exerciseSets;
+    final query = database.selectOnly(sets)..addColumns([sets.id]);
+    if (startDate != null) {
+      query.where(sets.timestamp.isBiggerOrEqualValue(startDate));
+    }
+    if (endDate != null) {
+      query.where(sets.timestamp.isSmallerOrEqualValue(endDate));
+    }
+    final rows = await query.get();
+    return rows.map((row) => row.read(sets.id)!).toList();
+  }
+
+  final query = _filteredExerciseSetQuery(
+    database,
+    search: search,
+    category: category,
+    startDate: startDate,
+    endDate: endDate,
+    repsGt: repsGt,
+    repsLt: repsLt,
+    weightGt: weightGt,
+    weightLt: weightLt,
+    idsOnly: true,
+  );
+  final rows = await query.get();
+  return rows.map((row) => row.read(database.exerciseSets.id)!).toList();
 }
 
 /// Loads only the requested exercise-set identifiers.
