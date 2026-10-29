@@ -39,6 +39,60 @@ void main() {
     expect(editable.focusNode.hasFocus, isTrue);
   });
 
+  testWidgets('Desktop search shows separate icon actions without overflow', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1200, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final harness = await FlexTestHarness.create();
+    final selection = <String>{};
+    var selectAllCalls = 0;
+    var editCalls = 0;
+    var shareCalls = 0;
+
+    Widget search() => Scaffold(
+      body: AppSearch(
+        controller: selection,
+        onChange: (_) {},
+        onSelectAll: () => selectAllCalls++,
+        onDelete: () async {},
+        onEdit: () async {
+          editCalls++;
+        },
+        onShare: () async {
+          shareCalls++;
+        },
+      ),
+    );
+
+    await harness.pump(tester, search(), surfaceSize: const Size(1200, 800));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.more_vert), findsNothing);
+    expect(find.byKey(const Key('desktop-weight')), findsOneWidget);
+    expect(find.byKey(const Key('desktop-search-settings')), findsOneWidget);
+    expect(find.byKey(const Key('desktop-select-all')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('desktop-select-all')));
+    expect(selectAllCalls, 1);
+
+    selection.add('entry');
+    await harness.pump(tester, search(), surfaceSize: const Size(1200, 800));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('desktop-clear-selection')), findsOneWidget);
+    expect(find.byKey(const Key('desktop-edit')), findsOneWidget);
+    expect(find.byKey(const Key('desktop-share')), findsOneWidget);
+    expect(find.byKey(const Key('desktop-weight')), findsNothing);
+    await tester.tap(find.byKey(const Key('desktop-edit')));
+    await tester.tap(find.byKey(const Key('desktop-share')));
+    expect(editCalls, 1);
+    expect(shareCalls, 1);
+    await tester.tap(find.byKey(const Key('desktop-clear-selection')));
+    expect(selection, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Clear selection menu uses deselect icon and clears selection', (
     tester,
   ) async {
@@ -57,7 +111,7 @@ void main() {
           onShare: () async {},
         ),
       ),
-      surfaceSize: const Size(1024, 600),
+      surfaceSize: const Size(430, 600),
     );
     await tester.pumpAndSettle();
 
@@ -96,7 +150,7 @@ void main() {
           onShare: () async {},
         ),
       ),
-      surfaceSize: const Size(1024, 600),
+      surfaceSize: const Size(430, 600),
     );
     await tester.pumpAndSettle();
 

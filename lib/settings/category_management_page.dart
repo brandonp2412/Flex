@@ -3,6 +3,7 @@ import 'package:flex/database/categories.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/error_state.dart';
 import 'package:flex/l10n/l10n.dart';
+import 'package:flex/responsive.dart';
 import 'package:flutter/material.dart';
 
 /// Lets people create, rename, merge, and remove workout categories.
@@ -38,37 +39,68 @@ class CategoryManagementPage extends StatelessWidget {
               return ListTile(
                 title: Text(summary.category.name),
                 subtitle: Text(l10n.categoryUsageCount(summary.usageCount)),
-                trailing: PopupMenuButton<_CategoryAction>(
-                  onSelected: (action) => switch (action) {
-                    _CategoryAction.rename => _showCategoryEditor(
-                      context,
-                      category: summary.category,
-                    ),
-                    _CategoryAction.merge => _showMergeDialog(
-                      context,
-                      source: summary.category,
-                      categories: categories,
-                    ),
-                    _CategoryAction.delete => _showDeleteDialog(
-                      context,
-                      summary,
-                    ),
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: _CategoryAction.rename,
-                      child: Text(l10n.renameCategory),
-                    ),
-                    PopupMenuItem(
-                      value: _CategoryAction.merge,
-                      child: Text(l10n.mergeCategory),
-                    ),
-                    PopupMenuItem(
-                      value: _CategoryAction.delete,
-                      child: Text(l10n.actionDelete),
-                    ),
-                  ],
-                ),
+                trailing: isDesktopLayout(context)
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: l10n.renameCategory,
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () => _showCategoryEditor(
+                              context,
+                              category: summary.category,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: l10n.mergeCategory,
+                            icon: const Icon(Icons.merge_outlined),
+                            onPressed: categories.length > 1
+                                ? () => _showMergeDialog(
+                                    context,
+                                    source: summary.category,
+                                    categories: categories,
+                                  )
+                                : null,
+                          ),
+                          IconButton(
+                            tooltip: l10n.actionDelete,
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () =>
+                                _showDeleteDialog(context, summary),
+                          ),
+                        ],
+                      )
+                    : PopupMenuButton<_CategoryAction>(
+                        onSelected: (action) => switch (action) {
+                          _CategoryAction.rename => _showCategoryEditor(
+                            context,
+                            category: summary.category,
+                          ),
+                          _CategoryAction.merge => _showMergeDialog(
+                            context,
+                            source: summary.category,
+                            categories: categories,
+                          ),
+                          _CategoryAction.delete => _showDeleteDialog(
+                            context,
+                            summary,
+                          ),
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: _CategoryAction.rename,
+                            child: Text(l10n.renameCategory),
+                          ),
+                          PopupMenuItem(
+                            value: _CategoryAction.merge,
+                            child: Text(l10n.mergeCategory),
+                          ),
+                          PopupMenuItem(
+                            value: _CategoryAction.delete,
+                            child: Text(l10n.actionDelete),
+                          ),
+                        ],
+                      ),
               );
             },
           );

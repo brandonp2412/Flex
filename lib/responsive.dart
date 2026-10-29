@@ -95,10 +95,11 @@ Future<T?> showDesktopContextMenu<T>(
   List<PopupMenuEntry<T>> items,
 ) {
   final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+  final localPosition = overlay.globalToLocal(globalPosition);
   return showMenu<T>(
     context: context,
     position: RelativeRect.fromRect(
-      globalPosition & const Size(1, 1),
+      localPosition & const Size(1, 1),
       Offset.zero & overlay.size,
     ),
     items: items,

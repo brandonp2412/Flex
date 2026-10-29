@@ -32,6 +32,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final PageController _pages;
   late final TimerState _timerState;
   final GlobalKey<PlansPageState> _plansPageKey = GlobalKey<PlansPageState>();
+  bool _desktopSettingsOpen = false;
 
   @override
   void initState() {
@@ -79,11 +80,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _selectDesktopTab(int index) {
+    if (_desktopSettingsOpen) {
+      setState(() => _desktopSettingsOpen = false);
+    }
     if (_controller.index != index) {
       _controller.index = index;
     }
     if (_pages.hasClients) {
       _pages.jumpToPage(index);
+    }
+  }
+
+  void _openDesktopSettings() {
+    final tabs = context.read<Setting>().tabs.split(',');
+    final index = tabs.indexOf('SettingsPage');
+    if (index >= 0) {
+      _selectDesktopTab(index);
+    } else if (!_desktopSettingsOpen) {
+      setState(() => _desktopSettingsOpen = true);
     }
   }
 
@@ -367,9 +381,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       currentIndex: _controller.index.clamp(0, tabs.length - 1),
                       onTap: _selectDesktopTab,
                       onSecondaryTap: hideTab,
+                      onSettingsTap: _openDesktopSettings,
+                      settingsSelected:
+                          _desktopSettingsOpen ||
+                          tabs[_controller.index.clamp(0, tabs.length - 1)] ==
+                              'SettingsPage',
                     ),
                   ),
-                  Expanded(child: content),
+                  Expanded(
+                    child: _desktopSettingsOpen
+                        ? const SettingsPage()
+                        : content,
+                  ),
                 ],
               )
             : content,

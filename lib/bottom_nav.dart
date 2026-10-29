@@ -163,12 +163,16 @@ class DesktopNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final void Function(BuildContext, String)? onSecondaryTap;
+  final VoidCallback onSettingsTap;
+  final bool settingsSelected;
 
   const DesktopNav({
     super.key,
     required this.tabs,
     required this.currentIndex,
     required this.onTap,
+    required this.onSettingsTap,
+    this.settingsSelected = false,
     this.onSecondaryTap,
   });
 
@@ -212,20 +216,35 @@ class DesktopNav extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              ...tabs.asMap().entries.map(
-                (entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: _DesktopNavItem(
-                    key: Key(entry.value),
-                    icon: BottomNav.iconForTab(entry.value),
-                    label: BottomNav.labelForTab(context, entry.value),
-                    selected: entry.key == currentIndex,
-                    onTap: () => onTap(entry.key),
-                    onSecondaryTap: onSecondaryTap == null
-                        ? null
-                        : () => onSecondaryTap!(context, entry.value),
+              ...tabs
+                  .asMap()
+                  .entries
+                  .where((entry) => entry.value != 'SettingsPage')
+                  .map(
+                    (entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: _DesktopNavItem(
+                        key: Key(entry.value),
+                        icon: BottomNav.iconForTab(entry.value),
+                        label: BottomNav.labelForTab(context, entry.value),
+                        selected:
+                            !settingsSelected && entry.key == currentIndex,
+                        onTap: () => onTap(entry.key),
+                        onSecondaryTap: onSecondaryTap == null
+                            ? null
+                            : () => onSecondaryTap!(context, entry.value),
+                      ),
+                    ),
                   ),
-                ),
+              const Spacer(),
+              Divider(color: colors.outlineVariant.withValues(alpha: .35)),
+              const SizedBox(height: 8),
+              _DesktopNavItem(
+                key: const Key('desktop-settings'),
+                icon: Icons.settings_rounded,
+                label: context.l10n.navSettings,
+                selected: settingsSelected,
+                onTap: onSettingsTap,
               ),
             ],
           ),

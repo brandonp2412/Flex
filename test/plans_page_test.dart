@@ -1,5 +1,8 @@
+import 'package:flex/database/database.dart';
+import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/plan/plans_page.dart';
+import 'package:flex/plan/plans_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,6 +15,35 @@ Future<void> pumpPlansPage(WidgetTester tester, FlexTestHarness harness) async {
 }
 
 void main() {
+  testWidgets('Plans do not show an empty state while loading', (tester) async {
+    final harness = await FlexTestHarness.create();
+    final scroll = ScrollController();
+    addTearDown(scroll.dispose);
+
+    Widget list(List<Plan>? plans, List<PlanExerciseEntry>? exercises) =>
+        Scaffold(
+          body: PlansList(
+            plans: plans,
+            exercises: exercises,
+            navKey: GlobalKey<NavigatorState>(),
+            selected: <int>{},
+            onSelect: (_) {},
+            search: '',
+            scroll: scroll,
+          ),
+        );
+
+    await harness.pump(tester, list(null, null));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('No plans yet'), findsNothing);
+
+    await harness.pump(tester, list(<Plan>[], <PlanExerciseEntry>[]));
+    await tester.pumpAndSettle();
+    expect(find.text('No plans yet'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
   testWidgets('PlansPage lists items', (WidgetTester tester) async {
     final harness = await FlexTestHarness.create();
     await pumpPlansPage(tester, harness);

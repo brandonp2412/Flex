@@ -107,7 +107,9 @@ class _PlansListState extends State<PlansList> {
       ),
     );
 
-    if (widget.plans == null) return noneFound;
+    if (widget.plans == null || widget.exercises == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     final weekday = weekdays[DateTime.now().weekday - 1];
 

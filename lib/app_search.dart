@@ -88,6 +88,60 @@ class _AppSearchState extends State<AppSearch> {
     }
   }
 
+  List<Widget> _desktopActions(BuildContext context, Widget trailingMain) {
+    final selected = widget.controller.isNotEmpty;
+    return [
+      if (selected || widget.filter != null) trailingMain,
+      if (selected) ...[
+        IconButton(
+          key: const Key('desktop-clear-selection'),
+          tooltip: context.l10n.clearSelection,
+          icon: const Icon(Icons.deselect),
+          onPressed: _clearSelection,
+        ),
+        IconButton(
+          key: const Key('desktop-edit'),
+          tooltip: context.l10n.actionEdit,
+          icon: const Icon(Icons.edit_outlined),
+          onPressed: () async {
+            await widget.onEdit();
+          },
+        ),
+        IconButton(
+          key: const Key('desktop-share'),
+          tooltip: context.l10n.actionShare,
+          icon: const Icon(Icons.share_outlined),
+          onPressed: () async {
+            await widget.onShare();
+          },
+        ),
+      ] else ...[
+        IconButton(
+          key: const Key('desktop-weight'),
+          tooltip: context.l10n.weightLabel,
+          icon: const Icon(Icons.scale_outlined),
+          onPressed: () async {
+            await _handleMenuAction(_AppSearchMenuAction.weight);
+          },
+        ),
+        IconButton(
+          key: const Key('desktop-search-settings'),
+          tooltip: context.l10n.navSettings,
+          icon: const Icon(Icons.settings_outlined),
+          onPressed: () async {
+            await _handleMenuAction(_AppSearchMenuAction.settings);
+          },
+        ),
+      ],
+      IconButton(
+        key: const Key('desktop-select-all'),
+        tooltip: context.l10n.selectAll,
+        icon: const Icon(Icons.done_all),
+        onPressed: widget.onSelectAll,
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final sel = widget.controller;
@@ -166,99 +220,104 @@ class _AppSearchState extends State<AppSearch> {
                       padding: const EdgeInsets.only(left: 16.0, right: 8.0),
                     ),
             ),
-            trailing: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                child: trailingMain,
-                transitionBuilder: (child, animation) =>
-                    ScaleTransition(scale: animation, child: child),
-              ),
-              Badge.count(
-                count: sel.length,
-                isLabelVisible: sel.isNotEmpty,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                child: Selector<Setting, bool>(
-                  selector: (p0, settings) => settings.showBodyWeight,
-                  builder: (context, showBodyWeight, child) => IconButton(
-                    icon: const Icon(Icons.more_vert),
-                    tooltip: context.l10n.showMenu,
-                    onPressed: () async {
-                      final RenderBox button =
-                          context.findRenderObject() as RenderBox;
-                      final RenderBox overlay =
-                          Navigator.of(
-                                context,
-                              ).overlay!.context.findRenderObject()
-                              as RenderBox;
-                      final RelativeRect position = RelativeRect.fromRect(
-                        Rect.fromPoints(
-                          button.localToGlobal(Offset.zero, ancestor: overlay),
-                          button.localToGlobal(
-                            button.size.bottomRight(Offset.zero),
-                            ancestor: overlay,
-                          ),
-                        ),
-                        Offset.zero & overlay.size,
-                      );
+            trailing: isDesktopLayout(context)
+                ? _desktopActions(context, trailingMain)
+                : [
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 150),
+                      child: trailingMain,
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
+                    ),
+                    Badge.count(
+                      count: sel.length,
+                      isLabelVisible: sel.isNotEmpty,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      child: Selector<Setting, bool>(
+                        selector: (p0, settings) => settings.showBodyWeight,
+                        builder: (context, showBodyWeight, child) => IconButton(
+                          icon: const Icon(Icons.more_vert),
+                          tooltip: context.l10n.showMenu,
+                          onPressed: () async {
+                            final RenderBox button =
+                                context.findRenderObject() as RenderBox;
+                            final RenderBox overlay =
+                                Navigator.of(
+                                      context,
+                                    ).overlay!.context.findRenderObject()
+                                    as RenderBox;
+                            final RelativeRect position = RelativeRect.fromRect(
+                              Rect.fromPoints(
+                                button.localToGlobal(
+                                  Offset.zero,
+                                  ancestor: overlay,
+                                ),
+                                button.localToGlobal(
+                                  button.size.bottomRight(Offset.zero),
+                                  ancestor: overlay,
+                                ),
+                              ),
+                              Offset.zero & overlay.size,
+                            );
 
-                      final action = await showMenu<_AppSearchMenuAction>(
-                        context: context,
-                        position: position,
-                        items: [
-                          PopupMenuItem(
-                            value: _AppSearchMenuAction.selectAll,
-                            child: ListTile(
-                              leading: const Icon(Icons.done_all),
-                              title: Text(context.l10n.selectAll),
-                            ),
-                          ),
-                          if (sel.isNotEmpty) ...[
-                            PopupMenuItem(
-                              value: _AppSearchMenuAction.clearSelection,
-                              child: ListTile(
-                                leading: const Icon(Icons.deselect),
-                                title: Text(context.l10n.clearSelection),
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: _AppSearchMenuAction.edit,
-                              child: ListTile(
-                                leading: const Icon(Icons.edit),
-                                title: Text(context.l10n.actionEdit),
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: _AppSearchMenuAction.share,
-                              child: ListTile(
-                                leading: const Icon(Icons.share),
-                                title: Text(context.l10n.actionShare),
-                              ),
-                            ),
-                          ],
-                          if (sel.isEmpty)
-                            PopupMenuItem(
-                              value: _AppSearchMenuAction.weight,
-                              child: ListTile(
-                                leading: const Icon(Icons.scale),
-                                title: Text(context.l10n.weightLabel),
-                              ),
-                            ),
-                          if (sel.isEmpty)
-                            PopupMenuItem(
-                              value: _AppSearchMenuAction.settings,
-                              child: ListTile(
-                                leading: const Icon(Icons.settings),
-                                title: Text(context.l10n.navSettings),
-                              ),
-                            ),
-                        ],
-                      );
-                      await _handleMenuAction(action);
-                    },
-                  ),
-                ),
-              ),
-            ],
+                            final action = await showMenu<_AppSearchMenuAction>(
+                              context: context,
+                              position: position,
+                              items: [
+                                PopupMenuItem(
+                                  value: _AppSearchMenuAction.selectAll,
+                                  child: ListTile(
+                                    leading: const Icon(Icons.done_all),
+                                    title: Text(context.l10n.selectAll),
+                                  ),
+                                ),
+                                if (sel.isNotEmpty) ...[
+                                  PopupMenuItem(
+                                    value: _AppSearchMenuAction.clearSelection,
+                                    child: ListTile(
+                                      leading: const Icon(Icons.deselect),
+                                      title: Text(context.l10n.clearSelection),
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: _AppSearchMenuAction.edit,
+                                    child: ListTile(
+                                      leading: const Icon(Icons.edit),
+                                      title: Text(context.l10n.actionEdit),
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: _AppSearchMenuAction.share,
+                                    child: ListTile(
+                                      leading: const Icon(Icons.share),
+                                      title: Text(context.l10n.actionShare),
+                                    ),
+                                  ),
+                                ],
+                                if (sel.isEmpty)
+                                  PopupMenuItem(
+                                    value: _AppSearchMenuAction.weight,
+                                    child: ListTile(
+                                      leading: const Icon(Icons.scale),
+                                      title: Text(context.l10n.weightLabel),
+                                    ),
+                                  ),
+                                if (sel.isEmpty)
+                                  PopupMenuItem(
+                                    value: _AppSearchMenuAction.settings,
+                                    child: ListTile(
+                                      leading: const Icon(Icons.settings),
+                                      title: Text(context.l10n.navSettings),
+                                    ),
+                                  ),
+                              ],
+                            );
+                            await _handleMenuAction(action);
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
           ),
         ),
       ),
