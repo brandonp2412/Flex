@@ -6,7 +6,6 @@ import 'package:flex/database/database.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/l10n/locale_preferences.dart';
 import 'package:flex/plan/start_plan_page.dart';
-import 'package:flex/plan/start_plan_data.dart';
 import 'package:flex/plan/start_list.dart';
 import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/stepper_field.dart';
@@ -224,103 +223,94 @@ void main() {
     expect(find.byIcon(Icons.check_circle_outline), findsNothing);
   });
 
-  testWidgets(
-    'prefetched desktop StartPlan has inputs and previews on first frame',
-    (tester) async {
-      final harness = await FlexTestHarness.create();
-      final database = harness.database;
-      final yesterday = DateTime.now().subtract(const Duration(days: 1));
-      await insertExerciseSetFixture(
-        database,
-        'Bench press',
-        created: DateTime(yesterday.year, yesterday.month, yesterday.day, 9),
-        reps: 8,
-        weight: 90,
-      );
-      final id = await database.plans.insertOne(planFixture(title: 'Push day'));
-      await insertPlanExerciseFixture(
-        database,
-        planId: id,
-        exercise: 'Bench press',
-      );
-      final plan =
-          await (database.plans.select()..where((row) => row.id.equals(id)))
-              .getSingle();
-      final prefetched = await tester.runAsync(
-        () => watchStartPlanData(database, id).first,
-      );
+  testWidgets('desktop StartPlan hydrates previous sets without a spinner', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    final database = harness.database;
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    await insertExerciseSetFixture(
+      database,
+      'Bench press',
+      created: DateTime(yesterday.year, yesterday.month, yesterday.day, 9),
+      reps: 8,
+      weight: 90,
+    );
+    final id = await database.plans.insertOne(planFixture(title: 'Push day'));
+    await insertPlanExerciseFixture(
+      database,
+      planId: id,
+      exercise: 'Bench press',
+    );
+    final plan =
+        await (database.plans.select()..where((row) => row.id.equals(id)))
+            .getSingle();
 
-      await harness.pump(
-        tester,
-        StartPlanPage(plan: plan, prefetched: prefetched),
-        surfaceSize: const Size(1200, 800),
-      );
+    await harness.pump(
+      tester,
+      StartPlanPage(plan: plan),
+      surfaceSize: const Size(1200, 800),
+    );
 
-      expect(find.text('8 × 90 kg'), findsOneWidget);
-      expect(find.byKey(const Key('previous-set-scroll')), findsOneWidget);
-      expect(
-        tester.widget<EditableText>(textFieldWithLabel('Reps')).controller.text,
-        '8',
-      );
-      expect(
-        tester
-            .widget<EditableText>(textFieldWithLabel('Weight (kg)'))
-            .controller
-            .text,
-        '90',
-      );
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-    },
-  );
+    await tester.pumpAndSettle();
+    expect(find.text('8 × 90 kg'), findsOneWidget);
+    expect(find.byKey(const Key('previous-set-scroll')), findsOneWidget);
+    expect(
+      tester.widget<EditableText>(textFieldWithLabel('Reps')).controller.text,
+      '8',
+    );
+    expect(
+      tester
+          .widget<EditableText>(textFieldWithLabel('Weight (kg)'))
+          .controller
+          .text,
+      '90',
+    );
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
 
-  testWidgets(
-    'opening a plan passes prefetched data to the first route frame',
-    (tester) async {
-      final harness = await FlexTestHarness.create();
-      final database = harness.database;
-      final id = await database.plans.insertOne(
-        planFixture(title: 'Ready plan'),
-      );
-      await insertPlanExerciseFixture(
-        database,
-        planId: id,
-        exercise: 'Bench press',
-      );
-      final plan =
-          await (database.plans.select()..where((row) => row.id.equals(id)))
-              .getSingle();
-      await harness.pump(
-        tester,
-        Builder(
-          builder: (context) => Scaffold(
-            body: TextButton(
-              onPressed: () => openStartPlan(Navigator.of(context), plan),
-              child: const Text('Open ready plan'),
-            ),
+  testWidgets('opening a plan navigates before workout data is loaded', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    final database = harness.database;
+    final id = await database.plans.insertOne(planFixture(title: 'Ready plan'));
+    await insertPlanExerciseFixture(
+      database,
+      planId: id,
+      exercise: 'Bench press',
+    );
+    final plan =
+        await (database.plans.select()..where((row) => row.id.equals(id)))
+            .getSingle();
+    await harness.pump(
+      tester,
+      Builder(
+        builder: (context) => Scaffold(
+          body: TextButton(
+            onPressed: () => openStartPlan(Navigator.of(context), plan),
+            child: const Text('Open ready plan'),
           ),
         ),
-        surfaceSize: const Size(1200, 800),
-      );
+      ),
+      surfaceSize: const Size(1200, 800),
+    );
 
-      await tester.runAsync(() async {
-        final navigator = Navigator.of(
-          tester.element(find.text('Open ready plan')),
-        );
-        await tester.tap(find.text('Open ready plan'));
-        final deadline = DateTime.now().add(const Duration(seconds: 3));
-        while (!navigator.canPop() && DateTime.now().isBefore(deadline)) {
-          await Future<void>.delayed(const Duration(milliseconds: 10));
-        }
-        expect(navigator.canPop(), isTrue);
-      });
-      await tester.pumpAndSettle();
-      expect(find.byType(StartPlanPage), findsOneWidget);
-      expect(
-        tester.widget<StartPlanPage>(find.byType(StartPlanPage)).prefetched,
-        isNotNull,
+    await tester.runAsync(() async {
+      final navigator = Navigator.of(
+        tester.element(find.text('Open ready plan')),
       );
-    },
-  );
+      final stopwatch = Stopwatch()..start();
+      await tester.tap(find.text('Open ready plan'));
+      stopwatch.stop();
+      print('START_PLAN_OPEN_NAV_US=${stopwatch.elapsedMicroseconds}');
+      expect(navigator.canPop(), isTrue);
+    });
+    await tester.pumpAndSettle();
+    expect(find.byType(StartPlanPage), findsOneWidget);
+    expect(find.text('Ready plan'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
 
   testWidgets('strength reps remain unchanged when the app resumes', (
     WidgetTester tester,
