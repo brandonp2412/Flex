@@ -246,7 +246,9 @@ void main() {
       final plan =
           await (database.plans.select()..where((row) => row.id.equals(id)))
               .getSingle();
-      final prefetched = await watchStartPlanData(database, id).first;
+      final prefetched = await tester.runAsync(
+        () => watchStartPlanData(database, id).first,
+      );
 
       await harness.pump(
         tester,
@@ -300,7 +302,17 @@ void main() {
         surfaceSize: const Size(1200, 800),
       );
 
-      await tester.tap(find.text('Open ready plan'));
+      await tester.runAsync(() async {
+        final navigator = Navigator.of(
+          tester.element(find.text('Open ready plan')),
+        );
+        await tester.tap(find.text('Open ready plan'));
+        final deadline = DateTime.now().add(const Duration(seconds: 3));
+        while (!navigator.canPop() && DateTime.now().isBefore(deadline)) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+        expect(navigator.canPop(), isTrue);
+      });
       await tester.pumpAndSettle();
       expect(find.byType(StartPlanPage), findsOneWidget);
       expect(

@@ -2,4 +2,8 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="?android:colorBackground" />
 
+    <item
+        android:drawable="@drawable/made_in_new_zealand"
+        android:gravity="bottom|center_horizontal"
+        android:bottom="28dp" />
 </layer-list>

@@ -38,6 +38,7 @@ final _placeholderPattern = RegExp(r'\{([A-Za-z][A-Za-z0-9_]*)\s*(?:,|\})');
 const _allowedLiteralUiText = <String>{
   'lib/about_page.dart:Brandon Dick',
   'lib/about_page.dart:MIT',
+  'lib/made_in_new_zealand_badge.dart:Made in New Zealand',
 };
 
 const _alwaysEnglishEquivalentKeys = <String>{

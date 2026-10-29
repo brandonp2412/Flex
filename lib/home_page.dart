@@ -70,8 +70,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           newVersionSnackBar(
             context,
             pkg.version,
-            () => Navigator.of(context)
-                .push(FlexPageRoute(builder: (context) => const WhatsNew())),
+            () => Navigator.of(
+              context,
+            ).push(FlexPageRoute(builder: (context) => const WhatsNew())),
           ),
         );
     });

@@ -25,6 +25,40 @@ Future<FlexTestHarness> render(
 }
 
 void main() {
+  testWidgets('Made in New Zealand branding is visible in phone settings', (
+    WidgetTester tester,
+  ) async {
+    await render(tester, surfaceSize: const Size(390, 844));
+    const badge = Key('made-in-new-zealand-branding');
+    await tester.scrollUntilVisible(
+      find.byKey(badge),
+      180,
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView).first,
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(badge), findsOneWidget);
+    expect(tester.getRect(find.byKey(badge)).width, 200);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Made in New Zealand branding is visible on desktop', (
+    WidgetTester tester,
+  ) async {
+    await render(tester, surfaceSize: const Size(1200, 900));
+
+    expect(
+      find.byKey(const Key('made-in-new-zealand-branding')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('SettingsPage searches', (WidgetTester tester) async {
     await render(tester);
     expect(find.text('Settings'), findsOne);
