@@ -5,7 +5,6 @@ import 'package:flex/audio/safe_audio_player.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/l10n/l10n.dart';
-import 'package:flex/made_in_new_zealand_badge.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/settings/appearance_settings.dart';
 import 'package:flex/settings/data_settings.dart';
@@ -148,11 +147,6 @@ class _SettingsPageState extends State<SettingsPage>
               ),
             ),
             SizedBox(height: desktop ? 20 : 8),
-            if (_searchCtrl.text.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 2, bottom: 8),
-                child: MadeInNewZealandBadge(),
-              ),
             Expanded(
               child: Padding(
                 padding: desktop

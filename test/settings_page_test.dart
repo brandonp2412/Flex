@@ -26,31 +26,19 @@ Future<FlexTestHarness> render(
 }
 
 void main() {
-  testWidgets('Made in New Zealand branding is visible in phone settings', (
+  testWidgets('New Zealand branding stays out of phone settings', (
     WidgetTester tester,
   ) async {
     await render(tester, surfaceSize: const Size(390, 844));
-    const badge = Key('made-in-new-zealand-branding');
-    expect(find.byKey(badge), findsOneWidget);
-    final rect = tester.getRect(find.byKey(badge));
-    expect(rect.width, 200);
-    expect(
-      rect.top,
-      greaterThan(tester.getRect(find.byType(SearchBar)).bottom),
-    );
-    expect(rect.bottom, lessThan(tester.getRect(find.text('Workouts')).top));
+    expect(find.byKey(const Key('made-in-new-zealand-branding')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Made in New Zealand branding is visible on desktop', (
+  testWidgets('New Zealand branding stays out of desktop settings', (
     WidgetTester tester,
   ) async {
     await render(tester, surfaceSize: const Size(1200, 900));
-
-    expect(
-      find.byKey(const Key('made-in-new-zealand-branding')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('made-in-new-zealand-branding')), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
