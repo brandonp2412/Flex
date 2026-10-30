@@ -1,0 +1,10 @@
+• Integrate recovered Glass work
+• Revise README to highlight app features
+• chore: reconcile Flex branding and desktop changes
+• chore: record app consistency audit and validation checks
+• chore: remove automatic issue closure on release
+• ci: validate main pushes and require manual releases
+• feat(branding): replace fern with walking kiwi
+• feat(branding): show NZ origin in settings and splash
+• feat(desktop): streamline navigation and context actions
+• fix(branding): balance kiwi badge horizontal spacing
