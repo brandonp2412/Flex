@@ -1,12 +1,6 @@
 name: Deploy to Google Play
 
-# Google play takes more than a day to
-# review our updates. So if we release the
-# app more than once a day, every new update
-# pushes back the "review process" by 1 day.
 on:
-  schedule:
-    - cron: '0 0 */2 * *'
   workflow_dispatch:
 
 permissions:
