@@ -533,5 +533,6 @@
   "1790477503": "• Übersetzungen und Korrekturen am App-Symbol vervollständigt",
   "1791796031": "• Text in Diagramm-Tooltips zentriert und die Begrenzung an den Rändern korrigiert.\n• Abstände über dem Diagrammverlauf und an den Filtern verbessert; standardmäßig werden 30 Punkte angezeigt.\n• Umstellung der Körpergewichtsspeicherung abgeschlossen.\n• Trainingsdaten für Screenshot-Tests korrigiert.\n• Android-Build auf integriertes Kotlin umgestellt; veraltete Entwickler-Hooks und Dateien entfernt.",
   "1792721242": "• Diagramme beschleunigt und Bestgewichte zwischengespeichert.\n• Ruckeln beim Wechsel zwischen Kraft- und Cardiotraining und die Tab-Navigation behoben.\n• Android-Links, Steigungsstandardwerte und Update-Hinweise verbessert.",
-  "1792897737": "• Flexify heißt jetzt Flex.\n• Die gewählte Gewichtseinheit wird im Krafttraining und Verlauf berücksichtigt; Diagrammachsen und Desktop-Verlauf wurden verbessert."
+  "1792897737": "• Flexify heißt jetzt Flex.\n• Die gewählte Gewichtseinheit wird im Krafttraining und Verlauf berücksichtigt; Diagrammachsen und Desktop-Verlauf wurden verbessert.",
+  "1793325851": "• Neues Logo mit laufendem Kiwi und deutlicherer Kennzeichnung der Herkunft aus Neuseeland.\n• Einfachere Desktopnavigation und Kontextaktionen.\n• Aktualisierte Dokumentation und manuelle Veröffentlichungen."
 }
