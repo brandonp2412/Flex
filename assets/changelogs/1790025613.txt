@@ -1,4 +1,4 @@
-• WIP: transfer Flex checklist work from Nox
+• Continue Flex checklist improvements
 • chore: refresh Serena project config
 • test: cover opt-in defaults
 • test: remove Patrol integration harness
