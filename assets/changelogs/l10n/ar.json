@@ -342,7 +342,7 @@
   "1789773703": "• الإصلاح: تقوية صوت مؤقت Windows",
   "1789802972": "• العمل الفذ: استخدم الرمز 08 كأيقونة Flex Launcher",
   "1789804588": "• الإصلاح (أندرويد): تحديث AGP إلى 9.3.2",
-  "1790025613": "• WIP: transfer Flex checklist work from Nox\n• chore: refresh Serena project config\n• test: cover opt-in defaults\n● الاختبار: إزالة أداة تكامل الدوريات",
+  "1790025613": "• chore: refresh Serena project config\n• test: cover opt-in defaults\n● الاختبار: إزالة أداة تكامل الدوريات",
   "1790107764": "● تغطية الأفضليات المحلية التركية\n• Revert temporary icon redesign assets\n• chore(l10n): Added languageNameTurkish\n• chore: address Turkish localization review\n• feat(l10n): Added Turkish Localization\n• feat: add flexing bicep icon concepts\n• feat: add icon 7 and 8 refinement sets\n• fix(l10n): Removed duentries\n• fix(tests): add.gitignore to exclude test bundle.dart\n• fix(tests): add tr language to the locale preference test",
   "1790111019": "• تحديث الملف README.md\n• الفذ: إضافة إدارة الفئة\n• العمل الفذ: قم بترويج الأيقونة 2 كرمز Flex Launcher\n• الإصلاح: استعادة Flutter DevTools المضمنة\n• الإصلاح: تثبيت تصحيح أخطاء Flutter في VS Code",
   "1790128482": "• أضف مساحة فوق حقل الاسم الجديد لتحرير الرسوم البيانية\n• إعادة إنشاء pubspec.lock\n• قم بإزالة المسافات الخاطئة في Edit_set_page\n• المستندات: قم بمحاذاة شارات تنزيل README",

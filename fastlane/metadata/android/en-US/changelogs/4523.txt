@@ -1,4 +1,3 @@
-• Integrate recovered Glass work
 • Revise README to highlight app features
 • chore: reconcile Flex branding and desktop changes
 • chore: record app consistency audit and validation checks

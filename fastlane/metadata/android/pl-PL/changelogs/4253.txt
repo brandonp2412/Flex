@@ -1,4 +1,3 @@
-• WIP: Przesun Flexyfikuj pracę z listy kontrolnej z Nox
 • chore: odświeżyć konfiguracja projektu Serena
 • test: opcje włączenia
 • test: Zdejmij złącze z patrolą

@@ -1,4 +1,3 @@
-• পরিবর্তন: WIP: transfer Flex checklist work from Nox
 • পরিবর্তন: chore: refresh Serena project config
 • টেস্ট: cover opt-in defaults
 • টেস্ট: remove Patrol integration harness

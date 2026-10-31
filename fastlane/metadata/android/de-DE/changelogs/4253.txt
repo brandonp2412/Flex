@@ -1,4 +1,3 @@
-• WIP: Übertragung von Flex-Checklistenarbeit von Nox
 • chore: Aktualisieren Sie die Projektkonfiguration von Serena
 • test: Abdeckung von Opt-in-Verschlagen
 • test: Entfernen Sie die Patrol-Integrationsleine

@@ -1,4 +1,3 @@
-WIP: transfer kerja checklist Fleksify dari Nox
 Orachore: segarkan konfigurasi proyek Serena
 Tes: sampul opt-in baku
 Uji coba: hapus penggunaan integrasi Patroli

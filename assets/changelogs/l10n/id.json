@@ -342,7 +342,7 @@
   "1789773703": "reparasi: hard Windows timer audio",
   "1789802972": "Appreat: gunakan ikon 08 sebagai ikon peluncur Flex",
   "1789804588": "Ikhtifix (android): perbarui ACP ke 9.3.2",
-  "1790025613": "WIP: transfer kerja checklist Fleksify dari Nox\nOrachore: segarkan konfigurasi proyek Serena\nTes: sampul opt-in baku\nUji coba: hapus penggunaan integrasi Patroli",
+  "1790025613": "Orachore: segarkan konfigurasi proyek Serena\nTes: sampul opt-in baku\nUji coba: hapus penggunaan integrasi Patroli",
   "1790107764": "Tutup preferensi lokal Turki\nRevert sementara ikon redesign aset\nAverchore (l10n): Added LanageNameTurkish\nOrachore: ulasan lokalisasi Turki alamat\nPrestasi (l10n): Ditambah Lokalisasi Turki\nPrestasi: tambahkan konsep ikon bisep lentur\nPrestasi: tambahkan ikon 7 dan 8 set perbaikan\nremoved duplicate entry\nfix (tests): tambahkan .gitignore untuk mengecualikan test _ bundle.panah\nfix (tests): tambahkan bahasa tr ke locale _ preference _ test",
   "1790111019": "Update README.md\nPrestasi: tambahkan manajemen kategori\nPrestasi: mempromosikan ikon 2 sebagai ikon peluncur Flex\nPerbaikan: kembalikan DevTools Flutter tertanam\nPerbaikan: menstabilkan Flutter debug dalam VS Code",
   "1790128482": "Tambahkan ruang di atas bagian nama baru grafik\nRe-generate pubspes.lock\nHapus spasi errant dalam edit _ set _ page\nApridocs: align README download lencana",

@@ -342,7 +342,7 @@
   "1789773703": "• fix: harden Windows টাইমার audio",
   "1789802972": "• পরিবর্তন: feat: use icon 08 as Flex launcher icon",
   "1789804588": "• fix(Android): update AGP to 9.3.2",
-  "1790025613": "• পরিবর্তন: WIP: transfer Flex checklist work from Nox\n• পরিবর্তন: chore: refresh Serena project config\n• টেস্ট: cover opt-in defaults\n• টেস্ট: remove Patrol integration harness",
+  "1790025613": "• পরিবর্তন: chore: refresh Serena project config\n• টেস্ট: cover opt-in defaults\n• টেস্ট: remove Patrol integration harness",
   "1790107764": "• পরিবর্তন: Cover Turkish locale preferences\n• পরিবর্তন: Revert temporary icon redesign assets\n• পরিবর্তন: chore(l10n): Added languageNameTurkish\n• পরিবর্তন: chore: address Turkish localization review\n• পরিবর্তন: feat(l10n): Added Turkish Localization\n• পরিবর্তন: feat: add flexing bicep icon concepts\n• feat: add icon 7 and 8 refinement সেট\n• পরিবর্তন: fix(l10n): Removed duplicate entries\n• fix(টেস্ট): add .gitignore to exclude টেস্ট_bundle.dart\n• fix(টেস্ট): add tr language to the locale_preference_টেস্ট",
   "1790111019": "• আপডেট করুন README.md\n• পরিবর্তন: feat: add category management\n• পরিবর্তন: feat: promote icon 2 as Flex launcher icon\n• পরিবর্তন: fix: restore embedded Flutter DevTools\n• পরিবর্তন: fix: stabilize Flutter debugging in VS Code",
   "1790128482": "• যোগ করুন space above edit গ্রাফ new name field\n• পরিবর্তন: Re-generate pubspec.lock\n• সরান errant spacing in edit_সেট_পেজ\n• পরিবর্তন: docs: align README download badges",

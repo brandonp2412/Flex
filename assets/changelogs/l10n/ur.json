@@ -342,7 +342,7 @@
   "1789773703": "• fix: Windows timer audio کو مضبوط کریں",
   "1789802972": "• feat: Flex launcher icon کے طور پر icon 08 استعمال کریں",
   "1789804588": "• fix(android): AGP کو 9.3.2 پر اپ ڈیٹ کریں",
-  "1790025613": "• WIP: Flex checklist کا کام Nox سے منتقل کریں\n• chore: Serena project config refresh کریں\n• test: Opt-in defaults cover کریں\n• test: Patrol integration harness ہٹائیں",
+  "1790025613": "• chore: Serena project config refresh کریں\n• test: Opt-in defaults cover کریں\n• test: Patrol integration harness ہٹائیں",
   "1790107764": "• Turkish locale preferences cover کریں\n• Temporary icon redesign assets واپس لیں\n• chore(l10n): languageNameTurkish شامل کیا\n• chore: Turkish localization review کی اصلاحات کریں\n• feat(l10n): Turkish localization شامل کیا\n• feat: Flexing bicep icon concepts شامل کریں\n• feat: Icon 7 اور 8 refinement sets شامل کریں\n• fix(l10n): Duplicate entries ہٹائیں\n• fix(tests): test_bundle.dart exclude کرنے کے لیے .gitignore شامل کریں\n• fix(tests): locale_preference_test میں tr language شامل کریں",
   "1790111019": "• README.md اپ ڈیٹ کریں\n• feat: Category management شامل کریں\n• feat: Icon 2 کو Flex launcher icon بنائیں\n• fix: Embedded Flutter DevTools بحال کریں\n• fix: VS Code میں Flutter debugging مستحکم کریں",
   "1790128482": "• Edit graphs کے new name field کے اوپر space شامل کریں\n• pubspec.lock دوبارہ generate کریں\n• edit_set_page میں غلط spacing ہٹائیں\n• docs: README download badges align کریں",
