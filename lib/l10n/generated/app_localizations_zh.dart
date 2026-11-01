@@ -1154,6 +1154,49 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => '合并图表';
+
+  @override
+  String get mergeGraphsTitle => '合并图表';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '将 $count 个图表合并为一个';
+  }
+
+  @override
+  String get mergeGraphsExplanation => '所有训练组、日期和计划引用将归属于您保留的图表。已完成的训练组不会被删除。';
+
+  @override
+  String get mergeGraphsWarning => '其他运动条目将被移除。此操作无法撤销。';
+
+  @override
+  String get mergeNameLabel => '选择要保留的名称';
+
+  @override
+  String get mergeNewName => '新名称';
+
+  @override
+  String get mergeNameHint => '合并后的运动名称';
+
+  @override
+  String get mergeNameRequired => '请输入合并图表的名称。';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return '图表设置将来自 $name。';
+  }
+
+  @override
+  String get mergeGraphsIncluded => '正在合并的图表';
+
+  @override
+  String get mergeGraphsIncompatible => '仅能合并相同类型的运动图表。有氧设备的类型也必须匹配。无法合并自重训练。';
+
+  @override
+  String get mergeGraphsFailed => '无法合并这些图表。未进行任何更改。';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return '这将删除 $count 条记录。确定吗？';
   }
@@ -2649,6 +2692,49 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   }
 
   @override
+  String get mergeGraphs => '合并图表';
+
+  @override
+  String get mergeGraphsTitle => '合并图表';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '将 $count 个图表合并为一个';
+  }
+
+  @override
+  String get mergeGraphsExplanation => '所有训练组、日期和计划引用将归属于您保留的图表。已完成的训练组不会被删除。';
+
+  @override
+  String get mergeGraphsWarning => '其他运动条目将被移除。此操作无法撤销。';
+
+  @override
+  String get mergeNameLabel => '选择要保留的名称';
+
+  @override
+  String get mergeNewName => '新名称';
+
+  @override
+  String get mergeNameHint => '合并后的运动名称';
+
+  @override
+  String get mergeNameRequired => '请输入合并图表的名称。';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return '图表设置将来自 $name。';
+  }
+
+  @override
+  String get mergeGraphsIncluded => '正在合并的图表';
+
+  @override
+  String get mergeGraphsIncompatible => '仅能合并相同类型的运动图表。有氧设备的类型也必须匹配。无法合并自重训练。';
+
+  @override
+  String get mergeGraphsFailed => '无法合并这些图表。未进行任何更改。';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return '这将删除 $count 条记录。确定吗？';
   }
@@ -4142,6 +4228,50 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String addNamed(String name) {
     return '新增“$name”';
   }
+
+  @override
+  String get mergeGraphs => '合併圖表';
+
+  @override
+  String get mergeGraphsTitle => '合併圖表';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '將 $count 個圖表合併為一個';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      '所有訓練組數、日期及計劃參考均將保留在您選擇的圖表中。已完成的組數不會被刪除。';
+
+  @override
+  String get mergeGraphsWarning => '其他運動項目條目將被移除，此操作無法復原。';
+
+  @override
+  String get mergeNameLabel => '選擇要保留的名稱';
+
+  @override
+  String get mergeNewName => '新名稱';
+
+  @override
+  String get mergeNameHint => '合併後的運動項目名稱';
+
+  @override
+  String get mergeNameRequired => '請輸入合併圖表的名稱。';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return '圖表設定將來自 $name。';
+  }
+
+  @override
+  String get mergeGraphsIncluded => '正在合併的圖表';
+
+  @override
+  String get mergeGraphsIncompatible => '僅能合併相同類型的運動圖表。有氧設備也必須匹配，無法合併體重訓練項目。';
+
+  @override
+  String get mergeGraphsFailed => '無法合併這些圖表，未做任何變更。';
 
   @override
   String deleteGraphRecordsConfirmation(int count) {

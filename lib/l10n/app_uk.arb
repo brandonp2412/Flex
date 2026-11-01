@@ -1545,6 +1545,19 @@
       }
     }
   },
+  "mergeGraphs": "Об'єднати",
+  "mergeGraphsTitle": "Об'єднання графіків",
+  "mergeGraphsIntro": "Об'єднайте {count} графіків у один",
+  "mergeGraphsExplanation": "Всі підходи, дати та посилання на план тренувань перейдуть до збереженого графіка. Жодні виконані підходи не будуть видалені.",
+  "mergeGraphsWarning": "Інші записи про вправи будуть видалені. Цю дію неможливо скасувати.",
+  "mergeNameLabel": "Оберіть назву для збереження",
+  "mergeNewName": "Нова назва",
+  "mergeNameHint": "Назва об'єднаної вправи",
+  "mergeNameRequired": "Введіть назву для об'єднаного графіка.",
+  "mergeNewNameSettings": "Налаштування графіка будуть взяті з {name}.",
+  "mergeGraphsIncluded": "Графіки, що об'єднуються",
+  "mergeGraphsIncompatible": "Можна об'єднувати лише графіки однакових типів вправ. Типи кардіо-приладів також мають співпадати. Тренування власної ваги неможливо об'єднати.",
+  "mergeGraphsFailed": "Не вдалося об'єднати ці графіки. Змін не було внесено.",
   "deleteGraphRecordsConfirmation": "Буде видалено {count} записів. Продовжити?",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

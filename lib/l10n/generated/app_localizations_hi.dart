@@ -1183,6 +1183,53 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'समाकलन करें';
+
+  @override
+  String get mergeGraphsTitle => 'ग्राफों को मिलाएं';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '$count ग्राफों को एक में मिलाएं';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'सभी वर्कआउट सेट, तारीखें और योजना संदर्भ आपके द्वारा चुने गए ग्राफ के साथ जुड़ जाएंगे। कोई भी पूरा हुआ सेट हटाया नहीं जाएगा।';
+
+  @override
+  String get mergeGraphsWarning =>
+      'अन्य व्यायाम प्रविष्टियाँ हटा दी जाएंगी। इसे वापस नहीं किया जा सकता।';
+
+  @override
+  String get mergeNameLabel => 'रखने के लिए नाम चुनें';
+
+  @override
+  String get mergeNewName => 'नया नाम';
+
+  @override
+  String get mergeNameHint => 'मिला हुआ व्यायाम का नाम';
+
+  @override
+  String get mergeNameRequired => 'मिले हुए ग्राफ के लिए एक नाम दर्ज करें।';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'ग्राफ की सेटिंग्स $name से आएंगी।';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'समाकलित होने वाले ग्राफ';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'केवल समान प्रकार के व्यायाम ग्राफों को मिलाया जा सकता है। कार्डियो इकाइयों का भी मिलान होना चाहिए। शरीर के वजन को नहीं मिलाया जा सकता।';
+
+  @override
+  String get mergeGraphsFailed =>
+      'इन ग्राफों को मिलाया नहीं जा सका। कुछ भी बदला नहीं गया।';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'इससे $count रिकॉर्ड हट जाएँगे। क्या आप सुनिश्चित हैं?';
   }

@@ -1536,6 +1536,19 @@
       }
     }
   },
+  "mergeGraphs": "Gabungkan",
+  "mergeGraphsTitle": "Gabungkan graf",
+  "mergeGraphsIntro": "Gabungkan {count} graf menjadi satu",
+  "mergeGraphsExplanation": "Semua set latihan, tarikh dan rujukan pelan akan milik graf yang anda simpan. Tiada set yang siap dihapus.",
+  "mergeGraphsWarning": "Entri latihan lain akan dipadamkan. Tindakan ini tidak boleh dibatalkan.",
+  "mergeNameLabel": "Pilih nama untuk disimpan",
+  "mergeNewName": "Nama baru",
+  "mergeNameHint": "Nama latihan gabungan",
+  "mergeNameRequired": "Masukkan nama untuk graf gabungan.",
+  "mergeNewNameSettings": "Tetapan graf akan diambil dari {name}.",
+  "mergeGraphsIncluded": "Graf yang digabungkan",
+  "mergeGraphsIncompatible": "Hanya graf latihan jenis sama boleh digabungkan. Unit kadro juga mesti padan. Berat badan tidak boleh digabungkan.",
+  "mergeGraphsFailed": "Tidak dapat menggabungkan graf ini. Tiada perubahan dibuat.",
   "deleteGraphRecordsConfirmation": "Ini akan memadam {count} rekod. Adakah anda pasti?",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

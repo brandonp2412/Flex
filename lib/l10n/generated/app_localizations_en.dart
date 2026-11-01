@@ -1181,6 +1181,53 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Merge';
+
+  @override
+  String get mergeGraphsTitle => 'Merge graphs';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Combine $count graphs into one';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'All workout sets, dates and plan references will belong to the graph you keep. No completed sets are deleted.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'The other exercise entries will be removed. This can\'t be undone.';
+
+  @override
+  String get mergeNameLabel => 'Choose the name to keep';
+
+  @override
+  String get mergeNewName => 'New name';
+
+  @override
+  String get mergeNameHint => 'Merged exercise name';
+
+  @override
+  String get mergeNameRequired => 'Enter a name for the merged graph.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Graph settings will come from $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Graphs being combined';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Only exercise graphs of the same type can be merged. Cardio units must also match. Body weight cannot be merged.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Could not merge these graphs. Nothing was changed.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'This will delete $count records. Are you sure?';
   }

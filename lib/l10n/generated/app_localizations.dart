@@ -2244,6 +2244,84 @@ abstract class AppLocalizations {
   /// **'Add “{name}”'**
   String addNamed(String name);
 
+  /// Action to combine selected exercise graphs.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get mergeGraphs;
+
+  /// Title of graph merging review page.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge graphs'**
+  String get mergeGraphsTitle;
+
+  /// Summary heading before merging exercise graphs.
+  ///
+  /// In en, this message translates to:
+  /// **'Combine {count} graphs into one'**
+  String mergeGraphsIntro(int count);
+
+  /// Explains preserved workout data during graph merging.
+  ///
+  /// In en, this message translates to:
+  /// **'All workout sets, dates and plan references will belong to the graph you keep. No completed sets are deleted.'**
+  String get mergeGraphsExplanation;
+
+  /// Warns about the irreversible removal of redundant exercise definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'The other exercise entries will be removed. This can\'t be undone.'**
+  String get mergeGraphsWarning;
+
+  /// Label for the discrete graph merge name slider.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the name to keep'**
+  String get mergeNameLabel;
+
+  /// Final slider position for typing a custom graph name.
+  ///
+  /// In en, this message translates to:
+  /// **'New name'**
+  String get mergeNewName;
+
+  /// Hint for an optional new name for the merged graph.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged exercise name'**
+  String get mergeNameHint;
+
+  /// Validation for a blank custom merged graph name.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name for the merged graph.'**
+  String get mergeNameRequired;
+
+  /// Explains which existing graph supplies settings for a new name.
+  ///
+  /// In en, this message translates to:
+  /// **'Graph settings will come from {name}.'**
+  String mergeNewNameSettings(String name);
+
+  /// Heading above selected exercise graphs on merge review page.
+  ///
+  /// In en, this message translates to:
+  /// **'Graphs being combined'**
+  String get mergeGraphsIncluded;
+
+  /// Safety rule preventing incompatible graph merges.
+  ///
+  /// In en, this message translates to:
+  /// **'Only exercise graphs of the same type can be merged. Cardio units must also match. Body weight cannot be merged.'**
+  String get mergeGraphsIncompatible;
+
+  /// Fallback error after a failed graph merge.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not merge these graphs. Nothing was changed.'**
+  String get mergeGraphsFailed;
+
   /// Confirmation for deleting records associated with selected graphs.
   ///
   /// In en, this message translates to:

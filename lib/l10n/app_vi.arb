@@ -1536,6 +1536,19 @@
       }
     }
   },
+  "mergeGraphs": "Ghép biểu đồ",
+  "mergeGraphsTitle": "Ghép biểu đồ",
+  "mergeGraphsIntro": "Kết hợp {count} biểu đồ thành một",
+  "mergeGraphsExplanation": "Tất cả các tập bài tập, ngày tháng và tham chiếu kế hoạch sẽ thuộc về biểu đồ bạn giữ lại. Không có tập nào bị xóa.",
+  "mergeGraphsWarning": "Các mục bài tập khác sẽ bị loại bỏ. Hành động này không thể hoàn tác.",
+  "mergeNameLabel": "Chọn tên cần giữ",
+  "mergeNewName": "Tên mới",
+  "mergeNameHint": "Tên bài tập đã ghép",
+  "mergeNameRequired": "Nhập tên cho biểu đồ đã ghép.",
+  "mergeNewNameSettings": "Cài đặt biểu đồ sẽ được lấy từ {name}.",
+  "mergeGraphsIncluded": "Các biểu đồ đang được kết hợp",
+  "mergeGraphsIncompatible": "Chỉ có thể ghép các biểu đồ bài tập cùng loại. Đơn vị tim mạch cũng phải khớp. Không thể ghép bài tập với trọng lượng cơ thể.",
+  "mergeGraphsFailed": "Không thể ghép các biểu đồ này. Không có thay đổi nào.",
   "deleteGraphRecordsConfirmation": "Thao tác này sẽ xóa bản ghi {count}. Bạn có chắc không?",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

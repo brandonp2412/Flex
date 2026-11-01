@@ -1179,6 +1179,53 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'دمج';
+
+  @override
+  String get mergeGraphsTitle => 'دمج الرسوم البيانية';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'دمج $count رسم بياني في واحد';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'سيتم احتساب جميع مجموعات التمرين والتواريخ والمراجع الخطة ضمن الرسم البياني الذي تحتفظ به. لن يتم حذف أي مجموعات مكتملة.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'سيتم إزالة مدخلات التمرين الأخرى. لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get mergeNameLabel => 'اختر الاسم للاحتفاظ به';
+
+  @override
+  String get mergeNewName => 'اسم جديد';
+
+  @override
+  String get mergeNameHint => 'اسم تمرين مدمج';
+
+  @override
+  String get mergeNameRequired => 'أدخل اسماً للرسم البياني المدمج.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'سيتم استخدام إعدادات الرسم البياني من $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'الرسوم البيانية قيد الدمج';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'يمكن دمج الرسوم البيانية للتمرين فقط إذا كانت من نفس النوع. يجب أن تتطابق وحدات الكارديو أيضاً. لا يمكن دمج وزن الجسم.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'تعذر دمج هذه الرسوم البيانية. لم يتم إجراء أي تغيير.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'سيؤدي هذا إلى حذف $count سجلات. هل أنت متأكد؟';
   }

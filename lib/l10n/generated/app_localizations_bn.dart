@@ -1185,6 +1185,53 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'যুক্ত করুন';
+
+  @override
+  String get mergeGraphsTitle => 'গ্রাফ যুক্ত করুন';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '$countটি গ্রাফকে একটিতে মিলিয়ে নিন';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'সকল ব্যায়াম সেট, তারিখ এবং পরিকল্পনা রেফারেন্স আপনার সংরক্ষিত গ্রাফের সাথে যুক্ত হবে। কোনো সম্পন্ন সেট মুছে ফেলা হবে না।';
+
+  @override
+  String get mergeGraphsWarning =>
+      'অন্য ব্যায়াম প্রবেশপত্রগুলো সরিয়ে দেওয়া হবে। এই কাজটি উল্টানো সম্ভব নয়।';
+
+  @override
+  String get mergeNameLabel => 'সংরক্ষণের জন্য নাম নির্বাচন করুন';
+
+  @override
+  String get mergeNewName => 'নতুন নাম';
+
+  @override
+  String get mergeNameHint => 'যুক্ত ব্যায়ামের নাম';
+
+  @override
+  String get mergeNameRequired => 'যুক্ত গ্রাফের জন্য একটি নাম লিখুন।';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'গ্রাফ সেটিংস $name থেকে আসবে।';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'যুক্ত হতে থাকা গ্রাফগুলো';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'শুধুমাত্র একই ধরনের ব্যায়াম গ্রাফ যুক্ত করা যায়। কার্ডিও ইউনিটগুলোও মিলতে হবে। শরীরের ওজন যুক্ত করা সম্ভব নয়।';
+
+  @override
+  String get mergeGraphsFailed =>
+      'এই গ্রাফগুলো যুক্ত করতে ব্যর্থ হয়েছে। কোনো পরিবর্তন হয়নি।';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'এতে $countটি রেকর্ড মুছে যাবে। আপনি কি নিশ্চিত?';
   }

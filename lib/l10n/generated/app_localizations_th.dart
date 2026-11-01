@@ -1184,6 +1184,53 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'รวมกราฟ';
+
+  @override
+  String get mergeGraphsTitle => 'รวมกราฟ';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'รวมกราฟ $count เป็นหนึ่งเดียว';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'เซ็ตทั้งหมด วันที่ และข้อมูลแผนการจะอยู่ในกราฟที่คุณเลือกเก็บ เซ็ตที่เสร็จสมบูรณ์จะไม่ถูกลบ';
+
+  @override
+  String get mergeGraphsWarning =>
+      'รายการออกกำลังกายอื่นจะถูกลบออก การกระทำนี้ไม่สามารถย้อนกลับได้';
+
+  @override
+  String get mergeNameLabel => 'เลือกชื่อที่จะเก็บไว้';
+
+  @override
+  String get mergeNewName => 'ชื่อใหม่';
+
+  @override
+  String get mergeNameHint => 'ชื่อกิจกรรมที่รวมแล้ว';
+
+  @override
+  String get mergeNameRequired => 'กรุณาใส่ชื่อสำหรับกราฟที่รวม';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'การตั้งค่ากราฟจะมาจาก $name';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'กราฟที่จะถูกผสาน';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'สามารถรวมเฉพาะกราฟออกกำลังกายประเภทเดียวกันเท่านั้น เครื่องมือคาร์ดิโอต้องเหมือนกัน และไม่สามารถรวมน้ำหนักตัวได้';
+
+  @override
+  String get mergeGraphsFailed =>
+      'ไม่สามารถรวมกราฟเหล่านี้ได้ ไม่มีการเปลี่ยนแปลงใดๆ';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'การดำเนินการนี้จะลบ $count รายการ คุณแน่ใจหรือไม่?';
   }

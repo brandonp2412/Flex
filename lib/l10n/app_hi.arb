@@ -1536,6 +1536,19 @@
       }
     }
   },
+  "mergeGraphs": "समाकलन करें",
+  "mergeGraphsTitle": "ग्राफों को मिलाएं",
+  "mergeGraphsIntro": "{count} ग्राफों को एक में मिलाएं",
+  "mergeGraphsExplanation": "सभी वर्कआउट सेट, तारीखें और योजना संदर्भ आपके द्वारा चुने गए ग्राफ के साथ जुड़ जाएंगे। कोई भी पूरा हुआ सेट हटाया नहीं जाएगा।",
+  "mergeGraphsWarning": "अन्य व्यायाम प्रविष्टियाँ हटा दी जाएंगी। इसे वापस नहीं किया जा सकता।",
+  "mergeNameLabel": "रखने के लिए नाम चुनें",
+  "mergeNewName": "नया नाम",
+  "mergeNameHint": "मिला हुआ व्यायाम का नाम",
+  "mergeNameRequired": "मिले हुए ग्राफ के लिए एक नाम दर्ज करें।",
+  "mergeNewNameSettings": "ग्राफ की सेटिंग्स {name} से आएंगी।",
+  "mergeGraphsIncluded": "समाकलित होने वाले ग्राफ",
+  "mergeGraphsIncompatible": "केवल समान प्रकार के व्यायाम ग्राफों को मिलाया जा सकता है। कार्डियो इकाइयों का भी मिलान होना चाहिए। शरीर के वजन को नहीं मिलाया जा सकता।",
+  "mergeGraphsFailed": "इन ग्राफों को मिलाया नहीं जा सका। कुछ भी बदला नहीं गया।",
   "deleteGraphRecordsConfirmation": "इससे {count} रिकॉर्ड हट जाएँगे। क्या आप सुनिश्चित हैं?",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

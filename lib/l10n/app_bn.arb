@@ -1536,6 +1536,19 @@
       }
     }
   },
+  "mergeGraphs": "যুক্ত করুন",
+  "mergeGraphsTitle": "গ্রাফ যুক্ত করুন",
+  "mergeGraphsIntro": "{count}টি গ্রাফকে একটিতে মিলিয়ে নিন",
+  "mergeGraphsExplanation": "সকল ব্যায়াম সেট, তারিখ এবং পরিকল্পনা রেফারেন্স আপনার সংরক্ষিত গ্রাফের সাথে যুক্ত হবে। কোনো সম্পন্ন সেট মুছে ফেলা হবে না।",
+  "mergeGraphsWarning": "অন্য ব্যায়াম প্রবেশপত্রগুলো সরিয়ে দেওয়া হবে। এই কাজটি উল্টানো সম্ভব নয়।",
+  "mergeNameLabel": "সংরক্ষণের জন্য নাম নির্বাচন করুন",
+  "mergeNewName": "নতুন নাম",
+  "mergeNameHint": "যুক্ত ব্যায়ামের নাম",
+  "mergeNameRequired": "যুক্ত গ্রাফের জন্য একটি নাম লিখুন।",
+  "mergeNewNameSettings": "গ্রাফ সেটিংস {name} থেকে আসবে।",
+  "mergeGraphsIncluded": "যুক্ত হতে থাকা গ্রাফগুলো",
+  "mergeGraphsIncompatible": "শুধুমাত্র একই ধরনের ব্যায়াম গ্রাফ যুক্ত করা যায়। কার্ডিও ইউনিটগুলোও মিলতে হবে। শরীরের ওজন যুক্ত করা সম্ভব নয়।",
+  "mergeGraphsFailed": "এই গ্রাফগুলো যুক্ত করতে ব্যর্থ হয়েছে। কোনো পরিবর্তন হয়নি।",
   "deleteGraphRecordsConfirmation": "এতে {count}টি রেকর্ড মুছে যাবে। আপনি কি নিশ্চিত?",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

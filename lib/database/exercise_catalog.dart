@@ -248,6 +248,75 @@ Future<void> updateExerciseDefinition(
   });
 }
 
+/// Combines graph identities without deleting workout sets or plan memberships.
+/// The kept exercise supplies graph settings, category, image and unit.
+Future<void> mergeExerciseGraphs(
+  AppDatabase database, {
+  required Set<int> exerciseIds,
+  required int keepExerciseId,
+  required String name,
+}) async {
+  if (exerciseIds.length < 2 || !exerciseIds.contains(keepExerciseId)) {
+    throw ArgumentError('Select at least two exercises and a name to keep.');
+  }
+  final trimmedName = name.trim();
+  if (trimmedName.isEmpty) {
+    throw ArgumentError('Enter a name for the merged graph.');
+  }
+
+  await database.transaction(() async {
+    final exercises =
+        await (database.exercises.select()
+              ..where((row) => row.id.isIn(exerciseIds)))
+            .get();
+    if (exercises.length != exerciseIds.length) {
+      throw StateError('One of the selected exercises no longer exists.');
+    }
+
+    final keep = exercises.singleWhere((row) => row.id == keepExerciseId);
+    if (exercises.any(
+      (row) =>
+          row.kind != keep.kind ||
+          (row.kind == 'cardio' && row.displayUnit != keep.displayUnit),
+    )) {
+      throw StateError('These exercises have incompatible types or units.');
+    }
+
+    final collision =
+        await (database.exercises.select()
+              ..where((row) => row.name.equals(trimmedName)))
+            .getSingleOrNull();
+    if (collision != null && !exerciseIds.contains(collision.id)) {
+      throw StateError('That name is already used by another exercise.');
+    }
+
+    for (final source in exercises) {
+      if (source.id == keepExerciseId) continue;
+      await _mergePlanExerciseReferences(
+        database,
+        sourceId: source.id,
+        targetId: keepExerciseId,
+      );
+      await (database.exerciseSets.update()
+            ..where((row) => row.exerciseId.equals(source.id)))
+          .write(ExerciseSetsCompanion(exerciseId: Value(keepExerciseId)));
+      await (database.exercises.delete()
+            ..where((row) => row.id.equals(source.id)))
+          .go();
+    }
+
+    // Rename after removing source rows to satisfy the unique name index.
+    await (database.exercises.update()
+          ..where((row) => row.id.equals(keepExerciseId)))
+        .write(
+          ExercisesCompanion(
+            name: Value(trimmedName),
+            archived: const Value(false),
+          ),
+        );
+  });
+}
+
 Future<void> updateExerciseGraphPreferences(
   AppDatabase database, {
   required int exerciseId,

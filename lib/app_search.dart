@@ -15,6 +15,7 @@ const double appSearchHeight = 72;
 
 enum _AppSearchMenuAction {
   selectAll,
+  merge,
   clearSelection,
   edit,
   share,
@@ -26,6 +27,7 @@ class AppSearch extends StatefulWidget {
   final Set<Object> controller;
   final ValueChanged<String> onChange;
   final VoidCallback onSelectAll;
+  final Future<void> Function()? onMerge;
   final Future<void> Function() onDelete;
   final Future<void> Function() onEdit;
   final Future<void> Function() onShare;
@@ -38,6 +40,7 @@ class AppSearch extends StatefulWidget {
     required this.controller,
     required this.onChange,
     required this.onSelectAll,
+    this.onMerge,
     required this.onDelete,
     required this.onEdit,
     required this.onShare,
@@ -65,6 +68,9 @@ class _AppSearchState extends State<AppSearch> {
     switch (action) {
       case _AppSearchMenuAction.selectAll:
         widget.onSelectAll();
+        break;
+      case _AppSearchMenuAction.merge:
+        await widget.onMerge?.call();
         break;
       case _AppSearchMenuAction.clearSelection:
         _clearSelection();
@@ -133,12 +139,20 @@ class _AppSearchState extends State<AppSearch> {
           },
         ),
       ],
-      IconButton(
-        key: const Key('desktop-select-all'),
-        tooltip: context.l10n.selectAll,
-        icon: const Icon(Icons.done_all),
-        onPressed: widget.onSelectAll,
-      ),
+      if (selected && widget.controller.length > 1 && widget.onMerge != null)
+        FilledButton.icon(
+          key: const Key('desktop-merge-graphs'),
+          onPressed: widget.onMerge,
+          icon: const Icon(Icons.merge_type_rounded),
+          label: Text(context.l10n.mergeGraphs),
+        )
+      else
+        IconButton(
+          key: const Key('desktop-select-all'),
+          tooltip: context.l10n.selectAll,
+          icon: const Icon(Icons.done_all),
+          onPressed: widget.onSelectAll,
+        ),
     ];
   }
 
@@ -264,13 +278,24 @@ class _AppSearchState extends State<AppSearch> {
                               context: context,
                               position: position,
                               items: [
-                                PopupMenuItem(
-                                  value: _AppSearchMenuAction.selectAll,
-                                  child: ListTile(
-                                    leading: const Icon(Icons.done_all),
-                                    title: Text(context.l10n.selectAll),
+                                if (sel.length > 1 && widget.onMerge != null)
+                                  PopupMenuItem(
+                                    value: _AppSearchMenuAction.merge,
+                                    child: ListTile(
+                                      leading: const Icon(
+                                        Icons.merge_type_rounded,
+                                      ),
+                                      title: Text(context.l10n.mergeGraphs),
+                                    ),
+                                  )
+                                else
+                                  PopupMenuItem(
+                                    value: _AppSearchMenuAction.selectAll,
+                                    child: ListTile(
+                                      leading: const Icon(Icons.done_all),
+                                      title: Text(context.l10n.selectAll),
+                                    ),
                                   ),
-                                ),
                                 if (sel.isNotEmpty) ...[
                                   PopupMenuItem(
                                     value: _AppSearchMenuAction.clearSelection,

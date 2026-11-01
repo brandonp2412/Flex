@@ -14,6 +14,7 @@ import 'package:flex/graph/cardio_data.dart';
 import 'package:flex/graph/edit_graph_page.dart';
 import 'package:flex/graph/flex_line_chart.dart';
 import 'package:flex/graph/global_progress_page.dart';
+import 'package:flex/graph/merge_graphs_page.dart';
 import 'package:flex/graphs_filters.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -420,6 +421,7 @@ class GraphsPageState extends State<GraphsPage>
                       },
                     ),
                     onShare: onShare,
+                    onMerge: _openMergeGraphs,
                     onChange: (value) {
                       setState(() {
                         _search = value;
@@ -467,6 +469,20 @@ class GraphsPageState extends State<GraphsPage>
               icon: const Icon(Icons.add),
             ),
     );
+  }
+
+  Future<void> _openMergeGraphs() async {
+    final summaries = filterGraphSummariesBySelection(
+      await _stream.first,
+      Set<String>.of(_selection),
+    );
+    if (summaries.length < 2 || !mounted) return;
+    final merged = await navKey.currentState!.push<bool>(
+      FlexPageRoute(
+        builder: (context) => MergeGraphsPage(summaries: summaries),
+      ),
+    );
+    if (merged == true && mounted) setState(_selection.clear);
   }
 
   Future<void> onShare() async {

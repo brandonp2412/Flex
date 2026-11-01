@@ -1157,6 +1157,51 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'グラフを統合';
+
+  @override
+  String get mergeGraphsTitle => 'グラフの統合';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '$count つのグラフを 1 つに結合します';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'すべてのトレーニングセット、日付、およびプラン参照は、保持するグラフに属します。完了したセットは削除されません。';
+
+  @override
+  String get mergeGraphsWarning => '他のエクササイズエントリは削除されます。この操作は元に戻せません。';
+
+  @override
+  String get mergeNameLabel => '保持する名前を選択';
+
+  @override
+  String get mergeNewName => '新しい名前';
+
+  @override
+  String get mergeNameHint => '統合されたエクササイズ名';
+
+  @override
+  String get mergeNameRequired => '統合されたグラフの名前を入力してください。';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'グラフの設定は $name から引き継がれます。';
+  }
+
+  @override
+  String get mergeGraphsIncluded => '結合対象のグラフ';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      '同じタイプのエクササイズグラフのみを統合できます。有酸素運動ユニットも一致している必要があります。自重トレーニングは統合できません。';
+
+  @override
+  String get mergeGraphsFailed => 'これらのグラフの統合に失敗しました。変更はありません。';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return '$count件の記録を削除します。よろしいですか？';
   }

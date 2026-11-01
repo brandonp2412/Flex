@@ -1158,6 +1158,51 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => '그래프 병합';
+
+  @override
+  String get mergeGraphsTitle => '그래프 병합';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '$count개의 그래프를 하나로 통합합니다';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      '모든 운동 세트, 날짜 및 계획 참조는 유지하는 그래프로 이동됩니다. 완료된 세트는 삭제되지 않습니다.';
+
+  @override
+  String get mergeGraphsWarning => '다른 운동 항목은 제거됩니다. 이 작업은 되돌릴 수 없습니다.';
+
+  @override
+  String get mergeNameLabel => '유지할 이름 선택';
+
+  @override
+  String get mergeNewName => '새로운 이름';
+
+  @override
+  String get mergeNameHint => '병합된 운동 이름';
+
+  @override
+  String get mergeNameRequired => '병합 그래프에 이름을 입력하세요.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return '그래프 설정은 $name에서 가져옵니다.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => '통합 중인 그래프';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      '동일한 유형의 운동 그래프만 병합할 수 있습니다. 심박수 단위는 반드시 일치해야 하며, 체중 운동은 병합할 수 없습니다.';
+
+  @override
+  String get mergeGraphsFailed => '이러한 그래프를 병합할 수 없습니다. 변경 사항은 없습니다.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return '기록 $count개가 삭제됩니다. 계속할까요?';
   }

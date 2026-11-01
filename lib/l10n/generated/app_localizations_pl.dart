@@ -1204,6 +1204,53 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Połącz wykresy';
+
+  @override
+  String get mergeGraphsTitle => 'Łączenie wykresów';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Połącz $count wykresów w jeden';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Wszystkie zestawy treningowe, daty i odniesienia do planu będą należeć do zachowanego wykresu. Żadne ukończone zestawy nie zostaną usunięte.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'Inne wpisy dotyczące ćwiczeń zostaną usunięte. Ta operacja nie może zostać cofnięta.';
+
+  @override
+  String get mergeNameLabel => 'Wybierz nazwę do zachowania';
+
+  @override
+  String get mergeNewName => 'Nowa nazwa';
+
+  @override
+  String get mergeNameHint => 'Nazwa połączonego ćwiczenia';
+
+  @override
+  String get mergeNameRequired => 'Wpisz nazwę dla połączonego wykresu.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Ustawienia wykresu zostaną przejęte z $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Wykresy do łączenia';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Można łączyć tylko wykresy ćwiczeń tego samego typu. Jednostki cardio muszą się również zgadzać. Nie można łączyć treningów na wagę własną.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Nie udało się połączyć tych wykresów. Nic nie zostało zmienione.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Spowoduje to usunięcie $count rekordów. Czy na pewno?';
   }

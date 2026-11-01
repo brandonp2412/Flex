@@ -1203,6 +1203,53 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Об\'єднати';
+
+  @override
+  String get mergeGraphsTitle => 'Об\'єднання графіків';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Об\'єднайте $count графіків у один';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Всі підходи, дати та посилання на план тренувань перейдуть до збереженого графіка. Жодні виконані підходи не будуть видалені.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'Інші записи про вправи будуть видалені. Цю дію неможливо скасувати.';
+
+  @override
+  String get mergeNameLabel => 'Оберіть назву для збереження';
+
+  @override
+  String get mergeNewName => 'Нова назва';
+
+  @override
+  String get mergeNameHint => 'Назва об\'єднаної вправи';
+
+  @override
+  String get mergeNameRequired => 'Введіть назву для об\'єднаного графіка.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Налаштування графіка будуть взяті з $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Графіки, що об\'єднуються';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Можна об\'єднувати лише графіки однакових типів вправ. Типи кардіо-приладів також мають співпадати. Тренування власної ваги неможливо об\'єднати.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Не вдалося об\'єднати ці графіки. Змін не було внесено.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Буде видалено $count записів. Продовжити?';
   }

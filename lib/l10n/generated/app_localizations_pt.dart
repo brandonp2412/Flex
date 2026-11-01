@@ -1195,6 +1195,53 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Juntar';
+
+  @override
+  String get mergeGraphsTitle => 'Juntar gráficos';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Junte $count gráficos num único';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Todos os conjos, datas e referências do plano pertencerão ao gráfico que manter. Nenhum conjo concluído é eliminado.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'As outras entradas de exercício serão removidas. Esta ação não pode ser desfeita.';
+
+  @override
+  String get mergeNameLabel => 'Escolha o nome a manter';
+
+  @override
+  String get mergeNewName => 'Novo nome';
+
+  @override
+  String get mergeNameHint => 'Nome do exercício juntado';
+
+  @override
+  String get mergeNameRequired => 'Introduza um nome para o gráfico juntado.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'As definições do gráfico virão de $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Gráficos a ser combinados';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Apenas gráficos de exercício do mesmo tipo podem ser juntados. As unidades de cardio também devem corresponder. O peso corporal não pode ser juntado.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Não foi possível juntar estes gráficos. Nada foi alterado.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Isto eliminará $count registos. Tem a certeza?';
   }
@@ -2773,6 +2820,53 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String addNamed(String name) {
     return 'Adicionar “$name”';
   }
+
+  @override
+  String get mergeGraphs => 'Unir';
+
+  @override
+  String get mergeGraphsTitle => 'Unir gráficos';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Combine $count gráficos em um';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Todos os conjos de exercícios, datas e referências do plano pertencerão ao gráfico que você manter. Nenhum conjunto concluído será excluído.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'As outras entradas de exercício serão removidas. Isso não pode ser desfeito.';
+
+  @override
+  String get mergeNameLabel => 'Escolha o nome a manter';
+
+  @override
+  String get mergeNewName => 'Novo nome';
+
+  @override
+  String get mergeNameHint => 'Nome do exercício unido';
+
+  @override
+  String get mergeNameRequired => 'Digite um nome para o gráfico unido.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'As configurações do gráfico virão de $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Gráficos sendo combinados';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Apenas gráficos de exercícios do mesmo tipo podem ser unidos. Unidades de cardio também devem corresponder. Peso corporal não pode ser unido.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Não foi possível unir esses gráficos. Nada foi alterado.';
 
   @override
   String deleteGraphRecordsConfirmation(int count) {
@@ -4354,6 +4448,53 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
   String addNamed(String name) {
     return 'Adicionar “$name”';
   }
+
+  @override
+  String get mergeGraphs => 'Juntar';
+
+  @override
+  String get mergeGraphsTitle => 'Juntar gráficos';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Junte $count gráficos num único';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Todos os conjos, datas e referências do plano pertencerão ao gráfico que manter. Nenhum conjo concluído é eliminado.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'As outras entradas de exercício serão removidas. Esta ação não pode ser desfeita.';
+
+  @override
+  String get mergeNameLabel => 'Escolha o nome a manter';
+
+  @override
+  String get mergeNewName => 'Novo nome';
+
+  @override
+  String get mergeNameHint => 'Nome do exercício juntado';
+
+  @override
+  String get mergeNameRequired => 'Introduza um nome para o gráfico juntado.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'As definições do gráfico virão de $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Gráficos a ser combinados';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Apenas gráficos de exercício do mesmo tipo podem ser juntados. As unidades de cardio também devem corresponder. O peso corporal não pode ser juntado.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Não foi possível juntar estes gráficos. Nada foi alterado.';
 
   @override
   String deleteGraphRecordsConfirmation(int count) {

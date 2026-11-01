@@ -1536,6 +1536,19 @@
       }
     }
   },
+  "mergeGraphs": "รวมกราฟ",
+  "mergeGraphsTitle": "รวมกราฟ",
+  "mergeGraphsIntro": "รวมกราฟ {count} เป็นหนึ่งเดียว",
+  "mergeGraphsExplanation": "เซ็ตทั้งหมด วันที่ และข้อมูลแผนการจะอยู่ในกราฟที่คุณเลือกเก็บ เซ็ตที่เสร็จสมบูรณ์จะไม่ถูกลบ",
+  "mergeGraphsWarning": "รายการออกกำลังกายอื่นจะถูกลบออก การกระทำนี้ไม่สามารถย้อนกลับได้",
+  "mergeNameLabel": "เลือกชื่อที่จะเก็บไว้",
+  "mergeNewName": "ชื่อใหม่",
+  "mergeNameHint": "ชื่อกิจกรรมที่รวมแล้ว",
+  "mergeNameRequired": "กรุณาใส่ชื่อสำหรับกราฟที่รวม",
+  "mergeNewNameSettings": "การตั้งค่ากราฟจะมาจาก {name}",
+  "mergeGraphsIncluded": "กราฟที่จะถูกผสาน",
+  "mergeGraphsIncompatible": "สามารถรวมเฉพาะกราฟออกกำลังกายประเภทเดียวกันเท่านั้น เครื่องมือคาร์ดิโอต้องเหมือนกัน และไม่สามารถรวมน้ำหนักตัวได้",
+  "mergeGraphsFailed": "ไม่สามารถรวมกราฟเหล่านี้ได้ ไม่มีการเปลี่ยนแปลงใดๆ",
   "deleteGraphRecordsConfirmation": "การดำเนินการนี้จะลบ {count} รายการ คุณแน่ใจหรือไม่?",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

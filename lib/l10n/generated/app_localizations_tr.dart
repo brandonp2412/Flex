@@ -1188,6 +1188,53 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Birleştir';
+
+  @override
+  String get mergeGraphsTitle => 'Grafikleri birleştir';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '$count grafik tek bir grafiğe dönüştürülsün';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Tüm antrenman setleri, tarihler ve plan referansları, koruduğunuz grafiğe ait olacaktır. Tamamlanmış setler silinmeyecektir.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'Diğer egzersiz girişleri kaldırılacaktır. Bu işlem geri alınamaz.';
+
+  @override
+  String get mergeNameLabel => 'Korunacak ad seçin';
+
+  @override
+  String get mergeNewName => 'Yeni ad';
+
+  @override
+  String get mergeNameHint => 'Birleştirilmiş egzersiz adı';
+
+  @override
+  String get mergeNameRequired => 'Birleştirilen grafik için bir ad girin.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Grafik ayarları $name kaynaklı olacaktır.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Birleştirilecek grafikler';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Sadece aynı türdeki egzersiz grafikleri birleştirilebilir. Kardiyo cihazlarının da eşleşmesi gerekir. Vücut ağırlığı birleştirilemez.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Bu grafikler birleştirilemedi. Hiçbir değişiklik yapılmadı.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Bu işlem $count kaydı silecek. Emin misin?';
   }

@@ -1187,6 +1187,53 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Gabungkan';
+
+  @override
+  String get mergeGraphsTitle => 'Gabungkan graf';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Gabungkan $count graf menjadi satu';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Semua set latihan, tarikh dan rujukan pelan akan milik graf yang anda simpan. Tiada set yang siap dihapus.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'Entri latihan lain akan dipadamkan. Tindakan ini tidak boleh dibatalkan.';
+
+  @override
+  String get mergeNameLabel => 'Pilih nama untuk disimpan';
+
+  @override
+  String get mergeNewName => 'Nama baru';
+
+  @override
+  String get mergeNameHint => 'Nama latihan gabungan';
+
+  @override
+  String get mergeNameRequired => 'Masukkan nama untuk graf gabungan.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Tetapan graf akan diambil dari $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Graf yang digabungkan';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Hanya graf latihan jenis sama boleh digabungkan. Unit kadro juga mesti padan. Berat badan tidak boleh digabungkan.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Tidak dapat menggabungkan graf ini. Tiada perubahan dibuat.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Ini akan memadam $count rekod. Adakah anda pasti?';
   }

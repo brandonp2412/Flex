@@ -1184,6 +1184,53 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Ghép biểu đồ';
+
+  @override
+  String get mergeGraphsTitle => 'Ghép biểu đồ';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Kết hợp $count biểu đồ thành một';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Tất cả các tập bài tập, ngày tháng và tham chiếu kế hoạch sẽ thuộc về biểu đồ bạn giữ lại. Không có tập nào bị xóa.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'Các mục bài tập khác sẽ bị loại bỏ. Hành động này không thể hoàn tác.';
+
+  @override
+  String get mergeNameLabel => 'Chọn tên cần giữ';
+
+  @override
+  String get mergeNewName => 'Tên mới';
+
+  @override
+  String get mergeNameHint => 'Tên bài tập đã ghép';
+
+  @override
+  String get mergeNameRequired => 'Nhập tên cho biểu đồ đã ghép.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Cài đặt biểu đồ sẽ được lấy từ $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Các biểu đồ đang được kết hợp';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Chỉ có thể ghép các biểu đồ bài tập cùng loại. Đơn vị tim mạch cũng phải khớp. Không thể ghép bài tập với trọng lượng cơ thể.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Không thể ghép các biểu đồ này. Không có thay đổi nào.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Thao tác này sẽ xóa bản ghi $count. Bạn có chắc không?';
   }

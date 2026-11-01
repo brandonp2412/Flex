@@ -1196,6 +1196,54 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Zusammenführen';
+
+  @override
+  String get mergeGraphsTitle => 'Grafiken zusammenführen';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '$count Grafiken zu einer kombinieren';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Alle Workout-Sätze, Daten und Planverweise gehören zur erhaltenen Grafik. Keine abgeschlossenen Sätze werden gelöscht.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'Die anderen Einträge für Übungen werden entfernt. Dies kann nicht rückgängig gemacht werden.';
+
+  @override
+  String get mergeNameLabel => 'Zu erhaltenden Namen wählen';
+
+  @override
+  String get mergeNewName => 'Neuer Name';
+
+  @override
+  String get mergeNameHint => 'Name der zusammengeführten Übung';
+
+  @override
+  String get mergeNameRequired =>
+      'Geben Sie einen Namen für die zusammengeführte Grafik ein.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Die Grafikeinstellungen stammen von $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Zusammenzuführende Grafiken';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Nur Übungsgrafiken desselben Typs können kombiniert werden. Auch Cardio-Einheiten müssen übereinstimmen. Körpergewicht kann nicht zusammengeführt werden.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Diese Grafiken konnten nicht zusammengeführt werden. Keine Änderungen wurden vorgenommen.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Dadurch werden $count Einträge gelöscht. Fortfahren?';
   }

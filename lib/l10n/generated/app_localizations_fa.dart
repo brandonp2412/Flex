@@ -1182,6 +1182,53 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'ادغام';
+
+  @override
+  String get mergeGraphsTitle => 'ادغام نمودارها';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'ترکیب $count نمودار در یک نمودار واحد';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'تمام ست‌های تمرین، تاریخ‌ها و ارجاعات برنامه به نموداری که نگه می‌دارید تعلق خواهند داشت. هیچ ست تکمیلی حذف نمی‌شود.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'ورودی‌های ورزشی دیگر حذف خواهند شد. این عمل قابل بازگشت نیست.';
+
+  @override
+  String get mergeNameLabel => 'انتخاب نام برای نگهداری';
+
+  @override
+  String get mergeNewName => 'نام جدید';
+
+  @override
+  String get mergeNameHint => 'نام ورزش ادغام شده';
+
+  @override
+  String get mergeNameRequired => 'برای نمودار ادغام شده، یک نام وارد کنید.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'تنظیمات نمودار از $name پیروی خواهد کرد.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'نمودارهای در حال ترکیب';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'فقط نمودارهای ورزشی با همان نوع قابل ادغام هستند. واحد‌های هوازی نیز باید مطابقت داشته باشند. وزن بدن قابل ادغام نیست.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'ادغام این نمودارها امکان‌پذیر نبود. هیچ تغییری اعمال نشد.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'این کار $count رکورد را حذف می‌کند. مطمئنید؟';
   }

@@ -1190,6 +1190,53 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Unisci';
+
+  @override
+  String get mergeGraphsTitle => 'Unisci grafici';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Combinare $count grafici in uno';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Tutti i set di allenamento, le date e i riferimenti al piano apparterranno al grafico mantenuto. Nessun set completato verrà eliminato.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'Le altre voci di esercizio verranno rimosse. Questa operazione non può essere annullata.';
+
+  @override
+  String get mergeNameLabel => 'Scegli il nome da mantenere';
+
+  @override
+  String get mergeNewName => 'Nuovo nome';
+
+  @override
+  String get mergeNameHint => 'Nome dell\'esercizio unificato';
+
+  @override
+  String get mergeNameRequired => 'Inserisci un nome per il grafico unificato.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Le impostazioni del grafico provengono da $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Grafici in fase di combinazione';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Possono essere uniti solo grafici dello stesso tipo. Le unità cardio devono corrispondere. Il peso corporeo non può essere unito.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Impossibile unire questi grafici. Nessun cambiamento apportato.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Verranno eliminati $count record. Vuoi continuare?';
   }

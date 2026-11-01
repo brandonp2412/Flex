@@ -1536,6 +1536,19 @@
       }
     }
   },
+  "mergeGraphs": "دمج",
+  "mergeGraphsTitle": "دمج الرسوم البيانية",
+  "mergeGraphsIntro": "دمج {count} رسم بياني في واحد",
+  "mergeGraphsExplanation": "سيتم احتساب جميع مجموعات التمرين والتواريخ والمراجع الخطة ضمن الرسم البياني الذي تحتفظ به. لن يتم حذف أي مجموعات مكتملة.",
+  "mergeGraphsWarning": "سيتم إزالة مدخلات التمرين الأخرى. لا يمكن التراجع عن هذا الإجراء.",
+  "mergeNameLabel": "اختر الاسم للاحتفاظ به",
+  "mergeNewName": "اسم جديد",
+  "mergeNameHint": "اسم تمرين مدمج",
+  "mergeNameRequired": "أدخل اسماً للرسم البياني المدمج.",
+  "mergeNewNameSettings": "سيتم استخدام إعدادات الرسم البياني من {name}.",
+  "mergeGraphsIncluded": "الرسوم البيانية قيد الدمج",
+  "mergeGraphsIncompatible": "يمكن دمج الرسوم البيانية للتمرين فقط إذا كانت من نفس النوع. يجب أن تتطابق وحدات الكارديو أيضاً. لا يمكن دمج وزن الجسم.",
+  "mergeGraphsFailed": "تعذر دمج هذه الرسوم البيانية. لم يتم إجراء أي تغيير.",
   "deleteGraphRecordsConfirmation": "سيؤدي هذا إلى حذف {count} سجلات. هل أنت متأكد؟",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

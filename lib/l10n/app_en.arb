@@ -1546,6 +1546,64 @@
       }
     }
   },
+  "mergeGraphs": "Merge",
+  "@mergeGraphs": {
+    "description": "Action to combine selected exercise graphs."
+  },
+  "mergeGraphsTitle": "Merge graphs",
+  "@mergeGraphsTitle": {
+    "description": "Title of graph merging review page."
+  },
+  "mergeGraphsIntro": "Combine {count} graphs into one",
+  "@mergeGraphsIntro": {
+    "description": "Summary heading before merging exercise graphs.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "mergeGraphsExplanation": "All workout sets, dates and plan references will belong to the graph you keep. No completed sets are deleted.",
+  "@mergeGraphsExplanation": {
+    "description": "Explains preserved workout data during graph merging."
+  },
+  "mergeGraphsWarning": "The other exercise entries will be removed. This can't be undone.",
+  "@mergeGraphsWarning": {
+    "description": "Warns about the irreversible removal of redundant exercise definitions."
+  },
+  "mergeNameLabel": "Choose the name to keep",
+  "@mergeNameLabel": {
+    "description": "Label for the discrete graph merge name slider."
+  },
+  "mergeNewName": "New name",
+  "@mergeNewName": {
+    "description": "Final slider position for typing a custom graph name."
+  },
+  "mergeNameHint": "Merged exercise name",
+  "@mergeNameHint": {
+    "description": "Hint for an optional new name for the merged graph."
+  },
+  "mergeNameRequired": "Enter a name for the merged graph.",
+  "@mergeNameRequired": {
+    "description": "Validation for a blank custom merged graph name."
+  },
+  "mergeNewNameSettings": "Graph settings will come from {name}.",
+  "@mergeNewNameSettings": {
+    "description": "Explains which existing graph supplies settings for a new name.",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "mergeGraphsIncluded": "Graphs being combined",
+  "@mergeGraphsIncluded": {
+    "description": "Heading above selected exercise graphs on merge review page."
+  },
+  "mergeGraphsIncompatible": "Only exercise graphs of the same type can be merged. Cardio units must also match. Body weight cannot be merged.",
+  "@mergeGraphsIncompatible": {
+    "description": "Safety rule preventing incompatible graph merges."
+  },
+  "mergeGraphsFailed": "Could not merge these graphs. Nothing was changed.",
+  "@mergeGraphsFailed": {
+    "description": "Fallback error after a failed graph merge."
+  },
   "deleteGraphRecordsConfirmation": "This will delete {count} records. Are you sure?",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

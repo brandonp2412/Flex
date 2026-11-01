@@ -1536,6 +1536,19 @@
       }
     }
   },
+  "mergeGraphs": "ادغام",
+  "mergeGraphsTitle": "ادغام نمودارها",
+  "mergeGraphsIntro": "ترکیب {count} نمودار در یک نمودار واحد",
+  "mergeGraphsExplanation": "تمام ست‌های تمرین، تاریخ‌ها و ارجاعات برنامه به نموداری که نگه می‌دارید تعلق خواهند داشت. هیچ ست تکمیلی حذف نمی‌شود.",
+  "mergeGraphsWarning": "ورودی‌های ورزشی دیگر حذف خواهند شد. این عمل قابل بازگشت نیست.",
+  "mergeNameLabel": "انتخاب نام برای نگهداری",
+  "mergeNewName": "نام جدید",
+  "mergeNameHint": "نام ورزش ادغام شده",
+  "mergeNameRequired": "برای نمودار ادغام شده، یک نام وارد کنید.",
+  "mergeNewNameSettings": "تنظیمات نمودار از {name} پیروی خواهد کرد.",
+  "mergeGraphsIncluded": "نمودارهای در حال ترکیب",
+  "mergeGraphsIncompatible": "فقط نمودارهای ورزشی با همان نوع قابل ادغام هستند. واحد‌های هوازی نیز باید مطابقت داشته باشند. وزن بدن قابل ادغام نیست.",
+  "mergeGraphsFailed": "ادغام این نمودارها امکان‌پذیر نبود. هیچ تغییری اعمال نشد.",
   "deleteGraphRecordsConfirmation": "این کار {count} رکورد را حذف می‌کند. مطمئنید؟",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

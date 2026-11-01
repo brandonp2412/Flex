@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/graph/graph_tile.dart';
@@ -350,5 +351,117 @@ void main() {
               ..where((pe) => pe.id.equals(planExercise.id)))
             .get();
     expect(planExercises, isEmpty);
+  });
+
+  testWidgets('multi-selection offers Merge and can choose a new name', (
+    WidgetTester tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    await insertExerciseSetFixture(
+      harness.database,
+      'Machine row',
+      reps: 10,
+      weight: 50,
+      created: DateTime.now().toLocal(),
+      category: 'Back',
+    );
+    await insertExerciseSetFixture(
+      harness.database,
+      'Cable row',
+      reps: 9,
+      weight: 55,
+      created: DateTime.now().toLocal().subtract(const Duration(days: 1)),
+      category: 'Back',
+    );
+
+    await pumpGraphsPage(tester, harness);
+    await tester.longPress(find.text('Machine row'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cable row'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text('Merge'), findsOneWidget);
+    expect(find.text('Select all'), findsNothing);
+    await tester.tap(find.text('Merge'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Merge graphs'), findsOneWidget);
+    expect(
+      find.textContaining('No completed sets are deleted'),
+      findsOneWidget,
+    );
+    final slider = tester.widget<Slider>(
+      find.byKey(const Key('merge-name-slider')),
+    );
+    slider.onChanged!(2);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('merge-custom-name')),
+      'Seated row',
+    );
+    await tester.tap(find.byKey(const Key('confirm-merge-graphs')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Seated row'), findsOneWidget);
+    expect(find.text('Machine row'), findsNothing);
+    expect(find.text('Cable row'), findsNothing);
+    expect(await harness.database.exerciseSets.select().get(), hasLength(2));
+    final exercises = await harness.database.exercises.select().get();
+    expect(exercises.where((row) => row.name == 'Seated row'), hasLength(1));
+    expect(
+      exercises.where(
+        (row) => row.name == 'Machine row' || row.name == 'Cable row',
+      ),
+      isEmpty,
+    );
+  });
+
+  testWidgets('desktop multi-selection replaces Select all with Merge', (
+    WidgetTester tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    await harness.database.settings.update().write(
+      const SettingsCompanion(
+        showGlobalProgress: Value(false),
+        peekGraph: Value(false),
+      ),
+    );
+    await insertExerciseSetFixture(
+      harness.database,
+      'Lat pull',
+      reps: 8,
+      weight: 60,
+      created: DateTime.now().toLocal(),
+    );
+    await insertExerciseSetFixture(
+      harness.database,
+      'Lat pulldown',
+      reps: 9,
+      weight: 55,
+      created: DateTime.now().toLocal().subtract(const Duration(days: 1)),
+    );
+
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1400, 900);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    await pumpGraphsPage(tester, harness, surfaceSize: const Size(1400, 900));
+    final graphTiles = tester
+        .widgetList<GraphTile>(find.byType(GraphTile))
+        .toList();
+    expect(graphTiles, hasLength(2));
+    await graphTiles.first.onSelect(graphTiles.first.exerciseSet.selectionKey);
+    await tester.pumpAndSettle();
+    await graphTiles.last.onSelect(graphTiles.last.exerciseSet.selectionKey);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<AppSearch>(find.byType(AppSearch)).controller.length,
+      2,
+    );
+    expect(find.byKey(const Key('desktop-merge-graphs')), findsOneWidget);
+    expect(find.byKey(const Key('desktop-select-all')), findsNothing);
   });
 }

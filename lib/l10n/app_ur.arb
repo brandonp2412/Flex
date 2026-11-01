@@ -1536,6 +1536,19 @@
       }
     }
   },
+  "mergeGraphs": "مکمل کریں",
+  "mergeGraphsTitle": "گرافز کو ملائیں",
+  "mergeGraphsIntro": "{count} گرافز کو ایک میں ملائیں",
+  "mergeGraphsExplanation": "تمام ورک آؤٹ سیٹس، تاریخوں اور منصوبے کے حوالے آپ کے رکھے ہوئے گراف کی ملکیت بن جائیں گے۔ کوئی مکمل شدہ سیٹ حذف نہیں ہوتا۔",
+  "mergeGraphsWarning": "دیگر ورزشی اندراجات ختم کر دیے جائیں گے۔ یہ عمل واپس نہیں کیا جا سکتا۔",
+  "mergeNameLabel": "رکھنے کے لیے نام منتخب کریں",
+  "mergeNewName": "نیا نام",
+  "mergeNameHint": "ملائی ہوئی ورزش کا نام",
+  "mergeNameRequired": "ملائے گئے گراف کے لیے ایک نام درج کریں۔",
+  "mergeNewNameSettings": "گراف کی سیٹنگز {name} سے آئیں گی۔",
+  "mergeGraphsIncluded": "جو گراف ملائے جا رہے ہیں",
+  "mergeGraphsIncompatible": "صرف اسی قسم کے ورزشی گراف کو ملاایا جا سکتا ہے۔ کارڈیو یونٹس بھی ہم آہنگ ہونی چاہئیں۔ جسمانی وزن کو ملاایا نہیں جا سکتا۔",
+  "mergeGraphsFailed": "ان گرافز کو ملانا ناکام ہو گیا۔ کچھ تبدیل نہیں ہوا۔",
   "deleteGraphRecordsConfirmation": "اس سے {count} ریکارڈز حذف ہو جائیں گے۔ کیا آپ کو یقین ہے؟",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

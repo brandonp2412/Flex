@@ -1536,6 +1536,19 @@
       }
     }
   },
+  "mergeGraphs": "Gabungkan",
+  "mergeGraphsTitle": "Gabungkan grafik",
+  "mergeGraphsIntro": "Gabungkan {count} grafik menjadi satu",
+  "mergeGraphsExplanation": "Semua set latihan, tanggal dan referensi rencana akan milik grafik yang Anda pertahankan. Tidak ada set yang selesai yang dihapus.",
+  "mergeGraphsWarning": "Entri latihan lainnya akan dihapus. Tindakan ini tidak dapat dibatalkan.",
+  "mergeNameLabel": "Pilih nama untuk dipertahankan",
+  "mergeNewName": "Nama baru",
+  "mergeNameHint": "Nama latihan gabungan",
+  "mergeNameRequired": "Masukkan nama untuk grafik gabungan.",
+  "mergeNewNameSettings": "Pengaturan grafik akan berasal dari {name}.",
+  "mergeGraphsIncluded": "Grafik yang digabungkan",
+  "mergeGraphsIncompatible": "Hanya grafik latihan jenis yang sama yang dapat digabungkan. Unit kardio juga harus cocok. Berat badan tidak dapat digabungkan.",
+  "mergeGraphsFailed": "Tidak dapat menggabungkan grafik ini. Tidak ada perubahan.",
   "deleteGraphRecordsConfirmation": "Ini akan menghapus {count} catatan. Anda yakin?",
   "@deleteGraphRecordsConfirmation": {
     "description": "Confirmation for deleting records associated with selected graphs.",

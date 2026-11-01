@@ -1204,6 +1204,53 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Объединить';
+
+  @override
+  String get mergeGraphsTitle => 'Объединить графики';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Объединить $count графиков в один';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Все выполненные подходы, даты и ссылки на план будут относиться к сохраняемому графику. Выполненные подходы не удаляются.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'Другие записи упражнений будут удалены. Это действие нельзя отменить.';
+
+  @override
+  String get mergeNameLabel => 'Выберите название для сохранения';
+
+  @override
+  String get mergeNewName => 'Новое имя';
+
+  @override
+  String get mergeNameHint => 'Имя объединенного упражнения';
+
+  @override
+  String get mergeNameRequired => 'Введите имя для объединенного графика.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Настройки графика будут взяты из $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Объединяемые графики';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Можно объединять только графики одного типа упражнений. Единицы измерения кардиотренировок должны совпадать. Тренировки с весом тела нельзя объединить.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Не удалось объединить эти графики. Изменений не внесено.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Будет удалено записей: $count. Продолжить?';
   }

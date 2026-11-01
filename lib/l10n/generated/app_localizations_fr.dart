@@ -1198,6 +1198,53 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Fusionner';
+
+  @override
+  String get mergeGraphsTitle => 'Fusionner les graphiques';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Combiner $count graphiques en un seul';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Tous les séries d\'exercices, dates et références du plan appartiendront au graphique conservé. Aucune série terminée n\'est supprimée.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'Les autres entrées d\'exercice seront supprimées. Cette action ne peut être annulée.';
+
+  @override
+  String get mergeNameLabel => 'Choisir le nom à conserver';
+
+  @override
+  String get mergeNewName => 'Nouveau nom';
+
+  @override
+  String get mergeNameHint => 'Nom de l\'exercice fusionné';
+
+  @override
+  String get mergeNameRequired => 'Entrez un nom pour le graphique fusionné.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Les paramètres du graphique proviendront de $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Graphiques à combiner';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Seuls les graphiques d\'exercice du même type peuvent être fusionnés. Les unités cardio doivent également correspondre. Le poids corporel ne peut pas être fusionné.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Impossible de fusionner ces graphiques. Rien n\'a été modifié.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Cette opération supprimera $count enregistrements. Continuer ?';
   }

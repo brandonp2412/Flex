@@ -1192,6 +1192,54 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'Samenvoegen';
+
+  @override
+  String get mergeGraphsTitle => 'Grafieken samenvoegen';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return 'Voeg $count grafieken samen tot één';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'Alle workouts, data en planverwijzingen worden toegevoegd aan de behouden grafiek. Geen voltooide sets worden verwijderd.';
+
+  @override
+  String get mergeGraphsWarning =>
+      'De andere oefeningssommen worden verwijderd. Dit kan niet ongedaan worden gemaakt.';
+
+  @override
+  String get mergeNameLabel => 'Kies de naam om te behouden';
+
+  @override
+  String get mergeNewName => 'Nieuwe naam';
+
+  @override
+  String get mergeNameHint => 'Naam van de samengevoegde oefening';
+
+  @override
+  String get mergeNameRequired =>
+      'Voer een naam in voor de samengevoegde grafiek.';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'Grafiekspecificaties komen uit $name.';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'Te combineren grafieken';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'Alleen grafieken van hetzelfde type kunnen worden samengevoegd. Cardio-eenheden moeten ook overeenkomen. Lichaamsgewicht kan niet worden samengevoegd.';
+
+  @override
+  String get mergeGraphsFailed =>
+      'Kon deze grafieken niet samenvoegen. Niets is gewijzigd.';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'Hiermee worden $count records verwijderd. Weet je het zeker?';
   }

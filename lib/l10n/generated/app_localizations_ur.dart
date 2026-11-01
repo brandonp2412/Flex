@@ -1186,6 +1186,53 @@ class AppLocalizationsUr extends AppLocalizations {
   }
 
   @override
+  String get mergeGraphs => 'مکمل کریں';
+
+  @override
+  String get mergeGraphsTitle => 'گرافز کو ملائیں';
+
+  @override
+  String mergeGraphsIntro(int count) {
+    return '$count گرافز کو ایک میں ملائیں';
+  }
+
+  @override
+  String get mergeGraphsExplanation =>
+      'تمام ورک آؤٹ سیٹس، تاریخوں اور منصوبے کے حوالے آپ کے رکھے ہوئے گراف کی ملکیت بن جائیں گے۔ کوئی مکمل شدہ سیٹ حذف نہیں ہوتا۔';
+
+  @override
+  String get mergeGraphsWarning =>
+      'دیگر ورزشی اندراجات ختم کر دیے جائیں گے۔ یہ عمل واپس نہیں کیا جا سکتا۔';
+
+  @override
+  String get mergeNameLabel => 'رکھنے کے لیے نام منتخب کریں';
+
+  @override
+  String get mergeNewName => 'نیا نام';
+
+  @override
+  String get mergeNameHint => 'ملائی ہوئی ورزش کا نام';
+
+  @override
+  String get mergeNameRequired => 'ملائے گئے گراف کے لیے ایک نام درج کریں۔';
+
+  @override
+  String mergeNewNameSettings(String name) {
+    return 'گراف کی سیٹنگز $name سے آئیں گی۔';
+  }
+
+  @override
+  String get mergeGraphsIncluded => 'جو گراف ملائے جا رہے ہیں';
+
+  @override
+  String get mergeGraphsIncompatible =>
+      'صرف اسی قسم کے ورزشی گراف کو ملاایا جا سکتا ہے۔ کارڈیو یونٹس بھی ہم آہنگ ہونی چاہئیں۔ جسمانی وزن کو ملاایا نہیں جا سکتا۔';
+
+  @override
+  String get mergeGraphsFailed =>
+      'ان گرافز کو ملانا ناکام ہو گیا۔ کچھ تبدیل نہیں ہوا۔';
+
+  @override
   String deleteGraphRecordsConfirmation(int count) {
     return 'اس سے $count ریکارڈز حذف ہو جائیں گے۔ کیا آپ کو یقین ہے؟';
   }
