@@ -34,18 +34,24 @@ void main() {
       isTrue,
     );
     final fab = find.byType(FloatingActionButton);
-    final animatedSize = find.descendant(
+    final animatedContainer = find.descendant(
       of: find.byType(AppFab),
-      matching: find.byType(AnimatedSize),
+      matching: find.byType(AnimatedContainer),
     );
-    final expandedWidth = tester.getSize(animatedSize).width;
+    final expandedWidth = tester.getSize(animatedContainer).width;
+    expect(expandedWidth, 100);
+    expect(
+      tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
+      1,
+    );
 
     scroll.jumpTo(300);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
-    final intermediateWidth = tester.getSize(animatedSize).width;
+    final intermediateWidth = tester.getSize(animatedContainer).width;
     await tester.pumpAndSettle();
-    final collapsedWidth = tester.getSize(animatedSize).width;
+    final collapsedWidth = tester.getSize(animatedContainer).width;
+    expect(collapsedWidth, 56);
 
     expect(intermediateWidth, greaterThan(collapsedWidth));
     expect(intermediateWidth, lessThan(expandedWidth));
@@ -53,7 +59,7 @@ void main() {
 
     scroll.jumpTo(0);
     await tester.pumpAndSettle();
-    expect(tester.getSize(animatedSize).width, expandedWidth);
+    expect(tester.getSize(animatedContainer).width, expandedWidth);
     expect(tester.widget<FloatingActionButton>(fab).isExtended, isTrue);
   });
 }

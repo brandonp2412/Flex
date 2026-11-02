@@ -64,15 +64,20 @@ class _AppFabState extends State<AppFab> {
       padding: EdgeInsets.only(
         bottom: widget.bottomPadding ?? appFabBottomPadding(context),
       ),
-      child: AnimatedSize(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOutCubic,
-        alignment: AlignmentDirectional.centerEnd,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        width: _extended ? 100 : 56,
+        height: 56,
         child: FloatingActionButton.extended(
           heroTag: null,
           onPressed: widget.onPressed,
           isExtended: _extended,
-          label: widget.label,
+          label: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: _extended ? 1.0 : 0.0,
+            child: widget.label,
+          ),
           icon: widget.icon,
         ),
       ),
