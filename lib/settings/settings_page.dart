@@ -133,16 +133,41 @@ class _SettingsPageState extends State<SettingsPage>
                     const EdgeInsets.symmetric(horizontal: 16.0),
                   ),
                   onChanged: (_) => setState(() {}),
-                  leading: _searchCtrl.text.isEmpty
-                      ? const Icon(Icons.search)
-                      : IconButton(
-                          tooltip: context.l10n.clearSearch,
-                          icon: const Icon(Icons.close_rounded),
-                          onPressed: () {
-                            _searchCtrl.clear();
-                            setState(() {});
-                          },
+                  leading: SizedBox(
+                    width: 24,
+                    height: 48,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: _searchCtrl.text.isEmpty
+                          ? context.l10n.searchHint
+                          : context.l10n.clearSearch,
+                      onPressed: () {
+                        if (_searchCtrl.text.isEmpty) {
+                          _focusNode.requestFocus();
+                        } else {
+                          _searchCtrl.clear();
+                          setState(() {});
+                        }
+                      },
+                      icon: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          ),
                         ),
+                        child: Icon(
+                          _searchCtrl.text.isEmpty
+                              ? Icons.search
+                              : Icons.close_rounded,
+                          key: ValueKey(_searchCtrl.text.isEmpty),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

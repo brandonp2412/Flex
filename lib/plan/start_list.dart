@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart' hide Column;
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/custom_set_indicator.dart';
@@ -87,36 +86,12 @@ class _StartListState extends State<StartList> {
     final counts = widget.counts;
     final desktop = isDesktopLayout(context);
 
-    if (trailing == PlanTrailing.reorder)
-      return ReorderableListView.builder(
-        itemCount: widget.exercises.length,
-        buildDefaultDragHandles: !desktop,
-        padding: EdgeInsets.only(bottom: desktop ? 24 : _bottomPadding),
-        itemBuilder: (context, index) =>
-            itemBuilder(context, index, max, trailing, counts),
-        onReorderItem: (oldIndex, newIndex) async {
-          final item = widget.exercises.removeAt(oldIndex);
-          widget.exercises.insert(newIndex, item);
-
-          await db.batch((batch) {
-            for (var i = 0; i < widget.exercises.length; i++) {
-              batch.update(
-                db.planExercises,
-                PlanExercisesCompanion(sequence: Value(i)),
-                where: (pe) =>
-                    pe.id.equals(widget.exercises[i].planExercise.id),
-              );
-            }
-          });
-        },
-      );
-    else
-      return ListView.builder(
-        padding: EdgeInsets.only(bottom: desktop ? 24 : _bottomPadding),
-        itemCount: widget.exercises.length,
-        itemBuilder: (context, index) =>
-            itemBuilder(context, index, max, trailing, counts),
-      );
+    return ListView.builder(
+      padding: EdgeInsets.only(bottom: desktop ? 24 : _bottomPadding),
+      itemCount: widget.exercises.length,
+      itemBuilder: (context, index) =>
+          itemBuilder(context, index, max, trailing, counts),
+    );
   }
 
   Widget itemBuilder(
@@ -142,10 +117,6 @@ class _StartListState extends State<StartList> {
     Widget trail = const SizedBox();
     switch (trailing) {
       case PlanTrailing.reorder:
-        trail = ReorderableDragStartListener(
-          index: index,
-          child: const Icon(Icons.drag_handle, size: 32),
-        );
         break;
 
       case PlanTrailing.ratio:

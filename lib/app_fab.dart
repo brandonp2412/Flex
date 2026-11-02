@@ -64,18 +64,18 @@ class _AppFabState extends State<AppFab> {
       padding: EdgeInsets.only(
         bottom: widget.bottomPadding ?? appFabBottomPadding(context),
       ),
-      child: _extended
-          ? FloatingActionButton.extended(
-              heroTag: null,
-              onPressed: widget.onPressed,
-              label: widget.label,
-              icon: widget.icon,
-            )
-          : FloatingActionButton(
-              heroTag: null,
-              onPressed: widget.onPressed,
-              child: widget.icon,
-            ),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOutCubic,
+        alignment: AlignmentDirectional.centerEnd,
+        child: FloatingActionButton.extended(
+          heroTag: null,
+          onPressed: widget.onPressed,
+          isExtended: _extended,
+          label: widget.label,
+          icon: widget.icon,
+        ),
+      ),
     );
   }
 }

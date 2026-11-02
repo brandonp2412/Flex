@@ -317,27 +317,28 @@ List<Widget> getAppearanceSettings(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(
-                    value: 'underline',
-                    label: Text(l10n.inputStyleLine),
-                    icon: const Icon(Icons.format_underlined),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SegmentedButton<String>(
+                  showSelectedIcon: false,
+                  segments: [
+                    ButtonSegment(
+                      value: 'underline',
+                      label: Text(l10n.inputStyleLine, softWrap: false),
+                    ),
+                    ButtonSegment(
+                      value: 'outlined',
+                      label: Text(l10n.inputStyleOutlined, softWrap: false),
+                    ),
+                    ButtonSegment(
+                      value: 'filled',
+                      label: Text(l10n.inputStyleFilled, softWrap: false),
+                    ),
+                  ],
+                  selected: {settings.inputStyle},
+                  onSelectionChanged: (selection) => db.settings.update().write(
+                    SettingsCompanion(inputStyle: Value(selection.first)),
                   ),
-                  ButtonSegment(
-                    value: 'outlined',
-                    label: Text(l10n.inputStyleOutlined),
-                    icon: const Icon(Icons.border_all),
-                  ),
-                  ButtonSegment(
-                    value: 'filled',
-                    label: Text(l10n.inputStyleFilled),
-                    icon: const Icon(Icons.format_color_fill),
-                  ),
-                ],
-                selected: {settings.inputStyle},
-                onSelectionChanged: (selection) => db.settings.update().write(
-                  SettingsCompanion(inputStyle: Value(selection.first)),
                 ),
               ),
               const SizedBox(height: 12),

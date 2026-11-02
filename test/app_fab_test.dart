@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('AppFab collapses immediately without resize animations', (
+  testWidgets('AppFab smoothly collapses and expands when scrolling', (
     tester,
   ) async {
     final scroll = ScrollController();
@@ -33,28 +33,27 @@ void main() {
           .isExtended,
       isTrue,
     );
-    expect(
-      find.descendant(
-        of: find.byType(AppFab),
-        matching: find.byType(AnimatedContainer),
-      ),
-      findsNothing,
+    final fab = find.byType(FloatingActionButton);
+    final animatedSize = find.descendant(
+      of: find.byType(AppFab),
+      matching: find.byType(AnimatedSize),
     );
+    final expandedWidth = tester.getSize(animatedSize).width;
 
-    await tester.drag(find.byType(ListView), const Offset(0, -300));
+    scroll.jumpTo(300);
     await tester.pump();
-    expect(
-      tester
-          .widget<FloatingActionButton>(find.byType(FloatingActionButton))
-          .isExtended,
-      isFalse,
-    );
-    expect(
-      find.descendant(
-        of: find.byType(AppFab),
-        matching: find.byType(AnimatedOpacity),
-      ),
-      findsNothing,
-    );
+    await tester.pump(const Duration(milliseconds: 50));
+    final intermediateWidth = tester.getSize(animatedSize).width;
+    await tester.pumpAndSettle();
+    final collapsedWidth = tester.getSize(animatedSize).width;
+
+    expect(intermediateWidth, greaterThan(collapsedWidth));
+    expect(intermediateWidth, lessThan(expandedWidth));
+    expect(tester.widget<FloatingActionButton>(fab).isExtended, isFalse);
+
+    scroll.jumpTo(0);
+    await tester.pumpAndSettle();
+    expect(tester.getSize(animatedSize).width, expandedWidth);
+    expect(tester.widget<FloatingActionButton>(fab).isExtended, isTrue);
   });
 }
