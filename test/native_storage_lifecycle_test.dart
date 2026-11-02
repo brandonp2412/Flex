@@ -149,7 +149,7 @@ void main() {
     };
   }
 
-  Map<String, List<Map<String, Object?>>> afterGraphLimitUpgrade(
+  Map<String, List<Map<String, Object?>>> afterSettingsUpgrade(
     Map<String, List<Map<String, Object?>>> before,
   ) => {
     ...before,
@@ -159,6 +159,7 @@ void main() {
           for (final entry in setting.entries)
             if (entry.key != 'rep_estimation') entry.key: entry.value,
           'default_graph_limit': 30,
+          'seed_color': 0xFF673AB7,
         },
     ],
   };
@@ -260,13 +261,13 @@ Future<void> main(List<String> args) async {
       await legacy.close();
 
       final database = openPersistent();
-      expect(await snapshot(database), afterGraphLimitUpgrade(expected));
+      expect(await snapshot(database), afterSettingsUpgrade(expected));
       await expectHealthy(database);
       expect(await image.readAsBytes(), [1, 2, 3, 4]);
       await database.close();
 
       final reopened = openPersistent();
-      expect(await snapshot(reopened), afterGraphLimitUpgrade(expected));
+      expect(await snapshot(reopened), afterSettingsUpgrade(expected));
       await expectHealthy(reopened);
       final source = sqlite.sqlite3.open(
         legacyFile.path,
@@ -307,7 +308,7 @@ Future<void> main(List<String> args) async {
       expect(await File('${legacyFile.path}-wal').length(), greaterThan(0));
 
       final database = openPersistent();
-      expect(await snapshot(database), afterGraphLimitUpgrade(expected));
+      expect(await snapshot(database), afterSettingsUpgrade(expected));
       await expectHealthy(database);
       expect(await snapshot(legacy), expected);
     },

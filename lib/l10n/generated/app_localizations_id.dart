@@ -1300,6 +1300,15 @@ class AppLocalizationsId extends AppLocalizations {
       'Gunakan warna hitam murni untuk layar AMOLED';
 
   @override
+  String get appColor => 'Warna aplikasi';
+
+  @override
+  String get customColor => 'Warna khusus';
+
+  @override
+  String get hexColor => 'Warna heksadesimal';
+
+  @override
   String get systemColorScheme => 'Skema warna sistem';
 
   @override

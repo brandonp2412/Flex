@@ -1268,6 +1268,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pureBlackAmoledDescription => 'AMOLED 화면에서 완전한 검정색을 사용합니다';
 
   @override
+  String get appColor => '앱 색상';
+
+  @override
+  String get customColor => '사용자 지정 색상';
+
+  @override
+  String get hexColor => '16진수 색상';
+
+  @override
   String get systemColorScheme => '시스템 색상 구성';
 
   @override

@@ -122,6 +122,68 @@ void main() {
     expect(find.text('Light'), findsOne);
   });
 
+  testWidgets('Theme swatches and custom hex colour persist', (
+    WidgetTester tester,
+  ) async {
+    final harness = await render(tester, surfaceSize: const Size(390, 844));
+    await tester.tap(find.text('Appearance'));
+    await tester.pumpAndSettle();
+
+    final blue = const Color(0xFF1976D2);
+    final blueSwatch = find.byKey(Key('theme-color-${blue.toARGB32()}'));
+    await tester.ensureVisible(blueSwatch);
+    await tester.tap(blueSwatch);
+    await tester.pumpAndSettle();
+
+    var settings = await (harness.database.settings.select()..limit(1))
+        .getSingle();
+    expect(settings.seedColor, blue.toARGB32());
+
+    final custom = find.byKey(const Key('theme-color-custom'));
+    await tester.ensureVisible(custom);
+    await tester.tap(custom);
+    await tester.pumpAndSettle();
+    expect(find.text('Custom colour'), findsWidgets);
+
+    final hexField = find.byKey(const Key('theme-hex-field'));
+    await tester.enterText(hexField, '#12345');
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('theme-color-save')))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.enterText(hexField, '#12AB34');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('theme-color-save')));
+    await tester.pumpAndSettle();
+
+    settings = await (harness.database.settings.select()..limit(1)).getSingle();
+    expect(settings.seedColor, 0xFF12AB34);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Cancelling a custom theme colour keeps the saved seed', (
+    WidgetTester tester,
+  ) async {
+    final harness = await render(tester, surfaceSize: const Size(390, 844));
+    await tester.tap(find.text('Appearance'));
+    await tester.pumpAndSettle();
+    final custom = find.byKey(const Key('theme-color-custom'));
+    await tester.ensureVisible(custom);
+    await tester.tap(custom);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('theme-hex-field')), '#101010');
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    final settings = await (harness.database.settings.select()..limit(1))
+        .getSingle();
+    expect(settings.seedColor, Colors.deepPurple.toARGB32());
+  });
+
   testWidgets('SettingsPage searches and persists language', (
     WidgetTester tester,
   ) async {

@@ -1317,6 +1317,15 @@ class AppLocalizationsPl extends AppLocalizations {
       'Używaj czystej czerni na ekranach AMOLED';
 
   @override
+  String get appColor => 'Kolor aplikacji';
+
+  @override
+  String get customColor => 'Kolor niestandardowy';
+
+  @override
+  String get hexColor => 'Kolor szesnastkowy';
+
+  @override
   String get systemColorScheme => 'Systemowy schemat kolorów';
 
   @override

@@ -1301,6 +1301,15 @@ class AppLocalizationsTr extends AppLocalizations {
       'AMOLED ekranlar için saf siyah renkleri kullan';
 
   @override
+  String get appColor => 'Uygulama rengi';
+
+  @override
+  String get customColor => 'Özel renk';
+
+  @override
+  String get hexColor => 'Onaltılık renk';
+
+  @override
   String get systemColorScheme => 'Sistem teması';
 
   @override

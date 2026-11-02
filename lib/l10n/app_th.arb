@@ -1645,6 +1645,9 @@
   "@pureBlackAmoledDescription": {
     "description": "Description of the AMOLED pure-black appearance option."
   },
+  "appColor": "สีแอป",
+  "customColor": "สีที่กำหนดเอง",
+  "hexColor": "สีฐานสิบหก",
   "systemColorScheme": "โทนสีของระบบ",
   "@systemColorScheme": {
     "description": "Appearance setting for using system colors."

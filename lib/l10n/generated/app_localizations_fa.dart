@@ -1295,6 +1295,15 @@ class AppLocalizationsFa extends AppLocalizations {
       'برای نمایشگرهای AMOLED از رنگ‌های سیاه خالص استفاده کنید';
 
   @override
+  String get appColor => 'رنگ برنامه';
+
+  @override
+  String get customColor => 'رنگ دلخواه';
+
+  @override
+  String get hexColor => 'رنگ هگز';
+
+  @override
   String get systemColorScheme => 'طرح رنگ سیستم';
 
   @override

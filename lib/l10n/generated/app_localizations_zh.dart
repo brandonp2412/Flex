@@ -1262,6 +1262,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pureBlackAmoledDescription => '在 AMOLED 屏幕上使用纯黑色';
 
   @override
+  String get appColor => '应用颜色';
+
+  @override
+  String get customColor => '自定义颜色';
+
+  @override
+  String get hexColor => '十六进制颜色';
+
+  @override
   String get systemColorScheme => '系统配色';
 
   @override
@@ -2798,6 +2807,15 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
 
   @override
   String get pureBlackAmoledDescription => '在 AMOLED 屏幕上使用纯黑色';
+
+  @override
+  String get appColor => '应用颜色';
+
+  @override
+  String get customColor => '自定义颜色';
+
+  @override
+  String get hexColor => '十六进制颜色';
 
   @override
   String get systemColorScheme => '系统配色';
@@ -4337,6 +4355,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get pureBlackAmoledDescription => '在 AMOLED 螢幕上使用純黑色';
+
+  @override
+  String get appColor => '應用程式顏色';
+
+  @override
+  String get customColor => '自訂顏色';
+
+  @override
+  String get hexColor => '十六進位顏色';
 
   @override
   String get systemColorScheme => '系統配色';

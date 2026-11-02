@@ -1296,6 +1296,15 @@ class AppLocalizationsHi extends AppLocalizations {
       'AMOLED डिस्प्ले के लिए शुद्ध काले रंग इस्तेमाल करें';
 
   @override
+  String get appColor => 'ऐप का रंग';
+
+  @override
+  String get customColor => 'कस्टम रंग';
+
+  @override
+  String get hexColor => 'हेक्स रंग';
+
+  @override
   String get systemColorScheme => 'सिस्टम रंग योजना';
 
   @override

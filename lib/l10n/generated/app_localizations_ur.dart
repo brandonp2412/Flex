@@ -1299,6 +1299,15 @@ class AppLocalizationsUr extends AppLocalizations {
       'AMOLED ڈسپلے کے لیے مکمل سیاہ رنگ استعمال کریں';
 
   @override
+  String get appColor => 'ایپ کا رنگ';
+
+  @override
+  String get customColor => 'حسب ضرورت رنگ';
+
+  @override
+  String get hexColor => 'ہیکس رنگ';
+
+  @override
   String get systemColorScheme => 'سسٹم رنگ اسکیم';
 
   @override

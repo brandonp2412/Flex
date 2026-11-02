@@ -36,6 +36,8 @@ class Settings extends Table {
   BoolColumn get showUnits => boolean()();
   TextColumn get strengthUnit => text()();
   BoolColumn get systemColors => boolean()();
+  IntColumn get seedColor =>
+      integer().withDefault(const Constant(0xFF673AB7))();
   TextColumn get tabs => text().withDefault(
     const Constant("HistoryPage,PlansPage,GraphsPage,TimerPage"),
   )();

@@ -1294,6 +1294,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use pure black colors for AMOLED displays';
 
   @override
+  String get appColor => 'App colour';
+
+  @override
+  String get customColor => 'Custom colour';
+
+  @override
+  String get hexColor => 'Hex colour';
+
+  @override
   String get systemColorScheme => 'System color scheme';
 
   @override

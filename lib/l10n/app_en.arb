@@ -1700,6 +1700,12 @@
   "@pureBlackAmoledDescription": {
     "description": "Description of the AMOLED pure-black appearance option."
   },
+  "appColor": "App colour",
+  "@appColor": {"description": "Label for the app accent colour swatches."},
+  "customColor": "Custom colour",
+  "@customColor": {"description": "Title and tooltip for the custom colour picker."},
+  "hexColor": "Hex colour",
+  "@hexColor": {"description": "Input label for a six-digit hexadecimal colour."},
   "systemColorScheme": "System color scheme",
   "@systemColorScheme": {
     "description": "Appearance setting for using system colors."

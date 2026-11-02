@@ -1306,6 +1306,15 @@ class AppLocalizationsNl extends AppLocalizations {
       'Gebruik puur zwarte kleuren voor AMOLED-schermen';
 
   @override
+  String get appColor => 'Appkleur';
+
+  @override
+  String get customColor => 'Aangepaste kleur';
+
+  @override
+  String get hexColor => 'Hexkleur';
+
+  @override
   String get systemColorScheme => 'Systeemkleurenschema';
 
   @override

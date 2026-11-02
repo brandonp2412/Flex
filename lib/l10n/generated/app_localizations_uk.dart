@@ -1316,6 +1316,15 @@ class AppLocalizationsUk extends AppLocalizations {
       'Використовувати чистий чорний колір для AMOLED-дисплеїв';
 
   @override
+  String get appColor => 'Колір застосунку';
+
+  @override
+  String get customColor => 'Власний колір';
+
+  @override
+  String get hexColor => 'Шістнадцятковий колір';
+
+  @override
   String get systemColorScheme => 'Системна колірна схема';
 
   @override

@@ -1292,6 +1292,15 @@ class AppLocalizationsAr extends AppLocalizations {
       'استخدام ألوان سوداء خالصة لشاشات AMOLED';
 
   @override
+  String get appColor => 'لون التطبيق';
+
+  @override
+  String get customColor => 'لون مخصص';
+
+  @override
+  String get hexColor => 'لون سداسي عشري';
+
+  @override
   String get systemColorScheme => 'نظام ألوان الجهاز';
 
   @override

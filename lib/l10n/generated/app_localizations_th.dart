@@ -1296,6 +1296,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get pureBlackAmoledDescription => 'ใช้สีดำสนิทสำหรับหน้าจอ AMOLED';
 
   @override
+  String get appColor => 'สีแอป';
+
+  @override
+  String get customColor => 'สีที่กำหนดเอง';
+
+  @override
+  String get hexColor => 'สีฐานสิบหก';
+
+  @override
   String get systemColorScheme => 'โทนสีของระบบ';
 
   @override

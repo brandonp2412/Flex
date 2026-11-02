@@ -1654,6 +1654,9 @@
   "@pureBlackAmoledDescription": {
     "description": "Description of the AMOLED pure-black appearance option."
   },
+  "appColor": "Колір застосунку",
+  "customColor": "Власний колір",
+  "hexColor": "Шістнадцятковий колір",
   "systemColorScheme": "Системна колірна схема",
   "@systemColorScheme": {
     "description": "Appearance setting for using system colors."

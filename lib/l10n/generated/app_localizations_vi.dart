@@ -1297,6 +1297,15 @@ class AppLocalizationsVi extends AppLocalizations {
       'Sử dụng màu đen tuyền cho màn hình AMOLED';
 
   @override
+  String get appColor => 'Màu ứng dụng';
+
+  @override
+  String get customColor => 'Màu tùy chỉnh';
+
+  @override
+  String get hexColor => 'Màu thập lục phân';
+
+  @override
   String get systemColorScheme => 'Bảng màu hệ thống';
 
   @override

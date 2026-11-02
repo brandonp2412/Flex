@@ -1310,6 +1310,15 @@ class AppLocalizationsDe extends AppLocalizations {
       'Reines Schwarz für AMOLED-Displays verwenden';
 
   @override
+  String get appColor => 'App-Farbe';
+
+  @override
+  String get customColor => 'Benutzerdefinierte Farbe';
+
+  @override
+  String get hexColor => 'Hex-Farbe';
+
+  @override
   String get systemColorScheme => 'Systemfarbschema';
 
   @override

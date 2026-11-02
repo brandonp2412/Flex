@@ -2436,6 +2436,24 @@ abstract class AppLocalizations {
   /// **'Use pure black colors for AMOLED displays'**
   String get pureBlackAmoledDescription;
 
+  /// Label for the app accent colour swatches.
+  ///
+  /// In en, this message translates to:
+  /// **'App colour'**
+  String get appColor;
+
+  /// Title and tooltip for the custom colour picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom colour'**
+  String get customColor;
+
+  /// Input label for a six-digit hexadecimal colour.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex colour'**
+  String get hexColor;
+
   /// Appearance setting for using system colors.
   ///
   /// In en, this message translates to:

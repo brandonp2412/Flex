@@ -2915,6 +2915,18 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
       'CHECK ("system_colors" IN (0, 1))',
     ),
   );
+  static const VerificationMeta _seedColorMeta = const VerificationMeta(
+    'seedColor',
+  );
+  @override
+  late final GeneratedColumn<int> seedColor = GeneratedColumn<int>(
+    'seed_color',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0xFF673AB7),
+  );
   static const VerificationMeta _tabsMeta = const VerificationMeta('tabs');
   @override
   late final GeneratedColumn<String> tabs = GeneratedColumn<String>(
@@ -3153,6 +3165,7 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     showUnits,
     strengthUnit,
     systemColors,
+    seedColor,
     tabs,
     themeMode,
     timerDuration,
@@ -3433,6 +3446,12 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     } else if (isInserting) {
       context.missing(_systemColorsMeta);
     }
+    if (data.containsKey('seed_color')) {
+      context.handle(
+        _seedColorMeta,
+        seedColor.isAcceptableOrUnknown(data['seed_color']!, _seedColorMeta),
+      );
+    }
     if (data.containsKey('tabs')) {
       context.handle(
         _tabsMeta,
@@ -3693,6 +3712,10 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         DriftSqlType.bool,
         data['${effectivePrefix}system_colors'],
       )!,
+      seedColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}seed_color'],
+      )!,
       tabs: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}tabs'],
@@ -3796,6 +3819,7 @@ class Setting extends DataClass implements Insertable<Setting> {
   final bool showUnits;
   final String strengthUnit;
   final bool systemColors;
+  final int seedColor;
   final String tabs;
   final String themeMode;
   final int timerDuration;
@@ -3842,6 +3866,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     required this.showUnits,
     required this.strengthUnit,
     required this.systemColors,
+    required this.seedColor,
     required this.tabs,
     required this.themeMode,
     required this.timerDuration,
@@ -3901,6 +3926,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     map['show_units'] = Variable<bool>(showUnits);
     map['strength_unit'] = Variable<String>(strengthUnit);
     map['system_colors'] = Variable<bool>(systemColors);
+    map['seed_color'] = Variable<int>(seedColor);
     map['tabs'] = Variable<String>(tabs);
     map['theme_mode'] = Variable<String>(themeMode);
     map['timer_duration'] = Variable<int>(timerDuration);
@@ -3963,6 +3989,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       showUnits: Value(showUnits),
       strengthUnit: Value(strengthUnit),
       systemColors: Value(systemColors),
+      seedColor: Value(seedColor),
       tabs: Value(tabs),
       themeMode: Value(themeMode),
       timerDuration: Value(timerDuration),
@@ -4023,6 +4050,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       showUnits: serializer.fromJson<bool>(json['showUnits']),
       strengthUnit: serializer.fromJson<String>(json['strengthUnit']),
       systemColors: serializer.fromJson<bool>(json['systemColors']),
+      seedColor: serializer.fromJson<int>(json['seedColor']),
       tabs: serializer.fromJson<String>(json['tabs']),
       themeMode: serializer.fromJson<String>(json['themeMode']),
       timerDuration: serializer.fromJson<int>(json['timerDuration']),
@@ -4082,6 +4110,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       'showUnits': serializer.toJson<bool>(showUnits),
       'strengthUnit': serializer.toJson<String>(strengthUnit),
       'systemColors': serializer.toJson<bool>(systemColors),
+      'seedColor': serializer.toJson<int>(seedColor),
       'tabs': serializer.toJson<String>(tabs),
       'themeMode': serializer.toJson<String>(themeMode),
       'timerDuration': serializer.toJson<int>(timerDuration),
@@ -4133,6 +4162,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     bool? showUnits,
     String? strengthUnit,
     bool? systemColors,
+    int? seedColor,
     String? tabs,
     String? themeMode,
     int? timerDuration,
@@ -4184,6 +4214,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     showUnits: showUnits ?? this.showUnits,
     strengthUnit: strengthUnit ?? this.strengthUnit,
     systemColors: systemColors ?? this.systemColors,
+    seedColor: seedColor ?? this.seedColor,
     tabs: tabs ?? this.tabs,
     themeMode: themeMode ?? this.themeMode,
     timerDuration: timerDuration ?? this.timerDuration,
@@ -4282,6 +4313,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       systemColors: data.systemColors.present
           ? data.systemColors.value
           : this.systemColors,
+      seedColor: data.seedColor.present ? data.seedColor.value : this.seedColor,
       tabs: data.tabs.present ? data.tabs.value : this.tabs,
       themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
       timerDuration: data.timerDuration.present
@@ -4361,6 +4393,7 @@ class Setting extends DataClass implements Insertable<Setting> {
           ..write('showUnits: $showUnits, ')
           ..write('strengthUnit: $strengthUnit, ')
           ..write('systemColors: $systemColors, ')
+          ..write('seedColor: $seedColor, ')
           ..write('tabs: $tabs, ')
           ..write('themeMode: $themeMode, ')
           ..write('timerDuration: $timerDuration, ')
@@ -4412,6 +4445,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     showUnits,
     strengthUnit,
     systemColors,
+    seedColor,
     tabs,
     themeMode,
     timerDuration,
@@ -4463,6 +4497,7 @@ class Setting extends DataClass implements Insertable<Setting> {
           other.showUnits == this.showUnits &&
           other.strengthUnit == this.strengthUnit &&
           other.systemColors == this.systemColors &&
+          other.seedColor == this.seedColor &&
           other.tabs == this.tabs &&
           other.themeMode == this.themeMode &&
           other.timerDuration == this.timerDuration &&
@@ -4511,6 +4546,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<bool> showUnits;
   final Value<String> strengthUnit;
   final Value<bool> systemColors;
+  final Value<int> seedColor;
   final Value<String> tabs;
   final Value<String> themeMode;
   final Value<int> timerDuration;
@@ -4557,6 +4593,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.showUnits = const Value.absent(),
     this.strengthUnit = const Value.absent(),
     this.systemColors = const Value.absent(),
+    this.seedColor = const Value.absent(),
     this.tabs = const Value.absent(),
     this.themeMode = const Value.absent(),
     this.timerDuration = const Value.absent(),
@@ -4604,6 +4641,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     required bool showUnits,
     required String strengthUnit,
     required bool systemColors,
+    this.seedColor = const Value.absent(),
     this.tabs = const Value.absent(),
     required String themeMode,
     required int timerDuration,
@@ -4666,6 +4704,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Expression<bool>? showUnits,
     Expression<String>? strengthUnit,
     Expression<bool>? systemColors,
+    Expression<int>? seedColor,
     Expression<String>? tabs,
     Expression<String>? themeMode,
     Expression<int>? timerDuration,
@@ -4716,6 +4755,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       if (showUnits != null) 'show_units': showUnits,
       if (strengthUnit != null) 'strength_unit': strengthUnit,
       if (systemColors != null) 'system_colors': systemColors,
+      if (seedColor != null) 'seed_color': seedColor,
       if (tabs != null) 'tabs': tabs,
       if (themeMode != null) 'theme_mode': themeMode,
       if (timerDuration != null) 'timer_duration': timerDuration,
@@ -4768,6 +4808,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<bool>? showUnits,
     Value<String>? strengthUnit,
     Value<bool>? systemColors,
+    Value<int>? seedColor,
     Value<String>? tabs,
     Value<String>? themeMode,
     Value<int>? timerDuration,
@@ -4817,6 +4858,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       showUnits: showUnits ?? this.showUnits,
       strengthUnit: strengthUnit ?? this.strengthUnit,
       systemColors: systemColors ?? this.systemColors,
+      seedColor: seedColor ?? this.seedColor,
       tabs: tabs ?? this.tabs,
       themeMode: themeMode ?? this.themeMode,
       timerDuration: timerDuration ?? this.timerDuration,
@@ -4929,6 +4971,9 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     if (systemColors.present) {
       map['system_colors'] = Variable<bool>(systemColors.value);
     }
+    if (seedColor.present) {
+      map['seed_color'] = Variable<int>(seedColor.value);
+    }
     if (tabs.present) {
       map['tabs'] = Variable<String>(tabs.value);
     }
@@ -5016,6 +5061,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           ..write('showUnits: $showUnits, ')
           ..write('strengthUnit: $strengthUnit, ')
           ..write('systemColors: $systemColors, ')
+          ..write('seedColor: $seedColor, ')
           ..write('tabs: $tabs, ')
           ..write('themeMode: $themeMode, ')
           ..write('timerDuration: $timerDuration, ')
@@ -8024,6 +8070,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
       required bool showUnits,
       required String strengthUnit,
       required bool systemColors,
+      Value<int> seedColor,
       Value<String> tabs,
       required String themeMode,
       required int timerDuration,
@@ -8072,6 +8119,7 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<bool> showUnits,
       Value<String> strengthUnit,
       Value<bool> systemColors,
+      Value<int> seedColor,
       Value<String> tabs,
       Value<String> themeMode,
       Value<int> timerDuration,
@@ -8241,6 +8289,11 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<bool> get systemColors => $composableBuilder(
     column: $table.systemColors,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seedColor => $composableBuilder(
+    column: $table.seedColor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8480,6 +8533,11 @@ class $$SettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get seedColor => $composableBuilder(
+    column: $table.seedColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get tabs => $composableBuilder(
     column: $table.tabs,
     builder: (column) => ColumnOrderings(column),
@@ -8706,6 +8764,9 @@ class $$SettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get seedColor =>
+      $composableBuilder(column: $table.seedColor, builder: (column) => column);
+
   GeneratedColumn<String> get tabs =>
       $composableBuilder(column: $table.tabs, builder: (column) => column);
 
@@ -8839,6 +8900,7 @@ class $$SettingsTableTableManager
                 Value<bool> showUnits = const Value.absent(),
                 Value<String> strengthUnit = const Value.absent(),
                 Value<bool> systemColors = const Value.absent(),
+                Value<int> seedColor = const Value.absent(),
                 Value<String> tabs = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
                 Value<int> timerDuration = const Value.absent(),
@@ -8886,6 +8948,7 @@ class $$SettingsTableTableManager
                 showUnits: showUnits,
                 strengthUnit: strengthUnit,
                 systemColors: systemColors,
+                seedColor: seedColor,
                 tabs: tabs,
                 themeMode: themeMode,
                 timerDuration: timerDuration,
@@ -8935,6 +8998,7 @@ class $$SettingsTableTableManager
                 required bool showUnits,
                 required String strengthUnit,
                 required bool systemColors,
+                Value<int> seedColor = const Value.absent(),
                 Value<String> tabs = const Value.absent(),
                 required String themeMode,
                 required int timerDuration,
@@ -8982,6 +9046,7 @@ class $$SettingsTableTableManager
                 showUnits: showUnits,
                 strengthUnit: strengthUnit,
                 systemColors: systemColors,
+                seedColor: seedColor,
                 tabs: tabs,
                 themeMode: themeMode,
                 timerDuration: timerDuration,

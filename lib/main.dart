@@ -149,13 +149,6 @@ Widget appProviders(Setting initialSettings) => ValueListenableBuilder<int>(
 );
 
 class App extends StatelessWidget {
-  static final _lightScheme = ColorScheme.fromSeed(
-    seedColor: Colors.deepPurple,
-  );
-  static final _darkScheme = ColorScheme.fromSeed(
-    seedColor: Colors.deepPurple,
-    brightness: Brightness.dark,
-  );
   static const _popupMenuTheme = PopupMenuThemeData(
     menuPadding: EdgeInsets.zero,
   );
@@ -176,6 +169,9 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.select<Setting, bool>(
       (settings) => settings.systemColors,
+    );
+    final seedColor = context.select<Setting, int>(
+      (settings) => settings.seedColor,
     );
     final amoledDark = context.select<Setting, bool>(
       (settings) => settings.themeMode == 'ThemeMode.amoled',
@@ -221,6 +217,12 @@ class App extends StatelessWidget {
           ),
         );
 
+        final lightScheme = ColorScheme.fromSeed(seedColor: Color(seedColor));
+        final darkScheme = ColorScheme.fromSeed(
+          seedColor: Color(seedColor),
+          brightness: Brightness.dark,
+        );
+
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           scaffoldMessengerKey: messengerKey,
@@ -250,7 +252,7 @@ class App extends StatelessWidget {
           },
           onGenerateTitle: (context) => context.l10n.appTitle,
           theme: ThemeData(
-            colorScheme: colors ? lightDynamic : _lightScheme,
+            colorScheme: colors ? (lightDynamic ?? lightScheme) : lightScheme,
             fontFamily: 'Manrope',
             useMaterial3: true,
             inputDecorationTheme: _inputDecorationTheme(inputStyle),
@@ -258,9 +260,8 @@ class App extends StatelessWidget {
             pageTransitionsTheme: _pageTransitionsTheme(),
           ),
           darkTheme: ThemeData(
-            colorScheme: (colors ? darkDynamic : _darkScheme)?.copyWith(
-              surface: amoledDark ? Colors.black : null,
-            ),
+            colorScheme: (colors ? (darkDynamic ?? darkScheme) : darkScheme)
+                .copyWith(surface: amoledDark ? Colors.black : null),
             fontFamily: 'Manrope',
             useMaterial3: true,
             inputDecorationTheme: _inputDecorationTheme(inputStyle),

@@ -1300,6 +1300,15 @@ class AppLocalizationsMs extends AppLocalizations {
       'Gunakan warna hitam tulen untuk paparan AMOLED';
 
   @override
+  String get appColor => 'Warna aplikasi';
+
+  @override
+  String get customColor => 'Warna tersuai';
+
+  @override
+  String get hexColor => 'Warna heksadesimal';
+
+  @override
   String get systemColorScheme => 'Skema warna sistem';
 
   @override

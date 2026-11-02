@@ -1298,6 +1298,15 @@ class AppLocalizationsBn extends AppLocalizations {
       'AMOLED ডিসপ্লের জন্য সম্পূর্ণ কালো রং ব্যবহার করুন';
 
   @override
+  String get appColor => 'অ্যাপের রং';
+
+  @override
+  String get customColor => 'কাস্টম রং';
+
+  @override
+  String get hexColor => 'হেক্স রং';
+
+  @override
   String get systemColorScheme => 'সিস্টেমের রঙের স্কিম';
 
   @override

@@ -1308,6 +1308,15 @@ class AppLocalizationsPt extends AppLocalizations {
       'Usar cores em preto puro para ecrãs AMOLED';
 
   @override
+  String get appColor => 'Cor da aplicação';
+
+  @override
+  String get customColor => 'Cor personalizada';
+
+  @override
+  String get hexColor => 'Cor hexadecimal';
+
+  @override
   String get systemColorScheme => 'Esquema de cores do sistema';
 
   @override
@@ -2933,6 +2942,15 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   @override
   String get pureBlackAmoledDescription =>
       'Usar cores em preto puro para telas AMOLED';
+
+  @override
+  String get appColor => 'Cor do aplicativo';
+
+  @override
+  String get customColor => 'Cor personalizada';
+
+  @override
+  String get hexColor => 'Cor hexadecimal';
 
   @override
   String get systemColorScheme => 'Esquema de cores do sistema';
@@ -4561,6 +4579,15 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
   @override
   String get pureBlackAmoledDescription =>
       'Usar cores em preto puro para ecrãs AMOLED';
+
+  @override
+  String get appColor => 'Cor da aplicação';
+
+  @override
+  String get customColor => 'Cor personalizada';
+
+  @override
+  String get hexColor => 'Cor hexadecimal';
 
   @override
   String get systemColorScheme => 'Esquema de cores do sistema';

@@ -1267,6 +1267,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pureBlackAmoledDescription => 'AMOLEDディスプレイでは完全な黒を使用します';
 
   @override
+  String get appColor => 'アプリの色';
+
+  @override
+  String get customColor => 'カスタムカラー';
+
+  @override
+  String get hexColor => '16進カラー';
+
+  @override
   String get systemColorScheme => 'システムのカラースキーム';
 
   @override

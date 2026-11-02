@@ -1645,6 +1645,9 @@
   "@pureBlackAmoledDescription": {
     "description": "Description of the AMOLED pure-black appearance option."
   },
+  "appColor": "Màu ứng dụng",
+  "customColor": "Màu tùy chỉnh",
+  "hexColor": "Màu thập lục phân",
   "systemColorScheme": "Bảng màu hệ thống",
   "@systemColorScheme": {
     "description": "Appearance setting for using system colors."

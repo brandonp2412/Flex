@@ -1311,6 +1311,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Utiliser du noir pur sur les écrans AMOLED';
 
   @override
+  String get appColor => 'Couleur de l’application';
+
+  @override
+  String get customColor => 'Couleur personnalisée';
+
+  @override
+  String get hexColor => 'Couleur hexadécimale';
+
+  @override
   String get systemColorScheme => 'Palette de couleurs du système';
 
   @override

@@ -4,6 +4,7 @@ import 'package:flex/l10n/l10n.dart';
 import 'package:flex/l10n/locale_preferences.dart';
 import 'package:flex/main.dart';
 import 'package:flex/responsive.dart';
+import 'package:flex/settings/theme_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -142,6 +143,67 @@ List<Widget> getAppearanceSettings(
               ),
             ),
           ),
+        ),
+      ),
+    if (!settings.systemColors &&
+        matches([
+          l10n.appColor,
+          l10n.customColor,
+          l10n.hexColor,
+          l10n.themeLabel,
+          'color',
+          'colour',
+          'accent',
+        ]))
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.appColor, style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final color in _themeColors)
+                  _colorSwatch(
+                    context,
+                    color: color,
+                    selected: settings.seedColor == color.toARGB32(),
+                    onTap: () => db.settings.update().write(
+                      SettingsCompanion(seedColor: Value(color.toARGB32())),
+                    ),
+                  ),
+                _colorSwatch(
+                  context,
+                  color:
+                      _themeColors.any(
+                        (color) => color.toARGB32() == settings.seedColor,
+                      )
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest
+                      : Color(settings.seedColor),
+                  selected: !_themeColors.any(
+                    (color) => color.toARGB32() == settings.seedColor,
+                  ),
+                  custom: true,
+                  onTap: () async {
+                    final selected = await showThemeColorPicker(
+                      context,
+                      Color(settings.seedColor),
+                    );
+                    if (selected != null) {
+                      await db.settings.update().write(
+                        SettingsCompanion(
+                          seedColor: Value(selected.toARGB32()),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     if (matches([l10n.showImages, l10n.showImagesDescription]))
@@ -306,4 +368,68 @@ class AppearanceSettings extends StatelessWidget {
       ),
     );
   }
+}
+
+const _themeColors = [
+  Colors.deepPurple,
+  Color(0xFF2B7A78),
+  Color(0xFF1976D2),
+  Color(0xFF388E3C),
+  Color(0xFFD32F2F),
+  Color(0xFFF57C00),
+  Color(0xFF7B1FA2),
+  Color(0xFF0097A7),
+  Color(0xFF5D4037),
+  Color(0xFF455A64),
+];
+
+Widget _colorSwatch(
+  BuildContext context, {
+  required Color color,
+  required bool selected,
+  required VoidCallback onTap,
+  bool custom = false,
+}) {
+  final label = custom
+      ? context.l10n.customColor
+      : '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
+  return Tooltip(
+    message: label,
+    child: Semantics(
+      label: label,
+      button: true,
+      selected: selected,
+      child: InkWell(
+        key: Key(
+          custom ? 'theme-color-custom' : 'theme-color-${color.toARGB32()}',
+        ),
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: selected
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.outlineVariant,
+              width: selected ? 3 : 1,
+            ),
+          ),
+          child: selected || custom
+              ? Icon(
+                  custom ? Icons.colorize_rounded : Icons.check_rounded,
+                  size: 19,
+                  color: color.computeLuminance() > 0.45
+                      ? Colors.black
+                      : Colors.white,
+                )
+              : null,
+        ),
+      ),
+    ),
+  );
 }
