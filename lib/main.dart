@@ -149,6 +149,11 @@ Widget appProviders(Setting initialSettings) => ValueListenableBuilder<int>(
 );
 
 class App extends StatelessWidget {
+  static const _sliderTheme = SliderThemeData(
+    trackHeight: 3,
+    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 7),
+    overlayShape: RoundSliderOverlayShape(overlayRadius: 14),
+  );
   static const _popupMenuTheme = PopupMenuThemeData(
     menuPadding: EdgeInsets.zero,
   );
@@ -255,6 +260,7 @@ class App extends StatelessWidget {
             colorScheme: colors ? (lightDynamic ?? lightScheme) : lightScheme,
             fontFamily: 'Manrope',
             useMaterial3: true,
+            sliderTheme: _sliderTheme,
             inputDecorationTheme: _inputDecorationTheme(inputStyle),
             popupMenuTheme: _popupMenuTheme,
             pageTransitionsTheme: _pageTransitionsTheme(),
@@ -264,6 +270,7 @@ class App extends StatelessWidget {
                 .copyWith(surface: amoledDark ? Colors.black : null),
             fontFamily: 'Manrope',
             useMaterial3: true,
+            sliderTheme: _sliderTheme,
             inputDecorationTheme: _inputDecorationTheme(inputStyle),
             popupMenuTheme: _popupMenuTheme,
             pageTransitionsTheme: _pageTransitionsTheme(),
