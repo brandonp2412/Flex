@@ -351,6 +351,8 @@ class _StrengthPageState extends State<StrengthPage> {
   }
 
   void _showOptions() {
+    final settings = context.read<Setting>();
+    final l10n = context.l10n;
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -359,7 +361,6 @@ class _StrengthPageState extends State<StrengthPage> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (sheetContext, setSheet) {
-            final settings = context.read<Setting>();
             void refreshSheet() => setSheet(() {});
 
             return SafeArea(
@@ -375,9 +376,10 @@ class _StrengthPageState extends State<StrengthPage> {
                   shortDateFormat: settings.shortDateFormat,
                   unitValue: settings.showUnits ? _targetUnit : null,
                   unitItems: settings.showUnits
-                      ? strengthUnitMenuItems(context.l10n)
+                      ? strengthUnitMenuItems(l10n)
                       : const [],
                   onUnitChanged: (value) {
+                    if (!mounted) return;
                     setState(() {
                       _targetUnit = value;
                     });
@@ -387,10 +389,12 @@ class _StrengthPageState extends State<StrengthPage> {
                   startDate: start,
                   endDate: end,
                   onSelectStart: () async {
+                    if (!mounted) return;
                     await _selectStart();
                     if (sheetContext.mounted) refreshSheet();
                   },
                   onClearStart: () {
+                    if (!mounted) return;
                     setState(() {
                       start = null;
                     });
@@ -398,10 +402,12 @@ class _StrengthPageState extends State<StrengthPage> {
                     refreshSheet();
                   },
                   onSelectEnd: () async {
+                    if (!mounted) return;
                     await _selectEnd();
                     if (sheetContext.mounted) refreshSheet();
                   },
                   onClearEnd: () {
+                    if (!mounted) return;
                     setState(() {
                       end = null;
                     });
@@ -411,6 +417,7 @@ class _StrengthPageState extends State<StrengthPage> {
                   limit: limit,
                   maxLimit: 100,
                   onLimitChanged: (value) {
+                    if (!mounted) return;
                     setState(() {
                       limit = value;
                     });
@@ -420,6 +427,7 @@ class _StrengthPageState extends State<StrengthPage> {
                   },
                   timeBasedXAxis: timeAxis,
                   onTimeAxisChange: (value) {
+                    if (!mounted) return;
                     setState(() {
                       timeAxis = value;
                     });
@@ -502,6 +510,7 @@ class _StrengthPageState extends State<StrengthPage> {
   }
 
   Future<void> _selectEnd() async {
+    if (!mounted) return;
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: end,
@@ -518,6 +527,7 @@ class _StrengthPageState extends State<StrengthPage> {
   }
 
   Future<void> _selectStart() async {
+    if (!mounted) return;
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: start,
