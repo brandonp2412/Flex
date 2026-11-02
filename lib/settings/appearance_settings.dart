@@ -301,6 +301,7 @@ List<Widget> getAppearanceSettings(
             inactiveColor: Theme.of(
               context,
             ).colorScheme.primary.withValues(alpha: 0.24),
+            divisions: 20,
             onChanged: (value) {
               db.settings.update().write(
                 SettingsCompanion(curveSmoothness: Value(value)),

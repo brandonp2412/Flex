@@ -317,6 +317,7 @@ class _LimitControl extends StatelessWidget {
       inactiveColor: colorScheme.primary.withValues(alpha: 0.24),
       min: 10,
       max: maxLimit.toDouble(),
+      divisions: maxLimit - 10,
       onChanged: (value) => onChanged(value.toInt()),
     );
 
