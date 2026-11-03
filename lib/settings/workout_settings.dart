@@ -248,6 +248,7 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
         l10n.bestWeight,
         l10n.bestReps,
         l10n.oneRepMax,
+        '1RM',
         l10n.volume,
         l10n.paceCardio,
         l10n.distanceCardio,

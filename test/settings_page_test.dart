@@ -70,6 +70,26 @@ void main() {
     expect(find.widgetWithText(ListTile, 'Show units'), findsOne);
   });
 
+  testWidgets('Settings search finds 1RM and backup actions', (tester) async {
+    await render(tester);
+    final search = find.descendant(
+      of: find.byType(SearchBar),
+      matching: find.byType(EditableText),
+    );
+
+    await tester.enterText(search, '1RM');
+    await tester.pumpAndSettle();
+    expect(find.text('Default graph metric'), findsOneWidget);
+
+    await tester.enterText(search, 'manual backup');
+    await tester.pumpAndSettle();
+    expect(find.text('Export data'), findsOneWidget);
+
+    await tester.enterText(search, 'restore');
+    await tester.pumpAndSettle();
+    expect(find.text('Import data'), findsOneWidget);
+  });
+
   testWidgets('Workout settings reveal graph options on demand', (
     WidgetTester tester,
   ) async {

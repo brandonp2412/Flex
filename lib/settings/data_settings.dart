@@ -148,8 +148,8 @@ List<Widget> getDataSettings(
         label: Text(l10n.shareDatabase),
         icon: const Icon(Icons.share),
       ),
-    if (matches([l10n.exportData])) const ExportData(),
-    if (matches([l10n.importData])) ImportData(ctx: context),
+    if (matches([l10n.exportData, 'manual backup'])) const ExportData(),
+    if (matches([l10n.importData, 'restore'])) ImportData(ctx: context),
     if (matches([l10n.deleteRecords])) DeleteRecordsButton(ctx: context),
   ];
 }
