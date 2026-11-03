@@ -1098,6 +1098,12 @@ class AppLocalizationsMs extends AppLocalizations {
   String get curveSmoothness => 'Kehalusan lengkung';
 
   @override
+  String get chartGridlines => 'Garis grid carta';
+
+  @override
+  String get chartShading => 'Lorekan carta';
+
+  @override
   String get actionBack => 'Kembali';
 
   @override

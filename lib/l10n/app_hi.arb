@@ -2024,5 +2024,7 @@
       }
     }
   },
-  "previousPerformance": "पहले {date} · {sets}"
+  "previousPerformance": "पहले {date} · {sets}",
+  "chartGridlines": "चार्ट की ग्रिड रेखाएँ",
+  "chartShading": "चार्ट का छायांकन"
 }

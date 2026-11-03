@@ -1098,6 +1098,12 @@ class AppLocalizationsUr extends AppLocalizations {
   String get curveSmoothness => 'منحنی لکیر کی ہمواری';
 
   @override
+  String get chartGridlines => 'چارٹ کی گرڈ لائنیں';
+
+  @override
+  String get chartShading => 'چارٹ کی شیڈنگ';
+
+  @override
   String get actionBack => 'واپس';
 
   @override

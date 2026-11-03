@@ -1075,6 +1075,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get curveSmoothness => '곡선 부드러움';
 
   @override
+  String get chartGridlines => '차트 눈금선';
+
+  @override
+  String get chartShading => '차트 영역 음영';
+
+  @override
   String get actionBack => '뒤로';
 
   @override

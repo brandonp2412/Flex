@@ -1095,6 +1095,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get curveSmoothness => 'वक्र की चिकनाई';
 
   @override
+  String get chartGridlines => 'चार्ट की ग्रिड रेखाएँ';
+
+  @override
+  String get chartShading => 'चार्ट का छायांकन';
+
+  @override
   String get actionBack => 'वापस';
 
   @override

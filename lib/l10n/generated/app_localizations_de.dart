@@ -1104,6 +1104,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get curveSmoothness => 'Kurvenglättung';
 
   @override
+  String get chartGridlines => 'Rasterlinien im Diagramm';
+
+  @override
+  String get chartShading => 'Flächenschattierung im Diagramm';
+
+  @override
   String get actionBack => 'Zurück';
 
   @override

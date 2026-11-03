@@ -1094,6 +1094,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get curveSmoothness => 'Độ mịn của đường cong';
 
   @override
+  String get chartGridlines => 'Đường lưới biểu đồ';
+
+  @override
+  String get chartShading => 'Tô bóng biểu đồ';
+
+  @override
   String get actionBack => 'Mặt sau';
 
   @override

@@ -2024,5 +2024,7 @@
       }
     }
   },
-  "previousPerformance": "Trước đây {date} · {sets}"
+  "previousPerformance": "Trước đây {date} · {sets}",
+  "chartGridlines": "Đường lưới biểu đồ",
+  "chartShading": "Tô bóng biểu đồ"
 }

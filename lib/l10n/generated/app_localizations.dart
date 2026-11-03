@@ -2106,6 +2106,18 @@ abstract class AppLocalizations {
   /// **'Smoothness'**
   String get curveSmoothness;
 
+  /// Toggle horizontal guide lines on line charts.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart gridlines'**
+  String get chartGridlines;
+
+  /// Toggle gradient area shading under line charts.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart shading'**
+  String get chartShading;
+
   /// Generic back-navigation tooltip.
   ///
   /// In en, this message translates to:

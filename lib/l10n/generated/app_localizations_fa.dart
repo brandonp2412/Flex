@@ -1094,6 +1094,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get curveSmoothness => 'نرمی منحنی';
 
   @override
+  String get chartGridlines => 'خطوط شبکهٔ نمودار';
+
+  @override
+  String get chartShading => 'سایه‌زنی نمودار';
+
+  @override
   String get actionBack => 'بازگشت';
 
   @override

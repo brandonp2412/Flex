@@ -508,5 +508,7 @@
   "createPlan": "创建计划",
   "createNamedPlan": "创建“{name}”",
   "setNumber": "第 {number} 组",
-  "previousPerformance": "之前 {date} · {sets}"
+  "previousPerformance": "之前 {date} · {sets}",
+  "chartGridlines": "图表网格线",
+  "chartShading": "图表区域填充"
 }

@@ -1103,6 +1103,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get curveSmoothness => 'Suavidade das curvas';
 
   @override
+  String get chartGridlines => 'Linhas de grelha do gráfico';
+
+  @override
+  String get chartShading => 'Sombreamento do gráfico';
+
+  @override
   String get actionBack => 'Voltar';
 
   @override
@@ -2737,6 +2743,12 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get curveSmoothness => 'Suavidade das curvas';
+
+  @override
+  String get chartGridlines => 'Linhas de grade do gráfico';
+
+  @override
+  String get chartShading => 'Sombreamento do gráfico';
 
   @override
   String get actionBack => 'Voltar';
@@ -4374,6 +4386,12 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
 
   @override
   String get curveSmoothness => 'Suavidade das curvas';
+
+  @override
+  String get chartGridlines => 'Linhas de grelha do gráfico';
+
+  @override
+  String get chartShading => 'Sombreamento do gráfico';
 
   @override
   String get actionBack => 'Voltar';

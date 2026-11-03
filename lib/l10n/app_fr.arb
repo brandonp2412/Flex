@@ -508,5 +508,7 @@
   "createPlan": "Créer un programme",
   "createNamedPlan": "Créer « {name} »",
   "setNumber": "Série {number}",
-  "previousPerformance": "Auparavant {date} · {sets}"
+  "previousPerformance": "Auparavant {date} · {sets}",
+  "chartGridlines": "Lignes de grille du graphique",
+  "chartShading": "Ombrage du graphique"
 }

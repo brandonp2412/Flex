@@ -1434,6 +1434,14 @@
   "@curveSmoothness": {
     "description": "Label for graph curve smoothness."
   },
+  "chartGridlines": "Chart gridlines",
+  "@chartGridlines": {
+    "description": "Toggle horizontal guide lines on line charts."
+  },
+  "chartShading": "Chart shading",
+  "@chartShading": {
+    "description": "Toggle gradient area shading under line charts."
+  },
   "actionBack": "Back",
   "@actionBack": {
     "description": "Generic back-navigation tooltip."

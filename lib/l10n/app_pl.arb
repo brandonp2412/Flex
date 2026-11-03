@@ -508,5 +508,7 @@
   "createPlan": "Utwórz plan",
   "createNamedPlan": "Utwórz „{name}”",
   "setNumber": "Seria {number}",
-  "previousPerformance": "Poprzednio {date} · {sets}"
+  "previousPerformance": "Poprzednio {date} · {sets}",
+  "chartGridlines": "Linie siatki wykresu",
+  "chartShading": "Cieniowanie wykresu"
 }

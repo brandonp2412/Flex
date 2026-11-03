@@ -508,5 +508,7 @@
   "createPlan": "Plan erstellen",
   "createNamedPlan": "„{name}“ erstellen",
   "setNumber": "Satz {number}",
-  "previousPerformance": "Zuletzt {date} · {sets}"
+  "previousPerformance": "Zuletzt {date} · {sets}",
+  "chartGridlines": "Rasterlinien im Diagramm",
+  "chartShading": "Flächenschattierung im Diagramm"
 }

@@ -1093,6 +1093,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get curveSmoothness => 'ความเรียบของเส้นโค้ง';
 
   @override
+  String get chartGridlines => 'เส้นตารางกราฟ';
+
+  @override
+  String get chartShading => 'การแรเงากราฟ';
+
+  @override
   String get actionBack => 'ย้อนกลับ';
 
   @override

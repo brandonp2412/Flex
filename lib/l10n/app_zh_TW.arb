@@ -508,5 +508,7 @@
   "createPlan": "建立計畫",
   "createNamedPlan": "建立“{name}”",
   "setNumber": "第 {number} 組",
-  "previousPerformance": "之前 {date} · {sets}"
+  "previousPerformance": "之前 {date} · {sets}",
+  "chartGridlines": "圖表格線",
+  "chartShading": "圖表區域填色"
 }

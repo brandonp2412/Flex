@@ -1074,6 +1074,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get curveSmoothness => '曲線の滑らかさ';
 
   @override
+  String get chartGridlines => 'グラフのグリッド線';
+
+  @override
+  String get chartShading => 'グラフの塗りつぶし';
+
+  @override
   String get actionBack => '戻る';
 
   @override

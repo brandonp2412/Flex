@@ -1104,6 +1104,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get curveSmoothness => 'Suavidad de la curva';
 
   @override
+  String get chartGridlines => 'Líneas de cuadrícula del gráfico';
+
+  @override
+  String get chartShading => 'Sombreado del gráfico';
+
+  @override
   String get actionBack => 'Atrás';
 
   @override

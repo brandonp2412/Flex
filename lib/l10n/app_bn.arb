@@ -2024,5 +2024,7 @@
       }
     }
   },
-  "previousPerformance": "পূর্বে {date} · {sets}"
+  "previousPerformance": "পূর্বে {date} · {sets}",
+  "chartGridlines": "গ্রাফের গ্রিডলাইন",
+  "chartShading": "গ্রাফের ছায়া"
 }

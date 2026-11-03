@@ -508,5 +508,7 @@
   "createPlan": "Schema aanmaken",
   "createNamedPlan": "“{name}” aanmaken",
   "setNumber": "Set {number}",
-  "previousPerformance": "Vorige keer {date} · {sets}"
+  "previousPerformance": "Vorige keer {date} · {sets}",
+  "chartGridlines": "Rasterlijnen van grafiek",
+  "chartShading": "Grafiekschaduw"
 }

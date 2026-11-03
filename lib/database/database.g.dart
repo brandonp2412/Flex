@@ -2619,6 +2619,21 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _fillChartAreaMeta = const VerificationMeta(
+    'fillChartArea',
+  );
+  @override
+  late final GeneratedColumn<bool> fillChartArea = GeneratedColumn<bool>(
+    'fill_chart_area',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("fill_chart_area" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _durationEstimationMeta =
       const VerificationMeta('durationEstimation');
   @override
@@ -2831,6 +2846,20 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
       'CHECK ("show_categories" IN (0, 1))',
     ),
     defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _showChartGridlinesMeta =
+      const VerificationMeta('showChartGridlines');
+  @override
+  late final GeneratedColumn<bool> showChartGridlines = GeneratedColumn<bool>(
+    'show_chart_gridlines',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_chart_gridlines" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
   );
   static const VerificationMeta _showImagesMeta = const VerificationMeta(
     'showImages',
@@ -3143,6 +3172,7 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     cardioUnit,
     curveLines,
     curveSmoothness,
+    fillChartArea,
     durationEstimation,
     enableSound,
     explainedPermissions,
@@ -3159,6 +3189,7 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
     shortDateFormat,
     showBodyWeight,
     showCategories,
+    showChartGridlines,
     showImages,
     showNotes,
     showGlobalProgress,
@@ -3249,6 +3280,15 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         curveSmoothness.isAcceptableOrUnknown(
           data['curve_smoothness']!,
           _curveSmoothnessMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fill_chart_area')) {
+      context.handle(
+        _fillChartAreaMeta,
+        fillChartArea.isAcceptableOrUnknown(
+          data['fill_chart_area']!,
+          _fillChartAreaMeta,
         ),
       );
     }
@@ -3392,6 +3432,15 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         showCategories.isAcceptableOrUnknown(
           data['show_categories']!,
           _showCategoriesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_chart_gridlines')) {
+      context.handle(
+        _showChartGridlinesMeta,
+        showChartGridlines.isAcceptableOrUnknown(
+          data['show_chart_gridlines']!,
+          _showChartGridlinesMeta,
         ),
       );
     }
@@ -3624,6 +3673,10 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
         DriftSqlType.double,
         data['${effectivePrefix}curve_smoothness'],
       ),
+      fillChartArea: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}fill_chart_area'],
+      )!,
       durationEstimation: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}duration_estimation'],
@@ -3687,6 +3740,10 @@ class $SettingsTable extends Settings with TableInfo<$SettingsTable, Setting> {
       showCategories: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}show_categories'],
+      )!,
+      showChartGridlines: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_chart_gridlines'],
       )!,
       showImages: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
@@ -3797,6 +3854,7 @@ class Setting extends DataClass implements Insertable<Setting> {
   final String cardioUnit;
   final bool curveLines;
   final double? curveSmoothness;
+  final bool fillChartArea;
   final bool durationEstimation;
   final bool enableSound;
   final bool explainedPermissions;
@@ -3813,6 +3871,7 @@ class Setting extends DataClass implements Insertable<Setting> {
   final String shortDateFormat;
   final bool showBodyWeight;
   final bool showCategories;
+  final bool showChartGridlines;
   final bool showImages;
   final bool showNotes;
   final bool showGlobalProgress;
@@ -3844,6 +3903,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     required this.cardioUnit,
     required this.curveLines,
     this.curveSmoothness,
+    required this.fillChartArea,
     required this.durationEstimation,
     required this.enableSound,
     required this.explainedPermissions,
@@ -3860,6 +3920,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     required this.shortDateFormat,
     required this.showBodyWeight,
     required this.showCategories,
+    required this.showChartGridlines,
     required this.showImages,
     required this.showNotes,
     required this.showGlobalProgress,
@@ -3900,6 +3961,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     if (!nullToAbsent || curveSmoothness != null) {
       map['curve_smoothness'] = Variable<double>(curveSmoothness);
     }
+    map['fill_chart_area'] = Variable<bool>(fillChartArea);
     map['duration_estimation'] = Variable<bool>(durationEstimation);
     map['enable_sound'] = Variable<bool>(enableSound);
     map['explained_permissions'] = Variable<bool>(explainedPermissions);
@@ -3920,6 +3982,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     map['short_date_format'] = Variable<String>(shortDateFormat);
     map['show_body_weight'] = Variable<bool>(showBodyWeight);
     map['show_categories'] = Variable<bool>(showCategories);
+    map['show_chart_gridlines'] = Variable<bool>(showChartGridlines);
     map['show_images'] = Variable<bool>(showImages);
     map['show_notes'] = Variable<bool>(showNotes);
     map['show_global_progress'] = Variable<bool>(showGlobalProgress);
@@ -3965,6 +4028,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       curveSmoothness: curveSmoothness == null && nullToAbsent
           ? const Value.absent()
           : Value(curveSmoothness),
+      fillChartArea: Value(fillChartArea),
       durationEstimation: Value(durationEstimation),
       enableSound: Value(enableSound),
       explainedPermissions: Value(explainedPermissions),
@@ -3983,6 +4047,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       shortDateFormat: Value(shortDateFormat),
       showBodyWeight: Value(showBodyWeight),
       showCategories: Value(showCategories),
+      showChartGridlines: Value(showChartGridlines),
       showImages: Value(showImages),
       showNotes: Value(showNotes),
       showGlobalProgress: Value(showGlobalProgress),
@@ -4024,6 +4089,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       cardioUnit: serializer.fromJson<String>(json['cardioUnit']),
       curveLines: serializer.fromJson<bool>(json['curveLines']),
       curveSmoothness: serializer.fromJson<double?>(json['curveSmoothness']),
+      fillChartArea: serializer.fromJson<bool>(json['fillChartArea']),
       durationEstimation: serializer.fromJson<bool>(json['durationEstimation']),
       enableSound: serializer.fromJson<bool>(json['enableSound']),
       explainedPermissions: serializer.fromJson<bool>(
@@ -4044,6 +4110,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       shortDateFormat: serializer.fromJson<String>(json['shortDateFormat']),
       showBodyWeight: serializer.fromJson<bool>(json['showBodyWeight']),
       showCategories: serializer.fromJson<bool>(json['showCategories']),
+      showChartGridlines: serializer.fromJson<bool>(json['showChartGridlines']),
       showImages: serializer.fromJson<bool>(json['showImages']),
       showNotes: serializer.fromJson<bool>(json['showNotes']),
       showGlobalProgress: serializer.fromJson<bool>(json['showGlobalProgress']),
@@ -4086,6 +4153,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       'cardioUnit': serializer.toJson<String>(cardioUnit),
       'curveLines': serializer.toJson<bool>(curveLines),
       'curveSmoothness': serializer.toJson<double?>(curveSmoothness),
+      'fillChartArea': serializer.toJson<bool>(fillChartArea),
       'durationEstimation': serializer.toJson<bool>(durationEstimation),
       'enableSound': serializer.toJson<bool>(enableSound),
       'explainedPermissions': serializer.toJson<bool>(explainedPermissions),
@@ -4104,6 +4172,7 @@ class Setting extends DataClass implements Insertable<Setting> {
       'shortDateFormat': serializer.toJson<String>(shortDateFormat),
       'showBodyWeight': serializer.toJson<bool>(showBodyWeight),
       'showCategories': serializer.toJson<bool>(showCategories),
+      'showChartGridlines': serializer.toJson<bool>(showChartGridlines),
       'showImages': serializer.toJson<bool>(showImages),
       'showNotes': serializer.toJson<bool>(showNotes),
       'showGlobalProgress': serializer.toJson<bool>(showGlobalProgress),
@@ -4140,6 +4209,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     String? cardioUnit,
     bool? curveLines,
     Value<double?> curveSmoothness = const Value.absent(),
+    bool? fillChartArea,
     bool? durationEstimation,
     bool? enableSound,
     bool? explainedPermissions,
@@ -4156,6 +4226,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     String? shortDateFormat,
     bool? showBodyWeight,
     bool? showCategories,
+    bool? showChartGridlines,
     bool? showImages,
     bool? showNotes,
     bool? showGlobalProgress,
@@ -4189,6 +4260,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     curveSmoothness: curveSmoothness.present
         ? curveSmoothness.value
         : this.curveSmoothness,
+    fillChartArea: fillChartArea ?? this.fillChartArea,
     durationEstimation: durationEstimation ?? this.durationEstimation,
     enableSound: enableSound ?? this.enableSound,
     explainedPermissions: explainedPermissions ?? this.explainedPermissions,
@@ -4208,6 +4280,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     shortDateFormat: shortDateFormat ?? this.shortDateFormat,
     showBodyWeight: showBodyWeight ?? this.showBodyWeight,
     showCategories: showCategories ?? this.showCategories,
+    showChartGridlines: showChartGridlines ?? this.showChartGridlines,
     showImages: showImages ?? this.showImages,
     showNotes: showNotes ?? this.showNotes,
     showGlobalProgress: showGlobalProgress ?? this.showGlobalProgress,
@@ -4256,6 +4329,9 @@ class Setting extends DataClass implements Insertable<Setting> {
       curveSmoothness: data.curveSmoothness.present
           ? data.curveSmoothness.value
           : this.curveSmoothness,
+      fillChartArea: data.fillChartArea.present
+          ? data.fillChartArea.value
+          : this.fillChartArea,
       durationEstimation: data.durationEstimation.present
           ? data.durationEstimation.value
           : this.durationEstimation,
@@ -4299,6 +4375,9 @@ class Setting extends DataClass implements Insertable<Setting> {
       showCategories: data.showCategories.present
           ? data.showCategories.value
           : this.showCategories,
+      showChartGridlines: data.showChartGridlines.present
+          ? data.showChartGridlines.value
+          : this.showChartGridlines,
       showImages: data.showImages.present
           ? data.showImages.value
           : this.showImages,
@@ -4369,6 +4448,7 @@ class Setting extends DataClass implements Insertable<Setting> {
           ..write('cardioUnit: $cardioUnit, ')
           ..write('curveLines: $curveLines, ')
           ..write('curveSmoothness: $curveSmoothness, ')
+          ..write('fillChartArea: $fillChartArea, ')
           ..write('durationEstimation: $durationEstimation, ')
           ..write('enableSound: $enableSound, ')
           ..write('explainedPermissions: $explainedPermissions, ')
@@ -4387,6 +4467,7 @@ class Setting extends DataClass implements Insertable<Setting> {
           ..write('shortDateFormat: $shortDateFormat, ')
           ..write('showBodyWeight: $showBodyWeight, ')
           ..write('showCategories: $showCategories, ')
+          ..write('showChartGridlines: $showChartGridlines, ')
           ..write('showImages: $showImages, ')
           ..write('showNotes: $showNotes, ')
           ..write('showGlobalProgress: $showGlobalProgress, ')
@@ -4423,6 +4504,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     cardioUnit,
     curveLines,
     curveSmoothness,
+    fillChartArea,
     durationEstimation,
     enableSound,
     explainedPermissions,
@@ -4439,6 +4521,7 @@ class Setting extends DataClass implements Insertable<Setting> {
     shortDateFormat,
     showBodyWeight,
     showCategories,
+    showChartGridlines,
     showImages,
     showNotes,
     showGlobalProgress,
@@ -4474,6 +4557,7 @@ class Setting extends DataClass implements Insertable<Setting> {
           other.cardioUnit == this.cardioUnit &&
           other.curveLines == this.curveLines &&
           other.curveSmoothness == this.curveSmoothness &&
+          other.fillChartArea == this.fillChartArea &&
           other.durationEstimation == this.durationEstimation &&
           other.enableSound == this.enableSound &&
           other.explainedPermissions == this.explainedPermissions &&
@@ -4491,6 +4575,7 @@ class Setting extends DataClass implements Insertable<Setting> {
           other.shortDateFormat == this.shortDateFormat &&
           other.showBodyWeight == this.showBodyWeight &&
           other.showCategories == this.showCategories &&
+          other.showChartGridlines == this.showChartGridlines &&
           other.showImages == this.showImages &&
           other.showNotes == this.showNotes &&
           other.showGlobalProgress == this.showGlobalProgress &&
@@ -4524,6 +4609,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<String> cardioUnit;
   final Value<bool> curveLines;
   final Value<double?> curveSmoothness;
+  final Value<bool> fillChartArea;
   final Value<bool> durationEstimation;
   final Value<bool> enableSound;
   final Value<bool> explainedPermissions;
@@ -4540,6 +4626,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   final Value<String> shortDateFormat;
   final Value<bool> showBodyWeight;
   final Value<bool> showCategories;
+  final Value<bool> showChartGridlines;
   final Value<bool> showImages;
   final Value<bool> showNotes;
   final Value<bool> showGlobalProgress;
@@ -4571,6 +4658,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.cardioUnit = const Value.absent(),
     this.curveLines = const Value.absent(),
     this.curveSmoothness = const Value.absent(),
+    this.fillChartArea = const Value.absent(),
     this.durationEstimation = const Value.absent(),
     this.enableSound = const Value.absent(),
     this.explainedPermissions = const Value.absent(),
@@ -4587,6 +4675,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     this.shortDateFormat = const Value.absent(),
     this.showBodyWeight = const Value.absent(),
     this.showCategories = const Value.absent(),
+    this.showChartGridlines = const Value.absent(),
     this.showImages = const Value.absent(),
     this.showNotes = const Value.absent(),
     this.showGlobalProgress = const Value.absent(),
@@ -4619,6 +4708,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     required String cardioUnit,
     required bool curveLines,
     this.curveSmoothness = const Value.absent(),
+    this.fillChartArea = const Value.absent(),
     this.durationEstimation = const Value.absent(),
     this.enableSound = const Value.absent(),
     required bool explainedPermissions,
@@ -4635,6 +4725,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     required String shortDateFormat,
     this.showBodyWeight = const Value.absent(),
     this.showCategories = const Value.absent(),
+    this.showChartGridlines = const Value.absent(),
     this.showImages = const Value.absent(),
     this.showNotes = const Value.absent(),
     this.showGlobalProgress = const Value.absent(),
@@ -4682,6 +4773,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Expression<String>? cardioUnit,
     Expression<bool>? curveLines,
     Expression<double>? curveSmoothness,
+    Expression<bool>? fillChartArea,
     Expression<bool>? durationEstimation,
     Expression<bool>? enableSound,
     Expression<bool>? explainedPermissions,
@@ -4698,6 +4790,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Expression<String>? shortDateFormat,
     Expression<bool>? showBodyWeight,
     Expression<bool>? showCategories,
+    Expression<bool>? showChartGridlines,
     Expression<bool>? showImages,
     Expression<bool>? showNotes,
     Expression<bool>? showGlobalProgress,
@@ -4730,6 +4823,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       if (cardioUnit != null) 'cardio_unit': cardioUnit,
       if (curveLines != null) 'curve_lines': curveLines,
       if (curveSmoothness != null) 'curve_smoothness': curveSmoothness,
+      if (fillChartArea != null) 'fill_chart_area': fillChartArea,
       if (durationEstimation != null) 'duration_estimation': durationEstimation,
       if (enableSound != null) 'enable_sound': enableSound,
       if (explainedPermissions != null)
@@ -4748,6 +4842,8 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       if (shortDateFormat != null) 'short_date_format': shortDateFormat,
       if (showBodyWeight != null) 'show_body_weight': showBodyWeight,
       if (showCategories != null) 'show_categories': showCategories,
+      if (showChartGridlines != null)
+        'show_chart_gridlines': showChartGridlines,
       if (showImages != null) 'show_images': showImages,
       if (showNotes != null) 'show_notes': showNotes,
       if (showGlobalProgress != null)
@@ -4786,6 +4882,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<String>? cardioUnit,
     Value<bool>? curveLines,
     Value<double?>? curveSmoothness,
+    Value<bool>? fillChartArea,
     Value<bool>? durationEstimation,
     Value<bool>? enableSound,
     Value<bool>? explainedPermissions,
@@ -4802,6 +4899,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     Value<String>? shortDateFormat,
     Value<bool>? showBodyWeight,
     Value<bool>? showCategories,
+    Value<bool>? showChartGridlines,
     Value<bool>? showImages,
     Value<bool>? showNotes,
     Value<bool>? showGlobalProgress,
@@ -4834,6 +4932,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       cardioUnit: cardioUnit ?? this.cardioUnit,
       curveLines: curveLines ?? this.curveLines,
       curveSmoothness: curveSmoothness ?? this.curveSmoothness,
+      fillChartArea: fillChartArea ?? this.fillChartArea,
       durationEstimation: durationEstimation ?? this.durationEstimation,
       enableSound: enableSound ?? this.enableSound,
       explainedPermissions: explainedPermissions ?? this.explainedPermissions,
@@ -4852,6 +4951,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
       shortDateFormat: shortDateFormat ?? this.shortDateFormat,
       showBodyWeight: showBodyWeight ?? this.showBodyWeight,
       showCategories: showCategories ?? this.showCategories,
+      showChartGridlines: showChartGridlines ?? this.showChartGridlines,
       showImages: showImages ?? this.showImages,
       showNotes: showNotes ?? this.showNotes,
       showGlobalProgress: showGlobalProgress ?? this.showGlobalProgress,
@@ -4903,6 +5003,9 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     if (curveSmoothness.present) {
       map['curve_smoothness'] = Variable<double>(curveSmoothness.value);
     }
+    if (fillChartArea.present) {
+      map['fill_chart_area'] = Variable<bool>(fillChartArea.value);
+    }
     if (durationEstimation.present) {
       map['duration_estimation'] = Variable<bool>(durationEstimation.value);
     }
@@ -4952,6 +5055,9 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
     }
     if (showCategories.present) {
       map['show_categories'] = Variable<bool>(showCategories.value);
+    }
+    if (showChartGridlines.present) {
+      map['show_chart_gridlines'] = Variable<bool>(showChartGridlines.value);
     }
     if (showImages.present) {
       map['show_images'] = Variable<bool>(showImages.value);
@@ -5037,6 +5143,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           ..write('cardioUnit: $cardioUnit, ')
           ..write('curveLines: $curveLines, ')
           ..write('curveSmoothness: $curveSmoothness, ')
+          ..write('fillChartArea: $fillChartArea, ')
           ..write('durationEstimation: $durationEstimation, ')
           ..write('enableSound: $enableSound, ')
           ..write('explainedPermissions: $explainedPermissions, ')
@@ -5055,6 +5162,7 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
           ..write('shortDateFormat: $shortDateFormat, ')
           ..write('showBodyWeight: $showBodyWeight, ')
           ..write('showCategories: $showCategories, ')
+          ..write('showChartGridlines: $showChartGridlines, ')
           ..write('showImages: $showImages, ')
           ..write('showNotes: $showNotes, ')
           ..write('showGlobalProgress: $showGlobalProgress, ')
@@ -8048,6 +8156,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
       required String cardioUnit,
       required bool curveLines,
       Value<double?> curveSmoothness,
+      Value<bool> fillChartArea,
       Value<bool> durationEstimation,
       Value<bool> enableSound,
       required bool explainedPermissions,
@@ -8064,6 +8173,7 @@ typedef $$SettingsTableCreateCompanionBuilder =
       required String shortDateFormat,
       Value<bool> showBodyWeight,
       Value<bool> showCategories,
+      Value<bool> showChartGridlines,
       Value<bool> showImages,
       Value<bool> showNotes,
       Value<bool> showGlobalProgress,
@@ -8097,6 +8207,7 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<String> cardioUnit,
       Value<bool> curveLines,
       Value<double?> curveSmoothness,
+      Value<bool> fillChartArea,
       Value<bool> durationEstimation,
       Value<bool> enableSound,
       Value<bool> explainedPermissions,
@@ -8113,6 +8224,7 @@ typedef $$SettingsTableUpdateCompanionBuilder =
       Value<String> shortDateFormat,
       Value<bool> showBodyWeight,
       Value<bool> showCategories,
+      Value<bool> showChartGridlines,
       Value<bool> showImages,
       Value<bool> showNotes,
       Value<bool> showGlobalProgress,
@@ -8179,6 +8291,11 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<double> get curveSmoothness => $composableBuilder(
     column: $table.curveSmoothness,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get fillChartArea => $composableBuilder(
+    column: $table.fillChartArea,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8259,6 +8376,11 @@ class $$SettingsTableFilterComposer
 
   ColumnFilters<bool> get showCategories => $composableBuilder(
     column: $table.showCategories,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showChartGridlines => $composableBuilder(
+    column: $table.showChartGridlines,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8422,6 +8544,11 @@ class $$SettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get fillChartArea => $composableBuilder(
+    column: $table.fillChartArea,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get durationEstimation => $composableBuilder(
     column: $table.durationEstimation,
     builder: (column) => ColumnOrderings(column),
@@ -8500,6 +8627,11 @@ class $$SettingsTableOrderingComposer
 
   ColumnOrderings<bool> get showCategories => $composableBuilder(
     column: $table.showCategories,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showChartGridlines => $composableBuilder(
+    column: $table.showChartGridlines,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -8663,6 +8795,11 @@ class $$SettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get fillChartArea => $composableBuilder(
+    column: $table.fillChartArea,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get durationEstimation => $composableBuilder(
     column: $table.durationEstimation,
     builder: (column) => column,
@@ -8735,6 +8872,11 @@ class $$SettingsTableAnnotationComposer
 
   GeneratedColumn<bool> get showCategories => $composableBuilder(
     column: $table.showCategories,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showChartGridlines => $composableBuilder(
+    column: $table.showChartGridlines,
     builder: (column) => column,
   );
 
@@ -8877,6 +9019,7 @@ class $$SettingsTableTableManager
                 Value<String> cardioUnit = const Value.absent(),
                 Value<bool> curveLines = const Value.absent(),
                 Value<double?> curveSmoothness = const Value.absent(),
+                Value<bool> fillChartArea = const Value.absent(),
                 Value<bool> durationEstimation = const Value.absent(),
                 Value<bool> enableSound = const Value.absent(),
                 Value<bool> explainedPermissions = const Value.absent(),
@@ -8894,6 +9037,7 @@ class $$SettingsTableTableManager
                 Value<String> shortDateFormat = const Value.absent(),
                 Value<bool> showBodyWeight = const Value.absent(),
                 Value<bool> showCategories = const Value.absent(),
+                Value<bool> showChartGridlines = const Value.absent(),
                 Value<bool> showImages = const Value.absent(),
                 Value<bool> showNotes = const Value.absent(),
                 Value<bool> showGlobalProgress = const Value.absent(),
@@ -8925,6 +9069,7 @@ class $$SettingsTableTableManager
                 cardioUnit: cardioUnit,
                 curveLines: curveLines,
                 curveSmoothness: curveSmoothness,
+                fillChartArea: fillChartArea,
                 durationEstimation: durationEstimation,
                 enableSound: enableSound,
                 explainedPermissions: explainedPermissions,
@@ -8942,6 +9087,7 @@ class $$SettingsTableTableManager
                 shortDateFormat: shortDateFormat,
                 showBodyWeight: showBodyWeight,
                 showCategories: showCategories,
+                showChartGridlines: showChartGridlines,
                 showImages: showImages,
                 showNotes: showNotes,
                 showGlobalProgress: showGlobalProgress,
@@ -8975,6 +9121,7 @@ class $$SettingsTableTableManager
                 required String cardioUnit,
                 required bool curveLines,
                 Value<double?> curveSmoothness = const Value.absent(),
+                Value<bool> fillChartArea = const Value.absent(),
                 Value<bool> durationEstimation = const Value.absent(),
                 Value<bool> enableSound = const Value.absent(),
                 required bool explainedPermissions,
@@ -8992,6 +9139,7 @@ class $$SettingsTableTableManager
                 required String shortDateFormat,
                 Value<bool> showBodyWeight = const Value.absent(),
                 Value<bool> showCategories = const Value.absent(),
+                Value<bool> showChartGridlines = const Value.absent(),
                 Value<bool> showImages = const Value.absent(),
                 Value<bool> showNotes = const Value.absent(),
                 Value<bool> showGlobalProgress = const Value.absent(),
@@ -9023,6 +9171,7 @@ class $$SettingsTableTableManager
                 cardioUnit: cardioUnit,
                 curveLines: curveLines,
                 curveSmoothness: curveSmoothness,
+                fillChartArea: fillChartArea,
                 durationEstimation: durationEstimation,
                 enableSound: enableSound,
                 explainedPermissions: explainedPermissions,
@@ -9040,6 +9189,7 @@ class $$SettingsTableTableManager
                 shortDateFormat: shortDateFormat,
                 showBodyWeight: showBodyWeight,
                 showCategories: showCategories,
+                showChartGridlines: showChartGridlines,
                 showImages: showImages,
                 showNotes: showNotes,
                 showGlobalProgress: showGlobalProgress,

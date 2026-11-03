@@ -508,5 +508,7 @@
   "createPlan": "Plan Oluştur",
   "createNamedPlan": "“{name}” Oluştur",
   "setNumber": "{number}. Set",
-  "previousPerformance": "Önce {date} · {sets}"
+  "previousPerformance": "Önce {date} · {sets}",
+  "chartGridlines": "Grafik ızgara çizgileri",
+  "chartShading": "Grafik gölgelendirmesi"
 }

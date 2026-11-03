@@ -1071,6 +1071,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get curveSmoothness => '曲线平滑度';
 
   @override
+  String get chartGridlines => '图表网格线';
+
+  @override
+  String get chartShading => '图表区域填充';
+
+  @override
   String get actionBack => '返回';
 
   @override
@@ -2618,6 +2624,12 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get curveSmoothness => '曲线平滑度';
 
   @override
+  String get chartGridlines => '图表网格线';
+
+  @override
+  String get chartShading => '图表区域填充';
+
+  @override
   String get actionBack => '返回';
 
   @override
@@ -4163,6 +4175,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get curveSmoothness => '曲線平滑度';
+
+  @override
+  String get chartGridlines => '圖表格線';
+
+  @override
+  String get chartShading => '圖表區域填色';
 
   @override
   String get actionBack => '返回';

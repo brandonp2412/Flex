@@ -9,6 +9,7 @@ class Settings extends Table {
   TextColumn get cardioUnit => text()();
   BoolColumn get curveLines => boolean()();
   RealColumn get curveSmoothness => real().nullable()();
+  BoolColumn get fillChartArea => boolean().withDefault(const Constant(true))();
   BoolColumn get durationEstimation =>
       boolean().withDefault(const Constant(true))();
   BoolColumn get enableSound => boolean().withDefault(const Constant(true))();
@@ -29,6 +30,8 @@ class Settings extends Table {
       boolean().withDefault(const Constant(true))();
   BoolColumn get showCategories =>
       boolean().withDefault(const Constant(true))();
+  BoolColumn get showChartGridlines =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get showImages => boolean().withDefault(const Constant(true))();
   BoolColumn get showNotes => boolean().withDefault(const Constant(true))();
   BoolColumn get showGlobalProgress =>

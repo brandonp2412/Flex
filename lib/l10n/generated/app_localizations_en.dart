@@ -1092,6 +1092,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get curveSmoothness => 'Smoothness';
 
   @override
+  String get chartGridlines => 'Chart gridlines';
+
+  @override
+  String get chartShading => 'Chart shading';
+
+  @override
   String get actionBack => 'Back';
 
   @override

@@ -508,5 +508,7 @@
   "createPlan": "Criar plano",
   "createNamedPlan": "Criar “{name}”",
   "setNumber": "Série {number}",
-  "previousPerformance": "Anteriormente {date} · {sets}"
+  "previousPerformance": "Anteriormente {date} · {sets}",
+  "chartGridlines": "Linhas de grade do gráfico",
+  "chartShading": "Sombreamento do gráfico"
 }

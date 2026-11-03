@@ -2033,5 +2033,7 @@
       }
     }
   },
-  "previousPerformance": "Раніше {date} · {sets}"
+  "previousPerformance": "Раніше {date} · {sets}",
+  "chartGridlines": "Лінії сітки графіка",
+  "chartShading": "Затінення графіка"
 }

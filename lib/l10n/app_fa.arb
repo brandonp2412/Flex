@@ -2024,5 +2024,7 @@
       }
     }
   },
-  "previousPerformance": "قبلاً {date} · {sets}"
+  "previousPerformance": "قبلاً {date} · {sets}",
+  "chartGridlines": "خطوط شبکهٔ نمودار",
+  "chartShading": "سایه‌زنی نمودار"
 }

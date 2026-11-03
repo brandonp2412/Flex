@@ -2024,5 +2024,7 @@
       }
     }
   },
-  "previousPerformance": "ก่อนหน้านี้ {date} · {sets}"
+  "previousPerformance": "ก่อนหน้านี้ {date} · {sets}",
+  "chartGridlines": "เส้นตารางกราฟ",
+  "chartShading": "การแรเงากราฟ"
 }

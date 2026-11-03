@@ -1089,6 +1089,13 @@ class AppDatabase extends _$AppDatabase {
             from70To71: (Migrator m, Schema71 schema) async {
               await m.addColumn(schema.settings, schema.settings.seedColor);
             },
+            from71To72: (Migrator m, Schema72 schema) async {
+              await m.addColumn(schema.settings, schema.settings.fillChartArea);
+              await m.addColumn(
+                schema.settings,
+                schema.settings.showChartGridlines,
+              );
+            },
           );
           await transaction(() async {
             await upgrade(m, from, to);
@@ -1110,5 +1117,5 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 71;
+  int get schemaVersion => 72;
 }

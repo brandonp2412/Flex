@@ -1098,6 +1098,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get curveSmoothness => 'Eğri Yumuşaklığı';
 
   @override
+  String get chartGridlines => 'Grafik ızgara çizgileri';
+
+  @override
+  String get chartShading => 'Grafik gölgelendirmesi';
+
+  @override
   String get actionBack => 'Geri';
 
   @override

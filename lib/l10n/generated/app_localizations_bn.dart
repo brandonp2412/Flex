@@ -1097,6 +1097,12 @@ class AppLocalizationsBn extends AppLocalizations {
   String get curveSmoothness => 'বক্ররেখার মসৃণতা';
 
   @override
+  String get chartGridlines => 'গ্রাফের গ্রিডলাইন';
+
+  @override
+  String get chartShading => 'গ্রাফের ছায়া';
+
+  @override
   String get actionBack => 'পেছনে';
 
   @override

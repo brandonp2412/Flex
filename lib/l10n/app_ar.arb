@@ -2024,5 +2024,7 @@
       }
     }
   },
-  "previousPerformance": "سابقاً {date} · {sets}"
+  "previousPerformance": "سابقاً {date} · {sets}",
+  "chartGridlines": "خطوط شبكة الرسم البياني",
+  "chartShading": "تظليل الرسم البياني"
 }

@@ -21,7 +21,7 @@ void main() {
         .getSingle();
     expect(initial.curveLines, isTrue);
 
-    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byKey(const Key('curve-lines-toggle')));
     await tester.pumpAndSettle();
 
     final updated = await harness.database

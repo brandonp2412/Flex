@@ -398,7 +398,8 @@ class FlexLineChart extends StatelessWidget {
         yStep: yBounds.$3,
         curveLines: settings.curveLines,
         curveSmoothness: settings.curveSmoothness ?? 0.35,
-        fillFirstSeries: true,
+        showGridlines: settings.showChartGridlines,
+        fillChartArea: settings.fillChartArea,
         showLeftLabels: hideLeft != true,
         bottomLabels: hideBottom != true,
         xLabels: labels,
@@ -443,7 +444,8 @@ class FlexGroupedLineChart extends StatelessWidget {
         yStep: yBounds.$3,
         curveLines: settings.curveLines,
         curveSmoothness: settings.curveSmoothness ?? 0.35,
-        fillFirstSeries: false,
+        showGridlines: settings.showChartGridlines,
+        fillChartArea: settings.fillChartArea,
         showLeftLabels: showLeftLabels,
         bottomLabels: bottomLabels,
         xLabels: [
@@ -682,7 +684,8 @@ class _FlexLineChartRenderer extends ChartRenderer
   final double yStep;
   final bool curveLines;
   final double curveSmoothness;
-  final bool fillFirstSeries;
+  final bool showGridlines;
+  final bool fillChartArea;
   final bool showLeftLabels;
   final bool bottomLabels;
   final List<_LineChartAxisLabel> xLabels;
@@ -696,7 +699,8 @@ class _FlexLineChartRenderer extends ChartRenderer
     required this.yStep,
     required this.curveLines,
     required this.curveSmoothness,
-    required this.fillFirstSeries,
+    required this.showGridlines,
+    required this.fillChartArea,
     required this.showLeftLabels,
     required this.bottomLabels,
     required this.xLabels,
@@ -817,7 +821,7 @@ class _FlexLineChartRenderer extends ChartRenderer
       );
     }
 
-    if (fill) {
+    if (fill && fillChartArea) {
       final fillPath = Path.from(path)
         ..lineTo(points.last.dx, bounds.bottom)
         ..lineTo(points.first.dx, bounds.bottom)
@@ -830,7 +834,7 @@ class _FlexLineChartRenderer extends ChartRenderer
             line.color,
             top: points.map((point) => point.dy).reduce(min),
             bottom: bounds.bottom,
-            topAlpha: 0.3,
+            topAlpha: series.length > 1 ? 0.16 : 0.3,
           ),
       );
     }
@@ -935,6 +939,19 @@ class _FlexLineChartRenderer extends ChartRenderer
   ) {
     if (size.isEmpty) return;
     final bounds = _bounds(size);
+    if (showGridlines) {
+      final gridPaint = Paint()
+        ..color = axisLabelColor.withValues(alpha: 0.12)
+        ..strokeWidth = 1;
+      for (var i = 0; i <= 4; i++) {
+        final y = bounds.top + bounds.height * i / 4;
+        canvas.drawLine(
+          Offset(bounds.left, y),
+          Offset(bounds.right, y),
+          gridPaint,
+        );
+      }
+    }
     _drawAxes(canvas, bounds);
     canvas.save();
     canvas.clipRect(
@@ -942,13 +959,7 @@ class _FlexLineChartRenderer extends ChartRenderer
     );
 
     for (var i = 0; i < series.length; i++) {
-      _drawSeries(
-        canvas,
-        bounds,
-        series[i],
-        fill: fillFirstSeries && i == 0,
-        progress: progress,
-      );
+      _drawSeries(canvas, bounds, series[i], fill: true, progress: progress);
     }
 
     final trend = trendSeries;

@@ -2024,5 +2024,7 @@
       }
     }
   },
-  "previousPerformance": "Sebelumnya {date} · {sets}"
+  "previousPerformance": "Sebelumnya {date} · {sets}",
+  "chartGridlines": "Garis kisi grafik",
+  "chartShading": "Arsiran grafik"
 }

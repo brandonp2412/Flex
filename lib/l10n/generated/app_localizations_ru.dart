@@ -1112,6 +1112,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get curveSmoothness => 'Плавность кривой';
 
   @override
+  String get chartGridlines => 'Линии сетки графика';
+
+  @override
+  String get chartShading => 'Заливка области графика';
+
+  @override
   String get actionBack => 'Назад';
 
   @override

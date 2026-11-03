@@ -1111,6 +1111,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get curveSmoothness => 'Gładkość krzywych';
 
   @override
+  String get chartGridlines => 'Linie siatki wykresu';
+
+  @override
+  String get chartShading => 'Cieniowanie wykresu';
+
+  @override
   String get actionBack => 'Wstecz';
 
   @override

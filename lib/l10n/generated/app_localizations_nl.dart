@@ -1101,6 +1101,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get curveSmoothness => 'Krommevloeiendheid';
 
   @override
+  String get chartGridlines => 'Rasterlijnen van grafiek';
+
+  @override
+  String get chartShading => 'Grafiekschaduw';
+
+  @override
   String get actionBack => 'Terug';
 
   @override

@@ -1108,6 +1108,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get curveSmoothness => 'Плавність кривої';
 
   @override
+  String get chartGridlines => 'Лінії сітки графіка';
+
+  @override
+  String get chartShading => 'Затінення графіка';
+
+  @override
   String get actionBack => 'Назад';
 
   @override

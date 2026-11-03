@@ -2024,5 +2024,7 @@
       }
     }
   },
-  "previousPerformance": "Sebelum ini {date} · {sets}"
+  "previousPerformance": "Sebelum ini {date} · {sets}",
+  "chartGridlines": "Garis grid carta",
+  "chartShading": "Lorekan carta"
 }

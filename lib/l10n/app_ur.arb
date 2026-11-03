@@ -2024,5 +2024,7 @@
       }
     }
   },
-  "previousPerformance": "پہلے {date} · {sets}"
+  "previousPerformance": "پہلے {date} · {sets}",
+  "chartGridlines": "چارٹ کی گرڈ لائنیں",
+  "chartShading": "چارٹ کی شیڈنگ"
 }

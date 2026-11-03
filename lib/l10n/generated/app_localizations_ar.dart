@@ -1092,6 +1092,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get curveSmoothness => 'نعومة المنحنى';
 
   @override
+  String get chartGridlines => 'خطوط شبكة الرسم البياني';
+
+  @override
+  String get chartShading => 'تظليل الرسم البياني';
+
+  @override
   String get actionBack => 'رجوع';
 
   @override

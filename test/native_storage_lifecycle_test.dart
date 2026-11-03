@@ -160,6 +160,8 @@ void main() {
             if (entry.key != 'rep_estimation') entry.key: entry.value,
           'default_graph_limit': 30,
           'seed_color': 0xFF673AB7,
+          'fill_chart_area': 1,
+          'show_chart_gridlines': 0,
         },
     ],
   };

@@ -1098,6 +1098,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get curveSmoothness => 'Kehalusan kurva';
 
   @override
+  String get chartGridlines => 'Garis kisi grafik';
+
+  @override
+  String get chartShading => 'Arsiran grafik';
+
+  @override
   String get actionBack => 'Kembali';
 
   @override

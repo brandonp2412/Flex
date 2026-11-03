@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/database/database.dart';
+import 'package:flex/graph/graph_curve_settings.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/l10n/locale_preferences.dart';
 import 'package:flex/main.dart';
@@ -265,50 +266,16 @@ List<Widget> getAppearanceSettings(
           ),
         ),
       ),
-    if (matches([l10n.curveLineGraphs, l10n.curveLineGraphsDescription]))
-      Tooltip(
-        message: l10n.curveLineGraphsDescription,
-        child: ListTile(
-          title: Text(l10n.curveLineGraphs, textAlign: TextAlign.start),
-          leading: settings.curveLines
-              ? const Icon(Icons.insights)
-              : const Icon(Icons.insights_outlined),
-          onTap: () => db.settings.update().write(
-            SettingsCompanion(curveLines: Value(!settings.curveLines)),
-          ),
-          trailing: Switch(
-            value: settings.curveLines,
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(curveLines: Value(value)),
-            ),
-          ),
-        ),
-      ),
-    if (settings.curveLines && matches([l10n.curveSmoothness]))
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              l10n.curveSmoothness,
-              textAlign: TextAlign.start,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ),
-          Slider(
-            value: settings.curveSmoothness ?? 0.35,
-            inactiveColor: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.24),
-            divisions: 20,
-            onChanged: (value) {
-              db.settings.update().write(
-                SettingsCompanion(curveSmoothness: Value(value)),
-              );
-            },
-          ),
-        ],
+    if (matches([
+      l10n.chartGridlines,
+      l10n.chartShading,
+      l10n.curveLineGraphs,
+      l10n.curveLineGraphsDescription,
+      l10n.curveSmoothness,
+    ]))
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: GraphCurveSettings(showPreview: true),
       ),
     if (matches([l10n.inputStyle, l10n.inputStyleDescription]))
       Tooltip(
