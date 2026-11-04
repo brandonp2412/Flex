@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
-import 'package:drift/drift.dart' hide Column;
+import 'package:drift/drift.dart' hide Column, View;
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/app_fab.dart';
@@ -674,6 +676,7 @@ class _EditSetPageState extends State<EditSetPage>
 
   Future<void> save() async {
     if (!_key.currentState!.validate()) return;
+    FocusManager.instance.primaryFocus?.unfocus();
 
     _category = _category?.trim();
     if (_category?.isEmpty ?? false) _category = null;
@@ -721,8 +724,7 @@ class _EditSetPageState extends State<EditSetPage>
       );
       if (!mounted) return;
       talker.info('Updated workout set');
-      allowPop = true;
-      return Navigator.of(context).pop();
+      return _popAfterSave();
     }
 
     final inserted = await insertExerciseSet(
@@ -753,8 +755,7 @@ class _EditSetPageState extends State<EditSetPage>
     }
 
     if (!settings.restTimers && mounted) {
-      allowPop = true;
-      return Navigator.of(context).pop();
+      return _popAfterSave();
     }
     if (!mounted) return;
     final timer = context.read<TimerState>();
@@ -779,8 +780,29 @@ class _EditSetPageState extends State<EditSetPage>
         settings.keepRinging,
       );
     if (!mounted) return;
+    return _popAfterSave();
+  }
+
+  Future<void> _popAfterSave() async {
+    final view = View.of(context);
+    if (view.viewInsets.bottom > 0) {
+      final closed = Completer<void>();
+      final observer = _KeyboardCloseObserver(view, closed);
+      WidgetsBinding.instance.addObserver(observer);
+      try {
+        if (view.viewInsets.bottom > 0) {
+          await closed.future.timeout(
+            const Duration(milliseconds: 800),
+            onTimeout: () {},
+          );
+        }
+      } finally {
+        WidgetsBinding.instance.removeObserver(observer);
+      }
+    }
+    if (!mounted) return;
     allowPop = true;
-    return Navigator.of(context).pop();
+    Navigator.of(context).pop();
   }
 
   Future<void> selectTime(DateTime pickedDate) async {
@@ -870,6 +892,20 @@ class _EditSetPageState extends State<EditSetPage>
 
     if (pickedDate != null) {
       selectTime(pickedDate);
+    }
+  }
+}
+
+class _KeyboardCloseObserver extends WidgetsBindingObserver {
+  _KeyboardCloseObserver(this.view, this.closed);
+
+  final FlutterView view;
+  final Completer<void> closed;
+
+  @override
+  void didChangeMetrics() {
+    if (view.viewInsets.bottom == 0 && !closed.isCompleted) {
+      closed.complete();
     }
   }
 }

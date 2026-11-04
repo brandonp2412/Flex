@@ -8,6 +8,7 @@ import 'package:flex/l10n/locale_preferences.dart';
 import 'package:flex/plan/start_plan_page.dart';
 import 'package:flex/plan/start_list.dart';
 import 'package:flex/plan/workout_sessions.dart';
+import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/stepper_field.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flutter/material.dart';
@@ -648,6 +649,52 @@ void main() {
       expect(find.byIcon(Icons.history_rounded), findsNothing);
     },
   );
+
+  testWidgets('editing a saved preview waits for keyboard close before pop', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    final database = harness.database;
+    final planId = await database.plans.insertOne(planFixture());
+    await insertPlanExerciseFixture(
+      database,
+      planId: planId,
+      exercise: 'Bench press',
+    );
+    final plan =
+        await (database.plans.select()..where((row) => row.id.equals(planId)))
+            .getSingle();
+    await harness.pump(
+      tester,
+      StartPlanPage(plan: plan),
+      surfaceSize: const Size(430, 900),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(textFieldWithLabel('Reps'), '8');
+    await tester.enterText(textFieldWithLabel('Weight (kg)'), '100');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('8 × 100 kg'));
+    await tester.pumpAndSettle();
+    expect(find.byType(EditSetPage), findsOneWidget);
+
+    await tester.enterText(textFieldWithLabel('Weight (kg)').last, '105');
+    addTearDown(tester.view.resetViewInsets);
+    tester.view.viewInsets = FakeViewPadding(
+      bottom: 300 * tester.view.devicePixelRatio,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save').last);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(EditSetPage), findsOneWidget);
+
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await tester.pumpAndSettle();
+    expect(find.byType(EditSetPage), findsNothing);
+    expect(find.text('8 × 105 kg'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('all translated locales complete the core workout save flow', (
     WidgetTester tester,
