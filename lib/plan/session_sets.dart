@@ -6,6 +6,7 @@ import 'package:flex/platform_page_route.dart';
 import 'package:flex/set_summary.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 /// Strong/Hevy-style strip of the sets already logged in the active workout
 /// for the selected exercise.
@@ -33,6 +34,7 @@ class SessionSets extends StatefulWidget {
 
 class _SessionSetsState extends State<SessionSets> {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _newestSetKey = GlobalKey();
   int _lastSetCount = 0;
 
   @override
@@ -53,10 +55,29 @@ class _SessionSetsState extends State<SessionSets> {
   void _scrollToNewest(int setCount) {
     if (setCount <= _lastSetCount) return;
     _lastSetCount = setCount;
+    final exerciseId = widget.exerciseId;
+    final workoutId = widget.workoutId;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
+      if (!mounted ||
+          !_scrollController.hasClients ||
+          exerciseId != widget.exerciseId ||
+          workoutId != widget.workoutId ||
+          setCount != _lastSetCount) {
+        return;
+      }
+      final target = _newestSetKey.currentContext?.findRenderObject();
+      if (target == null) return;
+      final position = _scrollController.position;
+      final offset = RenderAbstractViewport.of(
+        target,
+      ).getOffsetToReveal(target, 1).offset;
+      final destination = offset.clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      if ((destination - position.pixels).abs() < 0.5) return;
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        destination,
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOut,
       );
@@ -125,6 +146,7 @@ class _SessionSetsState extends State<SessionSets> {
             children: [
               for (var i = 0; i < sets.length; i++)
                 Padding(
+                  key: i == sets.length - 1 ? _newestSetKey : null,
                   padding: const EdgeInsets.only(right: 8.0),
                   child: _SetChip(
                     exerciseSet: sets[i],
