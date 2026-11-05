@@ -39,6 +39,8 @@ jobs:
           flutter/bin/flutter config --no-analytics
 
       - name: Check
+        env:
+          FLEX_BASE_REF: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD^' }}
         run: ./scripts/check.sh
 
   generate-screenshots:
@@ -301,6 +303,9 @@ jobs:
         with:
           ref: ${{ needs.version-bump.outputs.commit_sha }}
           persist-credentials: false
+
+      - name: Guard Android release contract
+        run: python3 scripts/check-release-invariants.py
 
       - name: Setup Java
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5

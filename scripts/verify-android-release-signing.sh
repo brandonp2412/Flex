@@ -36,6 +36,22 @@ if [[ -z "$apksigner_bin" ]]; then
   exit 2
 fi
 
+aapt_bin="$(dirname "$apksigner_bin")/aapt"
+if [[ ! -x "$aapt_bin" ]]; then
+  aapt_bin=$(command -v aapt || true)
+fi
+if [[ ! -x "$aapt_bin" ]]; then
+  echo "Could not find aapt" >&2
+  exit 2
+fi
+
+expected_package=$(sed -n 's/^productionApplicationId=//p' "$policy_file")
+expected_build=$(sed -n 's/^version: [0-9]*\.[0-9]*\.[0-9]*+//p' "$repo_root/pubspec.yaml")
+if [[ "$expected_package" != 'com.presley.flexify' || ! "$expected_build" =~ ^[0-9]+$ ]]; then
+  echo "Invalid applicationId or build number" >&2
+  exit 2
+fi
+
 if [[ $# -eq 0 ]]; then
   echo "Usage: $0 <apk> [apk ...]" >&2
   exit 2
@@ -62,5 +78,19 @@ for apk in "$@"; do
     exit 1
   fi
 
-  echo "Verified release signer: $apk ($actual)"
+  package_line=$("$aapt_bin" dump badging "$apk" | sed -n '/^package:/p' | head -n 1)
+  actual_package=$(printf '%s\n' "$package_line" | sed -n "s/.*name='\([^']*\)'.*/\1/p")
+  actual_code=$(printf '%s\n' "$package_line" | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p")
+  if [[ "$actual_package" != "$expected_package" || ! "$actual_code" =~ ^[0-9]+$ ]]; then
+    echo "Wrong package ID or missing Android versionCode for $apk" >&2
+    exit 1
+  fi
+  min_code=$((expected_build * 100 + 1))
+  max_code=$((expected_build * 100 + 3))
+  if (( actual_code < min_code || actual_code > max_code )); then
+    echo "Wrong Android versionCode for $apk: $actual_code (expected $min_code..$max_code)" >&2
+    exit 1
+  fi
+
+  echo "Verified release APK: $apk ($actual_package, versionCode $actual_code, signer $actual)"
 done

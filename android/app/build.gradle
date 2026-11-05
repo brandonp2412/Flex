@@ -49,8 +49,9 @@ def expectedReleaseCertificateSha256 = signingPolicy
     .replaceAll('[^0-9A-Fa-f]', '')
     .toLowerCase()
 
-if (!productionApplicationId || expectedReleaseCertificateSha256.size() != 64) {
-    throw new GradleException("Invalid Android signing policy in " + signingPolicyFile)
+if (productionApplicationId != 'com.presley.flexify' ||
+    expectedReleaseCertificateSha256 != '011ee1a6e4e5ecd675f67fbf3d78ad82614a7a7a3f24ed71cc9c417154a0f0fd') {
+    throw new GradleException("Android release identity differs from the pinned Flex contract.")
 }
 
 def signingCertificateSha256 = { signingConfig ->
@@ -180,14 +181,15 @@ gradle.taskGraph.whenReady { taskGraph ->
         }
 
         def signingConfig = buildType.signingConfig
+        if (buildType.name == 'release' && isFdroidBuild) {
+            if (signingConfig?.storeFile?.isFile()) {
+                throw new GradleException("F-Droid release must be unsigned; a signing key was injected.")
+            }
+            return
+        }
         if (signingConfig == null ||
             signingConfig.storeFile == null ||
             !signingConfig.storeFile.isFile()) {
-            if (buildType.name == 'release' && isFdroidBuild) {
-                // F-Droid's reproducible build is intentionally unsigned;
-                // F-Droid applies/verifies signing externally.
-                return
-            }
             throw new GradleException(
                 "Refusing to package " + productionApplicationId +
                 " without the Flex release signing key."
