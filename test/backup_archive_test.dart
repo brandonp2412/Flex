@@ -51,9 +51,54 @@ void main() {
         restored.select('SELECT image FROM gym_sets').single['image'] as String;
     restored.close();
 
-    expect(restoredImagePath, p.join(storageDirectory.path, '0_progress.jpg'));
+    expect(p.basename(restoredImagePath), '0_progress.jpg');
+    expect(p.dirname(p.dirname(restoredImagePath)), storageDirectory.path);
     expect(File(restoredImagePath).readAsBytesSync(), [1, 2, 3, 4]);
   });
+  test(
+    'backup import never overwrites an existing image with the same name',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'flex-image-collision-',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      final storage = await Directory(p.join(root.path, 'storage')).create();
+      final export = await Directory(p.join(root.path, 'export')).create();
+      final import = await Directory(p.join(root.path, 'import')).create();
+      final original = File(p.join(root.path, 'progress.jpg'))
+        ..writeAsBytesSync([1, 2, 3]);
+      final existing = File(p.join(storage.path, '0_progress.jpg'))
+        ..writeAsBytesSync([9, 8, 7]);
+      final source = sqlite3.open(p.join(root.path, backupDbName));
+      source.execute(
+        'CREATE TABLE gym_sets (id INTEGER PRIMARY KEY, image TEXT)',
+      );
+      source.execute('INSERT INTO gym_sets (image) VALUES (?)', [
+        original.path,
+      ]);
+      source.close();
+
+      final archive = await createBackupArchive(
+        databasePath: p.join(root.path, backupDbName),
+        workingDirectory: export,
+      );
+      final extracted = await extractBackupArchive(
+        archiveFile: archive,
+        workingDirectory: import,
+        storageDirectory: storage,
+      );
+      final restored = sqlite3.open(extracted.path);
+      final importedPath =
+          restored.select('SELECT image FROM gym_sets').single['image']
+              as String;
+      restored.close();
+
+      expect(existing.readAsBytesSync(), [9, 8, 7]);
+      expect(importedPath, isNot(existing.path));
+      expect(File(importedPath).readAsBytesSync(), [1, 2, 3]);
+    },
+  );
+
   test('backup includes committed records in a live WAL database', () async {
     final root = await Directory.systemTemp.createTemp('flex-wal-backup-');
     addTearDown(() => root.delete(recursive: true));

@@ -40,6 +40,65 @@ String _localizedImportError(Object error, AppLocalizations l10n) {
   return l10n.unexpectedError;
 }
 
+Future<({int plans, int links})> replacePlansFromCsv(
+  AppDatabase database,
+  String csvContent,
+  AppLocalizations l10n,
+) async {
+  final csvList = CsvDecoder().convert(csvContent);
+  if (csvList.isEmpty) throw _ImportValidationException(l10n.csvFileEmpty);
+  if (csvList.length <= 1) {
+    throw _ImportValidationException(l10n.csvNeedsDataRow);
+  }
+
+  return database.transaction(() async {
+    final plansToInsert = <PlansCompanion>[];
+    final links = <PlanExercisesCompanion>[];
+    for (final row in csvList.skip(1)) {
+      final idStr = row[0].toString().trim();
+      final id = int.tryParse(idStr);
+      if (id == null) {
+        throw _ImportValidationException(l10n.expectedIntegerPlanId(idStr));
+      }
+      plansToInsert.add(
+        PlansCompanion.insert(
+          id: Value(id),
+          days: row[1].toString().trim(),
+          title: Value(row[2].toString().trim()),
+          sequence: Value(int.tryParse(row[3].toString().trim())),
+        ),
+      );
+
+      final exerciseNames = row[4].toString().trim().split(';');
+      for (final rawExerciseName in exerciseNames) {
+        final exerciseName = rawExerciseName.trim();
+        if (exerciseName.isEmpty) continue;
+        var exercise = await getExerciseByName(database, exerciseName);
+        exercise ??= await createExerciseDefinition(
+          database,
+          name: exerciseName,
+          cardio: false,
+          displayUnit: 'kg',
+        );
+        links.add(
+          PlanExercisesCompanion.insert(
+            planId: id,
+            exerciseId: exercise.id,
+            enabled: true,
+            timers: const Value(true),
+          ),
+        );
+      }
+    }
+
+    await database.planExercises.deleteAll();
+    await database.plans.deleteAll();
+    await database.plans.insertAll(plansToInsert);
+    await database.planExercises.insertAll(links);
+    return (plans: plansToInsert.length, links: links.length);
+  });
+}
+
 class ImportData extends StatelessWidget {
   final BuildContext ctx;
 
@@ -319,58 +378,9 @@ class ImportData extends StatelessWidget {
         }
       }
 
-      final csvList = CsvDecoder().convert(csvContent);
-
-      if (csvList.isEmpty) throw _ImportValidationException(l10n.csvFileEmpty);
-      if (csvList.length <= 1)
-        throw _ImportValidationException(l10n.csvNeedsDataRow);
-
-      final plansToInsert = <PlansCompanion>[];
-      final links = <PlanExercisesCompanion>[];
-
-      for (final row in csvList.skip(1)) {
-        final idStr = row[0].toString().trim();
-        final id = int.tryParse(idStr);
-        if (id == null) {
-          throw _ImportValidationException(l10n.expectedIntegerPlanId(idStr));
-        }
-        plansToInsert.add(
-          PlansCompanion.insert(
-            id: Value(id),
-            days: row[1].toString().trim(),
-            title: Value(row[2].toString().trim()),
-            sequence: Value(int.tryParse(row[3].toString().trim())),
-          ),
-        );
-
-        final exerciseNames = row[4].toString().trim().split(';');
-        for (final rawExerciseName in exerciseNames) {
-          final exerciseName = rawExerciseName.trim();
-          if (exerciseName.isEmpty) continue;
-          var exercise = await getExerciseByName(db, exerciseName);
-          exercise ??= await createExerciseDefinition(
-            db,
-            name: exerciseName,
-            cardio: false,
-            displayUnit: 'kg',
-          );
-          links.add(
-            PlanExercisesCompanion.insert(
-              planId: id,
-              exerciseId: exercise.id,
-              enabled: true,
-              timers: const Value(true),
-            ),
-          );
-        }
-      }
-
-      await db.planExercises.deleteAll();
-      await db.plans.deleteAll();
-      await db.plans.insertAll(plansToInsert);
-      await db.planExercises.insertAll(links);
+      final imported = await replacePlansFromCsv(db, csvContent, l10n);
       talker.info(
-        'Imported ${plansToInsert.length} plans and ${links.length} exercises',
+        'Imported ${imported.plans} plans and ${imported.links} exercises',
       );
 
       if (!ctx.mounted) return;

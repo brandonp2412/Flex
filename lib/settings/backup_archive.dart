@@ -142,10 +142,20 @@ Future<File> extractBackupArchive({
 }) async {
   final input = InputFileStream(archiveFile.path);
   final archive = ZipDecoder().decodeStream(input);
+  final restoredImages = <String, String>{};
   try {
     final hasNewDatabase = archive.any(
       (entry) => entry.isFile && p.posix.normalize(entry.name) == backupDbName,
     );
+    final hasPreviousDatabase = archive.any(
+      (entry) =>
+          entry.isFile &&
+          p.posix.normalize(entry.name) == _previousBackupDbName,
+    );
+    if (!hasNewDatabase && !hasPreviousDatabase) {
+      throw const MissingBackupDatabaseException();
+    }
+    Directory? imageDirectory;
     for (final entry in archive) {
       if (!entry.isFile) continue;
       final name = p.posix.normalize(entry.name);
@@ -155,9 +165,13 @@ Future<File> extractBackupArchive({
       final isImage = p.posix.dirname(name) == 'images';
       if (!isDatabase && !isImage) continue;
 
+      if (isImage) {
+        imageDirectory ??= await storageDirectory.createTemp('flex-import-');
+      }
       final outputPath = isDatabase
           ? p.join(workingDirectory.path, backupDbName)
-          : p.join(storageDirectory.path, p.posix.basename(name));
+          : p.join(imageDirectory!.path, p.posix.basename(name));
+      if (isImage) restoredImages[name] = outputPath;
       final output = OutputFileStream(outputPath);
       output.writeStream(entry.getContent()!);
       await output.close();
@@ -182,10 +196,9 @@ Future<File> extractBackupArchive({
       );
       for (final row in rows) {
         final relativePath = row['path'] as String;
-        final absolutePath = p.join(
-          storageDirectory.path,
-          p.posix.basename(relativePath),
-        );
+        final absolutePath =
+            restoredImages[relativePath] ??
+            p.join(storageDirectory.path, p.posix.basename(relativePath));
         imported.execute(
           'UPDATE "$table" SET "$column" = ? WHERE "$column" = ?',
           [absolutePath, relativePath],

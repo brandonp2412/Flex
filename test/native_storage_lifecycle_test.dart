@@ -374,7 +374,7 @@ Future<void> main(List<String> args) async {
       expect(await restored.workouts.select().get(), hasLength(1));
       expect(await restored.planExercises.select().get(), hasLength(2));
       final photo = (await restored.bodyWeights.select().getSingle()).photo!;
-      expect(p.dirname(photo), support.path);
+      expect(p.dirname(p.dirname(photo)), support.path);
       expect(await File(photo).readAsBytes(), [1, 2, 3, 4]);
       final exercise =
           await (restored.exercises.select()

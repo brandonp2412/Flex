@@ -82,9 +82,9 @@ void main() {
       expect(restoredExerciseImage.readAsBytesSync(), [1, 2, 3]);
       expect(restoredSetImage.readAsBytesSync(), [7, 8, 9]);
       expect(restoredBodyPhoto.readAsBytesSync(), [4, 5, 6]);
-      expect(p.dirname(restoredExerciseImage.path), documents.path);
-      expect(p.dirname(restoredSetImage.path), documents.path);
-      expect(p.dirname(restoredBodyPhoto.path), documents.path);
+      expect(p.dirname(p.dirname(restoredExerciseImage.path)), documents.path);
+      expect(p.dirname(p.dirname(restoredSetImage.path)), documents.path);
+      expect(p.dirname(p.dirname(restoredBodyPhoto.path)), documents.path);
     },
   );
 }
