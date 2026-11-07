@@ -1,0 +1,5 @@
+• Simplify _groupSets in exercise_analytics.dart
+• build: preserve class names during release optimization
+• fix(android): stop using deprecated system bar colors
+• refactor: replace nested ternaries with clear branches
+• test(release): derive version assertions from pubspec
