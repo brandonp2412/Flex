@@ -43,6 +43,13 @@ class ReleaseInvariantTests(unittest.TestCase):
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.touch()
         self.base_pubspec = (self.root / "pubspec.yaml").read_text()
+        version_line = next(
+            line for line in self.base_pubspec.splitlines()
+            if line.startswith("version: ")
+        )
+        self.version = version_line.split(": ", 1)[1]
+        self.semantic_version, build_number = self.version.split("+", 1)
+        self.build_number = int(build_number)
         self.base_db = (self.root / "lib/database/database.dart").read_text()
         self.changed_snapshots = ""
 
@@ -106,22 +113,24 @@ class ReleaseInvariantTests(unittest.TestCase):
                 invariants.check_repository(self.root)
 
     def test_build_number_cannot_decrease(self):
-        self.replace("pubspec.yaml", "version: 2.2.38+452", "version: 2.2.38+451")
+        self.replace("pubspec.yaml", f"version: {self.version}", f"version: {self.semantic_version}+{self.build_number - 1}")
         with self.assertRaisesRegex(ValueError, "build number regressed"):
             self.check(history=True)
 
     def test_version_change_requires_new_build(self):
-        self.replace("pubspec.yaml", "version: 2.2.38+452", "version: 2.2.39+452")
+        parts = self.semantic_version.split(".")
+        parts[-1] = str(int(parts[-1]) + 1)
+        self.replace("pubspec.yaml", f"version: {self.version}", f"version: {'.'.join(parts)}+{self.build_number}")
         with self.assertRaisesRegex(ValueError, "requires increasing"):
             self.check(history=True)
 
     def test_semantic_version_cannot_decrease(self):
-        self.replace("pubspec.yaml", "version: 2.2.38+452", "version: 2.2.37+453")
+        self.replace("pubspec.yaml", f"version: {self.version}", f"version: 0.0.0+{self.build_number + 1}")
         with self.assertRaisesRegex(ValueError, "semantic version regressed"):
             self.check(history=True)
 
     def test_android_version_code_cannot_overflow(self):
-        self.replace("pubspec.yaml", "version: 2.2.38+452", "version: 2.2.38+21000000")
+        self.replace("pubspec.yaml", f"version: {self.version}", f"version: {self.semantic_version}+21000000")
         with self.assertRaisesRegex(ValueError, "exceeds Play"):
             self.check()
 
@@ -164,10 +173,10 @@ class ReleaseInvariantTests(unittest.TestCase):
         apk.touch()
 
         cases = [
-            (invariants.APPLICATION_ID, "45203", invariants.CERTIFICATE_SHA256, True),
-            ("com.presley.flex", "45203", invariants.CERTIFICATE_SHA256, False),
-            (invariants.APPLICATION_ID, "45103", invariants.CERTIFICATE_SHA256, False),
-            (invariants.APPLICATION_ID, "45203", "a" * 64, False),
+            (invariants.APPLICATION_ID, f"{self.build_number * 100 + 3}", invariants.CERTIFICATE_SHA256, True),
+            ("com.presley.flex", f"{self.build_number * 100 + 3}", invariants.CERTIFICATE_SHA256, False),
+            (invariants.APPLICATION_ID, f"{(self.build_number - 1) * 100 + 3}", invariants.CERTIFICATE_SHA256, False),
+            (invariants.APPLICATION_ID, f"{self.build_number * 100 + 3}", "a" * 64, False),
         ]
         for package, code, cert, accepted in cases:
             with self.subTest(package=package, code=code, cert=cert[:6]):
