@@ -217,8 +217,6 @@ class App extends StatelessWidget {
             systemNavigationBarIconBrightness: brightness == Brightness.dark
                 ? Brightness.light
                 : Brightness.dark,
-            statusBarColor: Colors.transparent,
-            systemNavigationBarColor: Colors.transparent,
           ),
         );
 

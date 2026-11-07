@@ -51,8 +51,6 @@ class MainActivity : FlutterActivity() {
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.isAppearanceLightStatusBars = false // Set to true if your app's theme is light
         controller.isAppearanceLightNavigationBars = false // Set to true if your app's theme is light
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         resetPermissionPromptStateOnFreshInstall()
 
