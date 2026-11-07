@@ -261,7 +261,11 @@ class _EditSetsPageState extends State<EditSetsPage>
                   TextFormField(
                     controller: _weight,
                     decoration: InputDecoration(
-                      labelText: l10n.weightLabel,
+                      labelText: _unit == null || isWeightUnit(_unit)
+                          ? l10n.weightLabel
+                          : _unit == 'kcal'
+                          ? l10n.amountWithUnit(_unit!)
+                          : l10n.distanceWithUnit(_unit!),
                       hintText: _oldWeights,
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
@@ -415,20 +419,16 @@ class _EditSetsPageState extends State<EditSetsPage>
   }
 
   List<DropdownMenuItem<String>> _getUnitItems(BuildContext context) {
-    if (_cardio == true) {
-      return [
-        ...strengthUnitMenuItems(context.l10n),
-        ...cardioUnitMenuItems(context.l10n),
-      ];
-    }
-    return strengthUnitMenuItems(context.l10n);
+    return [
+      ...strengthUnitMenuItems(context.l10n),
+      ...cardioUnitMenuItems(context.l10n),
+    ];
   }
 
   void _setCardio(bool value) {
     markDirty();
     setState(() {
       _cardio = value;
-      if (!value && !isWeightUnit(_unit)) _unit = 'kg';
     });
   }
 
@@ -549,8 +549,8 @@ class _EditSetsPageState extends State<EditSetsPage>
     final distance = _distance.text.isEmpty
         ? null
         : parseDisplayNumber(context, _distance.text);
+    final preferredStrengthUnit = context.read<Setting>().strengthUnit;
     if (_category != null) await createCategory(_category!);
-
     final selected = await getExerciseSetsByIds(db, widget.ids);
 
     final changesExercise =
@@ -580,6 +580,17 @@ class _EditSetsPageState extends State<EditSetsPage>
           : await getExerciseByName(db, original.name);
       if (exercise == null) continue;
 
+      final originalBodyWeightKg = original.bodyWeight == 0
+          ? null
+          : loadKg(original.unit, original.bodyWeight) ?? original.bodyWeight;
+      final bodyUnit = isWeightUnit(unit)
+          ? unit
+          : (preferredStrengthUnit == 'last-entry'
+                ? 'kg'
+                : preferredStrengthUnit);
+      final bodyWeightKg = bodyWeight == null
+          ? originalBodyWeightKg
+          : loadKg(bodyUnit, bodyWeight);
       final updated = original.copyWith(
         name: name,
         unit: unit,
@@ -605,6 +616,7 @@ class _EditSetsPageState extends State<EditSetsPage>
         id: original.id,
         exerciseSet: updated,
         exerciseId: exercise.id,
+        bodyWeightKg: bodyWeightKg,
       );
     }
 

@@ -184,6 +184,7 @@ List<List<ExerciseSetView>> _groupSets(
 }
 
 double _loadInUnit(ExerciseSetView set, String target) {
+  if (!isWeightUnit(set.unit)) return set.weight;
   final kg = loadKg(set.unit, set.weight);
   return displayLoad(target, kg);
 }
