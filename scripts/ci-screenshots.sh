@@ -9,7 +9,7 @@ device="emulator-$EMULATOR_PORT"
 store_locale="en-US"
 screenshot_dir="fastlane/metadata/android/$store_locale/images/${FLEX_DEVICE_TYPE}"
 expected_count=8
-drive_timeout="${SCREENSHOT_DRIVE_TIMEOUT:-12m}"
+drive_timeout="${SCREENSHOT_DRIVE_TIMEOUT:-5m}"
 drive_log="$(mktemp)"
 trap 'rm -f "$drive_log"' EXIT
 
@@ -47,6 +47,9 @@ recover_emulator() {
   adb kill-server >/dev/null 2>&1 || true
   adb start-server >/dev/null 2>&1 || true
   adb reconnect offline >/dev/null 2>&1 || true
+  wait_for_emulator || return 1
+  timeout 30 adb -s "$device" reboot || return 1
+  timeout 30 adb -s "$device" wait-for-disconnect || return 1
   wait_for_emulator
 }
 
@@ -91,7 +94,6 @@ drive_args=(
   --target=integration_test/screenshot_test.dart
   --no-enable-impeller
   --use-application-binary=build/app/outputs/flutter-apk/app-profile.apk
-  --host-vmservice-port=8888
   -d "$device"
 )
 
@@ -106,6 +108,9 @@ for attempt in 1 2; do
   mkdir -p "$screenshot_dir"
   : >"$drive_log"
   drive_status=0
+
+  adb -s "$device" shell am force-stop com.presley.flexify
+  adb -s "$device" forward --remove-all
 
   echo "Running screenshot drive attempt $attempt with a $drive_timeout timeout"
   timeout --foreground --signal=TERM --kill-after=30s "$drive_timeout" \
