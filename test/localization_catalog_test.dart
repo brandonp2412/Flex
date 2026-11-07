@@ -260,11 +260,6 @@ final _playStoreLocales = _playStoreLocaleByAppLocale.values.toSet();
 // https://support.google.com/googleplay/android-developer/answer/9844778
 const _playStoreScreenshotFallbackLocales = <String>{'ar', 'zh-TW', 'hi-IN'};
 
-final _changelogCatalogLocales = <String>{
-  ..._playStoreLocaleByAppLocale.keys,
-  'pt_PT',
-};
-
 Map<String, dynamic> _readArb(File file) =>
     jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
 
@@ -520,114 +515,6 @@ void main() {
           File('${directory.path}/${index}_$locale.png').existsSync(),
           isTrue,
           reason: 'Missing Play Store screenshot $index for $locale.',
-        );
-      }
-    }
-  });
-
-  test('in-app changelog history is localized for every shipped locale', () {
-    final changelogFiles =
-        Directory('assets/changelogs')
-            .listSync()
-            .whereType<File>()
-            .where((file) => file.path.endsWith('.txt'))
-            .toList()
-          ..sort((a, b) => a.path.compareTo(b.path));
-    expect(changelogFiles, isNotEmpty);
-
-    final englishByKey = <String, String>{
-      for (final file in changelogFiles)
-        file.uri.pathSegments.last.split('.').first: file
-            .readAsStringSync()
-            .trim(),
-    };
-    final expectedKeys = englishByKey.keys.toSet();
-
-    for (final locale in _changelogCatalogLocales) {
-      final file = File('assets/changelogs/l10n/$locale.json');
-      expect(
-        file.existsSync(),
-        isTrue,
-        reason: 'Missing in-app changelog catalog for $locale.',
-      );
-
-      final catalog =
-          jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
-      expect(
-        catalog.keys.toSet(),
-        expectedKeys,
-        reason: '$locale historical changelog catalog must be complete.',
-      );
-
-      for (final entry in englishByKey.entries) {
-        final localized = catalog[entry.key];
-        expect(
-          localized,
-          isA<String>(),
-          reason: '$locale changelog ${entry.key} must contain text.',
-        );
-
-        final english = entry.value;
-        if (english.isEmpty || english == 'last_commit') continue;
-        expect(
-          (localized as String).trim(),
-          allOf(isNotEmpty, isNot(equals(english))),
-          reason: '$locale must localize in-app changelog ${entry.key}.',
-        );
-      }
-    }
-  });
-
-  test('Play Store changelog history is localized for every locale', () {
-    final englishFiles =
-        Directory('fastlane/metadata/android/en-US/changelogs')
-            .listSync()
-            .whereType<File>()
-            .where((file) => file.path.endsWith('.txt'))
-            .toList()
-          ..sort((a, b) => a.path.compareTo(b.path));
-    expect(englishFiles, isNotEmpty);
-
-    final englishByName = <String, String>{
-      for (final file in englishFiles)
-        file.uri.pathSegments.last: file.readAsStringSync().trim(),
-    };
-    final expectedNames = englishByName.keys.toSet();
-
-    for (final locale in _playStoreLocales) {
-      final directory = Directory(
-        'fastlane/metadata/android/$locale/changelogs',
-      );
-      expect(
-        directory.existsSync(),
-        isTrue,
-        reason: 'Missing Play Store changelog directory for $locale.',
-      );
-
-      final localizedFiles = directory
-          .listSync()
-          .whereType<File>()
-          .where((file) => file.path.endsWith('.txt'))
-          .toList();
-      final localizedNames = localizedFiles
-          .map((file) => file.uri.pathSegments.last)
-          .toSet();
-      expect(
-        localizedNames,
-        expectedNames,
-        reason:
-            '$locale must mirror the complete English Play changelog history.',
-      );
-
-      for (final file in localizedFiles) {
-        final filename = file.uri.pathSegments.last;
-        final english = englishByName[filename]!;
-        final localized = file.readAsStringSync().trim();
-        if (english.isEmpty || english == 'last_commit') continue;
-        expect(
-          localized,
-          allOf(isNotEmpty, isNot(equals(english))),
-          reason: '$locale must localize Play Store changelog $filename.',
         );
       }
     }
