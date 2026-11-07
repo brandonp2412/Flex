@@ -81,6 +81,7 @@ class _EditSetPageState extends State<EditSetPage>
   bool _updatePending = false;
 
   late String _unit;
+  late String _bodyUnit;
   late bool _cardio;
   late String _name;
 
@@ -267,7 +268,7 @@ class _EditSetPageState extends State<EditSetPage>
       const SizedBox(height: 12.0),
       buildWeightField(),
       const SizedBox(height: 12.0),
-      buildORMField(),
+      if (isWeightUnit(_unit)) buildORMField(),
     ];
   }
 
@@ -295,7 +296,11 @@ class _EditSetPageState extends State<EditSetPage>
   Widget buildWeightField() {
     return StepperField(
       controller: _weight,
-      labelText: context.l10n.weightWithUnit(_unit),
+      labelText: isWeightUnit(_unit)
+          ? context.l10n.weightWithUnit(_unit)
+          : _unit == 'kcal'
+          ? context.l10n.amountWithUnit(_unit)
+          : context.l10n.distanceWithUnit(_unit),
       step: weightStep(_name, _unit),
       onFieldSubmitted: (value) => save(),
       onChanged: (value) {
@@ -375,7 +380,7 @@ class _EditSetPageState extends State<EditSetPage>
       child: TextFormField(
         controller: _body,
         decoration: InputDecoration(
-          labelText: context.l10n.bodyWeightWithUnit(_unit),
+          labelText: context.l10n.bodyWeightWithUnit(_bodyUnit),
         ),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         onTap: () => selectAll(_body),
@@ -653,6 +658,12 @@ class _EditSetPageState extends State<EditSetPage>
   @override
   void initState() {
     super.initState();
+    final settingUnit = context.read<Setting>().strengthUnit;
+    _bodyUnit = settingUnit == 'last-entry'
+        ? (isWeightUnit(widget.exerciseSet.unit)
+              ? widget.exerciseSet.unit
+              : 'kg')
+        : settingUnit;
 
     updateFields(widget.exerciseSet, formatOrm: false, rebuild: false);
     _created = widget.exerciseSet.created;
@@ -681,6 +692,10 @@ class _EditSetPageState extends State<EditSetPage>
     _category = _category?.trim();
     if (_category?.isEmpty ?? false) _category = null;
 
+    final bodyValue = parseDisplayNumber(context, _body.text);
+    final bodyWeightKg = bodyValue == null || bodyValue == 0
+        ? null
+        : toKg(_bodyUnit, bodyValue);
     final exerciseSet = widget.exerciseSet.copyWith(
       name: _name,
       unit: _unit,
@@ -721,6 +736,7 @@ class _EditSetPageState extends State<EditSetPage>
         id: widget.exerciseSet.id,
         exerciseSet: exerciseSet,
         exerciseId: exercise.id,
+        bodyWeightKg: bodyWeightKg,
       );
       if (!mounted) return;
       talker.info('Updated workout set');
@@ -731,6 +747,7 @@ class _EditSetPageState extends State<EditSetPage>
       db,
       exerciseSet: exerciseSet,
       exerciseId: exercise.id,
+      bodyWeightKg: bodyWeightKg,
     );
     talker.info('Created workout set');
 
@@ -867,8 +884,12 @@ class _EditSetPageState extends State<EditSetPage>
     if (exerciseSet.reps != 0) _reps.text = toString(exerciseSet.reps);
     _weight.text = toString(exerciseSet.weight);
     if (formatOrm) setORM();
-    if (exerciseSet.bodyWeight != 0)
-      _body.text = toString(exerciseSet.bodyWeight);
+    if (exerciseSet.bodyWeight != 0) {
+      final weightKg =
+          toKg(exerciseSet.unit, exerciseSet.bodyWeight) ??
+          exerciseSet.bodyWeight;
+      _body.text = toString(displayBodyWeight(_bodyUnit, weightKg));
+    }
     if (exerciseSet.duration != 0) {
       _minutes.text = exerciseSet.duration.floor().toString();
       _seconds.text = ((exerciseSet.duration * 60) % 60).floor().toString();

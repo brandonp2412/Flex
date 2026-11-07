@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/measurement_units.dart';
@@ -21,8 +22,16 @@ double? distanceMetres(String unit, double value) {
     'm' => value,
     'km' => value * 1000,
     'mi' => value * 1609.344,
+    'kcal' => value,
     _ => null,
   };
+}
+
+double? storedExerciseLoad(ExerciseSetView exerciseSet) {
+  if (isWeightUnit(exerciseSet.unit)) {
+    return loadKg(exerciseSet.unit, exerciseSet.weight);
+  }
+  return exerciseSet.cardio ? null : exerciseSet.weight;
 }
 
 ExerciseSetView _toExerciseSetView(AppDatabase database, TypedResult row) {
@@ -47,7 +56,10 @@ ExerciseSetView exerciseSetView(
   int? planId,
   String strengthUnit = 'last-entry',
 }) {
-  final unit = exercise.kind == 'strength' && strengthUnit != 'last-entry'
+  final unit =
+      exercise.kind == 'strength' &&
+          isWeightUnit(exercise.displayUnit) &&
+          strengthUnit != 'last-entry'
       ? strengthUnit
       : exercise.displayUnit;
 
@@ -545,7 +557,7 @@ Future<ExerciseSetView> insertExerciseSet(
       workoutId: Value(workoutId),
       timestamp: exerciseSet.created,
       reps: Value(exerciseSet.reps),
-      loadKg: Value(loadKg(exerciseSet.unit, exerciseSet.weight)),
+      loadKg: Value(storedExerciseLoad(exerciseSet)),
       durationMs: Value((exerciseSet.duration * 60000).round()),
       distanceMetres: Value(
         distanceMetres(exerciseSet.unit, exerciseSet.distance),
@@ -572,7 +584,7 @@ Future<void> updateExerciseSet(
           exerciseId: Value(exerciseId),
           timestamp: Value(exerciseSet.created),
           reps: Value(exerciseSet.reps),
-          loadKg: Value(loadKg(exerciseSet.unit, exerciseSet.weight)),
+          loadKg: Value(storedExerciseLoad(exerciseSet)),
           durationMs: Value((exerciseSet.duration * 60000).round()),
           distanceMetres: Value(
             distanceMetres(exerciseSet.unit, exerciseSet.distance),

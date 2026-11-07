@@ -142,9 +142,6 @@ class _WeightPageState extends State<WeightPage>
   Future<void> _save() async {
     if (!_key.currentState!.validate()) return;
 
-    final settings = context.read<Setting>();
-    if (settings.strengthUnit != 'last-entry') _unit = settings.strengthUnit;
-
     final value = parseDisplayNumber(context, _ctrl.text)!;
     final unit = _unit ?? 'kg';
     final weightKg = toKg(unit, value);
@@ -172,6 +169,9 @@ class _WeightPageState extends State<WeightPage>
   void initState() {
     super.initState();
     final settings = context.read<Setting>();
+    _unit = settings.strengthUnit == 'last-entry'
+        ? 'kg'
+        : settings.strengthUnit;
 
     getLatestBodyWeight(db).then((value) {
       if (!mounted) return;
@@ -179,10 +179,6 @@ class _WeightPageState extends State<WeightPage>
       setState(() {
         _previousWeight = value;
         _weightLoaded = true;
-
-        _unit = settings.strengthUnit == 'last-entry'
-            ? 'kg'
-            : settings.strengthUnit;
       });
     });
   }
