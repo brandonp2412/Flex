@@ -34,7 +34,7 @@ class SessionSets extends StatefulWidget {
 
 class _SessionSetsState extends State<SessionSets> {
   final ScrollController _scrollController = ScrollController();
-  final GlobalKey _newestSetKey = GlobalKey();
+  final GlobalKey _focusSetKey = GlobalKey();
   int _lastSetCount = 0;
 
   @override
@@ -52,7 +52,7 @@ class _SessionSetsState extends State<SessionSets> {
     super.dispose();
   }
 
-  void _scrollToNewest(int setCount) {
+  void _scrollToNextSet(int setCount) {
     if (setCount <= _lastSetCount) return;
     _lastSetCount = setCount;
     final exerciseId = widget.exerciseId;
@@ -65,7 +65,7 @@ class _SessionSetsState extends State<SessionSets> {
           setCount != _lastSetCount) {
         return;
       }
-      final target = _newestSetKey.currentContext?.findRenderObject();
+      final target = _focusSetKey.currentContext?.findRenderObject();
       if (target == null) return;
       final position = _scrollController.position;
       final offset = RenderAbstractViewport.of(
@@ -87,7 +87,7 @@ class _SessionSetsState extends State<SessionSets> {
   @override
   Widget build(BuildContext context) {
     final sets = widget.sets;
-    if (sets.isNotEmpty) _scrollToNewest(sets.length);
+    if (sets.isNotEmpty) _scrollToNextSet(sets.length);
 
     if (sets.isEmpty) {
       final previous = widget.previous;
@@ -131,6 +131,7 @@ class _SessionSetsState extends State<SessionSets> {
 
   Widget _buildChips(List<ExerciseSetView> sets) {
     final best = _bestId(sets);
+    final hasNextSet = sets.length < (widget.previous?.sets.length ?? 0);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -146,7 +147,9 @@ class _SessionSetsState extends State<SessionSets> {
             children: [
               for (var i = 0; i < sets.length; i++)
                 Padding(
-                  key: i == sets.length - 1 ? _newestSetKey : null,
+                  key: !hasNextSet && i == sets.length - 1
+                      ? _focusSetKey
+                      : null,
                   padding: const EdgeInsets.only(right: 8.0),
                   child: _SetChip(
                     exerciseSet: sets[i],
@@ -161,6 +164,7 @@ class _SessionSetsState extends State<SessionSets> {
                 i++
               )
                 Padding(
+                  key: hasNextSet && i == sets.length ? _focusSetKey : null,
                   padding: const EdgeInsets.only(right: 8),
                   child: _SetChip(
                     previousSet: widget.previous!.sets[i],

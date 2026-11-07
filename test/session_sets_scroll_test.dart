@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/test_app.dart';
 
 void main() {
-  testWidgets('new set aligns with the preview edge before historical sets', (
+  testWidgets('next pending set aligns with the preview edge after saving', (
     tester,
   ) async {
     final harness = await FlexTestHarness.create();
@@ -71,25 +71,26 @@ void main() {
     final controller = tester
         .widget<SingleChildScrollView>(scrollFinder)
         .controller!;
-    expect(controller.offset, 0);
+    final initialOffset = controller.offset;
+    expect(initialOffset, greaterThan(0));
 
     sets.value = [set(1, 100), set(2, 110)];
     await tester.pumpAndSettle();
 
     final cardFinder = find.ancestor(
-      of: find.text('8 × 110 kg'),
+      of: find.text('Set 3'),
       matching: find.byType(Card),
     );
     final viewport = tester.getRect(scrollFinder);
     final newestCard = tester.getRect(cardFinder);
-    expect(controller.offset, greaterThan(0));
+    expect(controller.offset, greaterThan(initialOffset));
     expect(newestCard.right, closeTo(viewport.right - 8, 1));
     expect(controller.offset, lessThan(controller.position.maxScrollExtent));
 
     sets.value = [set(1, 100), set(2, 110), set(3, 125)];
     await tester.pumpAndSettle();
     final thirdCard = tester.getRect(
-      find.ancestor(of: find.text('8 × 125 kg'), matching: find.byType(Card)),
+      find.ancestor(of: find.text('Set 4'), matching: find.byType(Card)),
     );
     expect(thirdCard.right, closeTo(viewport.right - 8, 1));
     expect(tester.takeException(), isNull);
