@@ -1,0 +1,10 @@
+• Add transactional merge flow for exercise graphs
+• chore: record Samsung version code reset and data backup
+• docs: remove internal device identifiers from public text
+• docs: strip internal machine references from release notes
+• feat(graph): add persistent gridlines and area shading controls
+• feat: add customizable theme colours to Flex settings
+• feat: add workout and backup settings search aliases
+• fix(ci): include Play upload in the manual Flex release
+• fix(l10n): restore missing translations for release notes
+• fix: avoid keyboard jitter when returning from set edit
