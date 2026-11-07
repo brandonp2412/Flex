@@ -79,7 +79,7 @@ for apk in "$@"; do
   fi
 
   package_line=$("$aapt_bin" dump badging "$apk" | sed -n '/^package:/p' | head -n 1)
-  actual_package=$(printf '%s\n' "$package_line" | sed -n "s/.*name='\([^']*\)'.*/\1/p")
+  actual_package=$(printf '%s\n' "$package_line" | sed -n "s/^package: name='\([^']*\)'.*/\1/p")
   actual_code=$(printf '%s\n' "$package_line" | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p")
   if [[ "$actual_package" != "$expected_package" || ! "$actual_code" =~ ^[0-9]+$ ]]; then
     echo "Wrong package ID or missing Android versionCode for $apk" >&2

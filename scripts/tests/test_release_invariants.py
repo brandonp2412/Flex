@@ -155,7 +155,7 @@ class ReleaseInvariantTests(unittest.TestCase):
         aapt = tools / "aapt"
         aapt.write_text(
             "#!/bin/sh\n"
-            "printf \"package: name='%s' versionCode='%s' versionName='2.2.38'\\n\" "
+            "printf \"package: name='%s' versionCode='%s' versionName='2.2.38' compileSdkVersionCodename='17'\\n\" "
             "\"$MOCK_PACKAGE\" \"$MOCK_CODE\"\n"
         )
         apksigner.chmod(0o755)
