@@ -261,11 +261,12 @@ class _EditSetsPageState extends State<EditSetsPage>
                   TextFormField(
                     controller: _weight,
                     decoration: InputDecoration(
-                      labelText: _unit == null || isWeightUnit(_unit)
-                          ? l10n.weightLabel
-                          : _unit == 'kcal'
-                          ? l10n.amountWithUnit(_unit!)
-                          : l10n.distanceWithUnit(_unit!),
+                      labelText: switch (_unit) {
+                        null => l10n.weightLabel,
+                        _ when isWeightUnit(_unit) => l10n.weightLabel,
+                        'kcal' => l10n.amountWithUnit(_unit!),
+                        _ => l10n.distanceWithUnit(_unit!),
+                      },
                       hintText: _oldWeights,
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
@@ -583,11 +584,11 @@ class _EditSetsPageState extends State<EditSetsPage>
       final originalBodyWeightKg = original.bodyWeight == 0
           ? null
           : loadKg(original.unit, original.bodyWeight) ?? original.bodyWeight;
-      final bodyUnit = isWeightUnit(unit)
-          ? unit
-          : (preferredStrengthUnit == 'last-entry'
-                ? 'kg'
-                : preferredStrengthUnit);
+      final bodyUnit = switch (preferredStrengthUnit) {
+        _ when isWeightUnit(unit) => unit,
+        'last-entry' => 'kg',
+        _ => preferredStrengthUnit,
+      };
       final bodyWeightKg = bodyWeight == null
           ? originalBodyWeightKg
           : loadKg(bodyUnit, bodyWeight);

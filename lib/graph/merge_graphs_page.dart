@@ -254,13 +254,11 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
             for (final item in items)
               ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                leading: Icon(
-                  item.bodyWeight
-                      ? Icons.monitor_weight_outlined
-                      : item.cardio
-                      ? Icons.directions_run_rounded
-                      : Icons.fitness_center_rounded,
-                ),
+                leading: Icon(switch (item) {
+                  _ when item.bodyWeight => Icons.monitor_weight_outlined,
+                  _ when item.cardio => Icons.directions_run_rounded,
+                  _ => Icons.fitness_center_rounded,
+                }),
                 title: Text(item.name),
                 subtitle: Text(item.unit),
                 trailing: const Icon(Icons.arrow_downward_rounded, size: 18),

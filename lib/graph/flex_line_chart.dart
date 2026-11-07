@@ -153,15 +153,13 @@ double _niceYStep(double span) {
   final target = span / 4;
   final magnitude = pow(10, (log(target) / ln10).floor()).toDouble();
   final scaled = target / magnitude;
-  final nice = scaled < 1.5
-      ? 1.0
-      : scaled < 2.25
-      ? 2.0
-      : scaled < 3.75
-      ? 2.5
-      : scaled < 7.5
-      ? 5.0
-      : 10.0;
+  final nice = switch (scaled) {
+    < 1.5 => 1.0,
+    < 2.25 => 2.0,
+    < 3.75 => 2.5,
+    < 7.5 => 5.0,
+    _ => 10.0,
+  };
   return nice * magnitude;
 }
 

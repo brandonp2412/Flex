@@ -296,11 +296,11 @@ class _EditSetPageState extends State<EditSetPage>
   Widget buildWeightField() {
     return StepperField(
       controller: _weight,
-      labelText: isWeightUnit(_unit)
-          ? context.l10n.weightWithUnit(_unit)
-          : _unit == 'kcal'
-          ? context.l10n.amountWithUnit(_unit)
-          : context.l10n.distanceWithUnit(_unit),
+      labelText: switch (_unit) {
+        _ when isWeightUnit(_unit) => context.l10n.weightWithUnit(_unit),
+        'kcal' => context.l10n.amountWithUnit(_unit),
+        _ => context.l10n.distanceWithUnit(_unit),
+      },
       step: weightStep(_name, _unit),
       onFieldSubmitted: (value) => save(),
       onChanged: (value) {
@@ -659,11 +659,12 @@ class _EditSetPageState extends State<EditSetPage>
   void initState() {
     super.initState();
     final settingUnit = context.read<Setting>().strengthUnit;
-    _bodyUnit = settingUnit == 'last-entry'
-        ? (isWeightUnit(widget.exerciseSet.unit)
-              ? widget.exerciseSet.unit
-              : 'kg')
-        : settingUnit;
+    _bodyUnit = switch (settingUnit) {
+      'last-entry' when isWeightUnit(widget.exerciseSet.unit) =>
+        widget.exerciseSet.unit,
+      'last-entry' => 'kg',
+      _ => settingUnit,
+    };
 
     updateFields(widget.exerciseSet, formatOrm: false, rebuild: false);
     _created = widget.exerciseSet.created;

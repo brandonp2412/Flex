@@ -192,11 +192,7 @@ class _SessionSetsState extends State<SessionSets> {
       if (b.weight != a.weight) return b.weight > a.weight ? b : a;
       return b.duration > a.duration ? b : a;
     });
-    final metric = weightedCardio
-        ? best.weight
-        : cardio
-        ? best.distance
-        : best.weight;
+    final metric = cardio && !weightedCardio ? best.distance : best.weight;
     if (metric <= 0) return null;
     return best.id;
   }
@@ -242,15 +238,16 @@ class _SetChip extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: currentSet != null
-            ? () => Navigator.of(context).push(
-                FlexPageRoute(
-                  builder: (context) => EditSetPage(exerciseSet: currentSet),
-                ),
-              )
-            : previousSet != null && onPreviousTap != null
-            ? () => onPreviousTap!(previousSet!)
-            : null,
+        onTap: switch (currentSet) {
+          != null => () => Navigator.of(context).push(
+            FlexPageRoute(
+              builder: (context) => EditSetPage(exerciseSet: currentSet),
+            ),
+          ),
+          _ when previousSet != null && onPreviousTap != null =>
+            () => onPreviousTap!(previousSet!),
+          _ => null,
+        },
         child: Stack(
           children: [
             Padding(

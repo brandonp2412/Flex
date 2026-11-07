@@ -82,31 +82,31 @@ class GraphsPageState extends State<GraphsPage>
   Future<List<dynamic>> _peekData(GraphExerciseSummary summary) {
     if (!identical(_peekSummary, summary)) {
       _peekSummary = summary;
-      _peekFuture = summary.bodyWeight
-          ? getBodyWeightData(
-              target: summary.unit,
-              period: Period.day,
-              start: null,
-              end: null,
-              limit: 20,
-            )
-          : summary.cardio
-          ? getCardioData(
-              name: summary.name,
-              target: summary.unit,
-              metric: isWeightUnit(summary.unit)
-                  ? CardioMetric.weight
-                  : CardioMetric.pace,
-            )
-          : getStrengthData(
-              target: summary.unit,
-              name: summary.name,
-              metric: StrengthMetric.bestWeight,
-              period: Period.day,
-              start: null,
-              end: null,
-              limit: 20,
-            );
+      _peekFuture = switch (summary) {
+        _ when summary.bodyWeight => getBodyWeightData(
+          target: summary.unit,
+          period: Period.day,
+          start: null,
+          end: null,
+          limit: 20,
+        ),
+        _ when summary.cardio => getCardioData(
+          name: summary.name,
+          target: summary.unit,
+          metric: isWeightUnit(summary.unit)
+              ? CardioMetric.weight
+              : CardioMetric.pace,
+        ),
+        _ => getStrengthData(
+          target: summary.unit,
+          name: summary.name,
+          metric: StrengthMetric.bestWeight,
+          period: Period.day,
+          start: null,
+          end: null,
+          limit: 20,
+        ),
+      };
     }
     return _peekFuture!;
   }

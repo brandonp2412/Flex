@@ -43,11 +43,12 @@ class _WeightPageState extends State<WeightPage>
   Widget build(BuildContext context) {
     final desktop = isDesktopLayout(context);
     final displayUnit = _unit ?? 'kg';
-    final lastWeightText = !_weightLoaded
-        ? ''
-        : _previousWeight == null
-        ? context.l10n.noWeightEnteredYet
-        : '${formatDisplayNumber(context, displayBodyWeight(displayUnit, _previousWeight!.weightKg))} ${displayMeasurementUnit(context.l10n, displayUnit)}';
+    final lastWeightText = switch (_previousWeight) {
+      _ when !_weightLoaded => '',
+      null => context.l10n.noWeightEnteredYet,
+      _ =>
+        '${formatDisplayNumber(context, displayBodyWeight(displayUnit, _previousWeight!.weightKg))} ${displayMeasurementUnit(context.l10n, displayUnit)}',
+    };
 
     return guardUnsavedChanges(
       child: Scaffold(

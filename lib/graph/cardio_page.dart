@@ -444,11 +444,11 @@ class _CardioPageState extends State<CardioPage> {
                 settings.showUnits &&
                 (metric == CardioMetric.distance ||
                     metric == CardioMetric.weight);
-            final unitItems = showUnitControl
-                ? (metric == CardioMetric.weight
-                      ? strengthUnitMenuItems(context.l10n)
-                      : cardioDistanceUnitMenuItems(context.l10n))
-                : <DropdownMenuItem<String>>[];
+            final unitItems = switch (metric) {
+              _ when !showUnitControl => <DropdownMenuItem<String>>[],
+              CardioMetric.weight => strengthUnitMenuItems(context.l10n),
+              _ => cardioDistanceUnitMenuItems(context.l10n),
+            };
             void refreshSheet() => setSheet(() {});
 
             return SafeArea(

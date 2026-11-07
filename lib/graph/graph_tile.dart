@@ -92,11 +92,12 @@ class GraphTile extends StatelessWidget {
     final desktop = isDesktopLayout(context);
     final colors = Theme.of(context).colorScheme;
     final tile = Material(
-      color: selected.contains(exerciseSet.selectionKey)
-          ? colors.primary.withValues(alpha: .18)
-          : desktop
-          ? colors.surfaceContainerLow
-          : Colors.transparent,
+      color: switch (desktop) {
+        _ when selected.contains(exerciseSet.selectionKey) =>
+          colors.primary.withValues(alpha: .18),
+        true => colors.surfaceContainerLow,
+        _ => Colors.transparent,
+      },
       borderRadius: desktop ? BorderRadius.circular(16) : null,
       clipBehavior: desktop ? Clip.antiAlias : Clip.none,
       child: ListTile(

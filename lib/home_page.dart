@@ -353,9 +353,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Consumer<Setting>(
           builder: (context, settings, child) => Positioned(
             top: settings.progressPosition == 'top' ? 8 : null,
-            bottom: settings.progressPosition == 'bottom'
-                ? (desktop ? 12 : 0)
-                : null,
+            bottom: switch (settings.progressPosition) {
+              'bottom' when desktop => 12,
+              'bottom' => 0,
+              _ => null,
+            },
             left: desktop ? 24 : 48,
             right: desktop ? 24 : 48,
             child: settings.progressPosition != 'none'

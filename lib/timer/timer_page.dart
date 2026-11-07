@@ -219,23 +219,22 @@ class _TimerPageWidgetState extends State<_TimerPageWidget>
         ),
         child: Center(child: timerVisual),
       ),
-      floatingActionButton: desktop
-          ? null
-          : timer.isRunning()
-          ? AppFab(
-              onPressed: () async => await widget.timerState.stopTimer(),
-              icon: const Icon(Icons.stop),
-              label: Text(context.l10n.actionStop),
-            )
-          : hasCountdown
-          ? const SizedBox()
-          : AppFab(
-              onPressed: _running ? _pauseStopwatch : _startStopwatch,
-              icon: Icon(_running ? Icons.pause : Icons.play_arrow),
-              label: Text(
-                _running ? context.l10n.actionPause : context.l10n.actionStart,
-              ),
-            ),
+      floatingActionButton: switch (desktop) {
+        true => null,
+        _ when timer.isRunning() => AppFab(
+          onPressed: () async => await widget.timerState.stopTimer(),
+          icon: const Icon(Icons.stop),
+          label: Text(context.l10n.actionStop),
+        ),
+        _ when hasCountdown => const SizedBox(),
+        _ => AppFab(
+          onPressed: _running ? _pauseStopwatch : _startStopwatch,
+          icon: Icon(_running ? Icons.pause : Icons.play_arrow),
+          label: Text(
+            _running ? context.l10n.actionPause : context.l10n.actionStart,
+          ),
+        ),
+      },
     );
   }
 }

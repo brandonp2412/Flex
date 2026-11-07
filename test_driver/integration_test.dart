@@ -32,13 +32,11 @@ Future<void> main() async => await integrationDriver(
         'fastlane/metadata/android/$storeLocale/images/$deviceType/$name.png',
       ).create(recursive: true);
     }
-    await imgFile.writeAsBytes(
-      !isWeb
-          ? (deviceType == 'phoneScreenshots'
-                ? trimPhoneStatusBar(image)
-                : toRgbPng(image))
-          : image,
-    );
+    await imgFile.writeAsBytes(switch (deviceType) {
+      _ when isWeb => image,
+      'phoneScreenshots' => trimPhoneStatusBar(image),
+      _ => toRgbPng(image),
+    });
     stdout.writeln('Saved ${imgFile.path} (${image.length} bytes)');
     return true;
   },

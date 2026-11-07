@@ -206,11 +206,12 @@ class _HistoryListState extends State<HistoryList> {
             final desktop = isDesktopLayout(context);
             final colors = Theme.of(context).colorScheme;
             final tile = Material(
-              color: widget.selected.contains(exerciseSet.id)
-                  ? colors.primary.withValues(alpha: .18)
-                  : desktop
-                  ? colors.surfaceContainerLow
-                  : Colors.transparent,
+              color: switch (desktop) {
+                _ when widget.selected.contains(exerciseSet.id) =>
+                  colors.primary.withValues(alpha: .18),
+                true => colors.surfaceContainerLow,
+                _ => Colors.transparent,
+              },
               borderRadius: desktop ? BorderRadius.circular(16) : null,
               clipBehavior: desktop ? Clip.antiAlias : Clip.none,
               child: ListTile(
@@ -231,17 +232,20 @@ class _HistoryListState extends State<HistoryList> {
                   builder: (context, dateFormat, child) => Padding(
                     padding: const EdgeInsets.only(top: 3),
                     child: Text(
-                      showTime
-                          ? TimeOfDay.fromDateTime(
-                              exerciseSet.created,
-                            ).format(context)
-                          : dateFormat == 'timeago'
-                          ? formatRelativeTime(context, exerciseSet.created)
-                          : formatDisplayDate(
-                              context,
-                              exerciseSet.created,
-                              dateFormat,
-                            ),
+                      switch (dateFormat) {
+                        _ when showTime => TimeOfDay.fromDateTime(
+                          exerciseSet.created,
+                        ).format(context),
+                        'timeago' => formatRelativeTime(
+                          context,
+                          exerciseSet.created,
+                        ),
+                        _ => formatDisplayDate(
+                          context,
+                          exerciseSet.created,
+                          dateFormat,
+                        ),
+                      },
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),

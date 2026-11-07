@@ -90,11 +90,12 @@ class _PlanTileState extends State<PlanTile> {
     final today = widget.plan.days.split(',').contains(widget.weekday);
 
     final tile = Material(
-      color: widget.selected.contains(widget.plan.id)
-          ? colors.primary.withValues(alpha: .18)
-          : desktop
-          ? colors.surfaceContainerLow
-          : Colors.transparent,
+      color: switch (desktop) {
+        _ when widget.selected.contains(widget.plan.id) =>
+          colors.primary.withValues(alpha: .18),
+        true => colors.surfaceContainerLow,
+        _ => Colors.transparent,
+      },
       borderRadius: desktop ? BorderRadius.circular(16) : null,
       clipBehavior: desktop ? Clip.antiAlias : Clip.none,
       child: ListTile(
