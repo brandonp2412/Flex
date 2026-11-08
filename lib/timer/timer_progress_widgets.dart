@@ -338,11 +338,12 @@ class _StopwatchProgressIndicatorState extends State<StopwatchProgressIndicator>
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton(
+                TextButton.icon(
                   onPressed: started
                       ? widget.onRestart
                       : () => _addOneMinute(context),
-                  child: Text(
+                  icon: Icon(started ? Icons.restart_alt : Icons.add),
+                  label: Text(
                     started
                         ? context.l10n.actionRestart
                         : context.l10n.addOneMinute,
