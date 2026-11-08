@@ -540,7 +540,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get reportBug => 'Fehler melden';
 
   @override
-  String get reportBugDescription => 'Ticket auf GitHub erstellen';
+  String get reportBugDescription =>
+      'Schreib mir eine E-Mail: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'Fehlgeschlagene Migrationen';
@@ -549,7 +550,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get errorMessageLabel => 'Fehlermeldung:';
 
   @override
-  String get createIssue => 'Issue erstellen';
+  String get emailDeveloper => 'Schreib mir eine E-Mail';
 
   @override
   String get addExercise => 'Übung hinzufügen';

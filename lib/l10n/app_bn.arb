@@ -689,7 +689,7 @@
   "@reportBug": {
     "description": "Label for opening the bug-report form."
   },
-  "reportBugDescription": "GitHub-এ একটি টিকিট খুলুন",
+  "reportBugDescription": "আমাকে ইমেল করুন: brandon@presley.nz",
   "@reportBugDescription": {
     "description": "Description for the bug-report action."
   },
@@ -701,9 +701,9 @@
   "@errorMessageLabel": {
     "description": "Label preceding a database migration error message."
   },
-  "createIssue": "ইস্যু তৈরি করুন",
-  "@createIssue": {
-    "description": "Action for opening a new issue report."
+  "emailDeveloper": "আমাকে ইমেল করুন",
+  "@emailDeveloper": {
+    "description": "Action for emailing the developer."
   },
   "addExercise": "ব্যায়াম যোগ করুন",
   "@addExercise": {

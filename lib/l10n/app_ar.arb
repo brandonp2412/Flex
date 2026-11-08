@@ -689,7 +689,7 @@
   "@reportBug": {
     "description": "Label for opening the bug-report form."
   },
-  "reportBugDescription": "افتح تذكرة على GitHub",
+  "reportBugDescription": "أرسل لي بريدًا إلكترونيًا: brandon@presley.nz",
   "@reportBugDescription": {
     "description": "Description for the bug-report action."
   },
@@ -701,9 +701,9 @@
   "@errorMessageLabel": {
     "description": "Label preceding a database migration error message."
   },
-  "createIssue": "إنشاء مشكلة",
-  "@createIssue": {
-    "description": "Action for opening a new issue report."
+  "emailDeveloper": "أرسل لي بريدًا إلكترونيًا",
+  "@emailDeveloper": {
+    "description": "Action for emailing the developer."
   },
   "addExercise": "إضافة تمرين",
   "@addExercise": {

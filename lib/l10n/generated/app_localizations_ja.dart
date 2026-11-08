@@ -518,7 +518,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get reportBug => 'バグを報告';
 
   @override
-  String get reportBugDescription => 'GitHubでIssueを作成';
+  String get reportBugDescription => 'メールを送る: brandon@presley.nz';
 
   @override
   String get failedMigrations => '失敗した移行';
@@ -527,7 +527,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get errorMessageLabel => 'エラーメッセージ:';
 
   @override
-  String get createIssue => 'Issueを作成';
+  String get emailDeveloper => 'メールを送る';
 
   @override
   String get addExercise => '種目を追加';

@@ -533,7 +533,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get reportBug => 'گزارش باگ';
 
   @override
-  String get reportBugDescription => 'در GitHub یک تیکت باز کنید';
+  String get reportBugDescription => 'به من ایمیل بزنید: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'مهاجرت‌های ناموفق';
@@ -542,7 +542,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get errorMessageLabel => 'پیام خطا:';
 
   @override
-  String get createIssue => 'ایجاد ایشو';
+  String get emailDeveloper => 'به من ایمیل بزنید';
 
   @override
   String get addExercise => 'افزودن تمرین';

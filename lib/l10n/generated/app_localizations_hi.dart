@@ -534,7 +534,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get reportBug => 'बग रिपोर्ट करें';
 
   @override
-  String get reportBugDescription => 'GitHub पर टिकट खोलें';
+  String get reportBugDescription => 'मुझे ईमेल करें: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'असफल माइग्रेशन';
@@ -543,7 +543,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get errorMessageLabel => 'त्रुटि संदेश:';
 
   @override
-  String get createIssue => 'इश्यू बनाएँ';
+  String get emailDeveloper => 'मुझे ईमेल करें';
 
   @override
   String get addExercise => 'व्यायाम जोड़ें';

@@ -535,7 +535,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reportBug => 'Hata Bildir';
 
   @override
-  String get reportBugDescription => 'GitHub üzerinde hata bildirin.';
+  String get reportBugDescription => 'Bana e-posta gönder: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'Başarısız veri tabanı geçişleri (migrations)';
@@ -544,7 +544,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get errorMessageLabel => 'Hata mesajı:';
 
   @override
-  String get createIssue => 'Hata Bildir';
+  String get emailDeveloper => 'Bana e-posta gönder';
 
   @override
   String get addExercise => 'Egzersiz Ekle';

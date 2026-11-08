@@ -689,7 +689,7 @@
   "@reportBug": {
     "description": "Label for opening the bug-report form."
   },
-  "reportBugDescription": "GitHub पर टिकट खोलें",
+  "reportBugDescription": "मुझे ईमेल करें: brandon@presley.nz",
   "@reportBugDescription": {
     "description": "Description for the bug-report action."
   },
@@ -701,9 +701,9 @@
   "@errorMessageLabel": {
     "description": "Label preceding a database migration error message."
   },
-  "createIssue": "इश्यू बनाएँ",
-  "@createIssue": {
-    "description": "Action for opening a new issue report."
+  "emailDeveloper": "मुझे ईमेल करें",
+  "@emailDeveloper": {
+    "description": "Action for emailing the developer."
   },
   "addExercise": "व्यायाम जोड़ें",
   "@addExercise": {

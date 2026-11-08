@@ -539,7 +539,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get reportBug => 'Comunicar um erro';
 
   @override
-  String get reportBugDescription => 'Abra um problema no GitHub';
+  String get reportBugDescription => 'Envie-me um email: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'Migrações com falha';
@@ -548,7 +548,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get errorMessageLabel => 'Mensagem de erro:';
 
   @override
-  String get createIssue => 'Criar problema';
+  String get emailDeveloper => 'Envie-me um email';
 
   @override
   String get addExercise => 'Adicionar exercício';
@@ -2185,7 +2185,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get reportBug => 'Relatar um bug';
 
   @override
-  String get reportBugDescription => 'Abra um chamado no GitHub';
+  String get reportBugDescription => 'Envie-me um e-mail: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'Migrações com falha';
@@ -2194,7 +2194,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String get errorMessageLabel => 'Mensagem de erro:';
 
   @override
-  String get createIssue => 'Criar chamado';
+  String get emailDeveloper => 'Envie-me um e-mail';
 
   @override
   String get addExercise => 'Adicionar exercício';
@@ -3830,7 +3830,7 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
   String get reportBug => 'Comunicar um erro';
 
   @override
-  String get reportBugDescription => 'Abra um problema no GitHub';
+  String get reportBugDescription => 'Envie-me um email: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'Migrações com falha';
@@ -3839,7 +3839,7 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
   String get errorMessageLabel => 'Mensagem de erro:';
 
   @override
-  String get createIssue => 'Criar problema';
+  String get emailDeveloper => 'Envie-me um email';
 
   @override
   String get addExercise => 'Adicionar exercício';

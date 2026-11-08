@@ -689,7 +689,7 @@
   "@reportBug": {
     "description": "Label for opening the bug-report form."
   },
-  "reportBugDescription": "เปิดตั๋วบน GitHub",
+  "reportBugDescription": "ส่งอีเมลถึงฉัน: brandon@presley.nz",
   "@reportBugDescription": {
     "description": "Description for the bug-report action."
   },
@@ -701,9 +701,9 @@
   "@errorMessageLabel": {
     "description": "Label preceding a database migration error message."
   },
-  "createIssue": "สร้างอิชชู",
-  "@createIssue": {
-    "description": "Action for opening a new issue report."
+  "emailDeveloper": "ส่งอีเมลถึงฉัน",
+  "@emailDeveloper": {
+    "description": "Action for emailing the developer."
   },
   "addExercise": "เพิ่มการออกกำลังกาย",
   "@addExercise": {

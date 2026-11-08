@@ -517,7 +517,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reportBug => '报告错误';
 
   @override
-  String get reportBugDescription => '在 GitHub 上提交问题';
+  String get reportBugDescription => '给我发邮件: brandon@presley.nz';
 
   @override
   String get failedMigrations => '迁移失败';
@@ -526,7 +526,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorMessageLabel => '错误信息：';
 
   @override
-  String get createIssue => '创建问题';
+  String get emailDeveloper => '给我发邮件';
 
   @override
   String get addExercise => '添加动作';
@@ -2073,7 +2073,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get reportBug => '报告错误';
 
   @override
-  String get reportBugDescription => '在 GitHub 上提交问题';
+  String get reportBugDescription => '给我发邮件: brandon@presley.nz';
 
   @override
   String get failedMigrations => '迁移失败';
@@ -2082,7 +2082,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get errorMessageLabel => '错误信息：';
 
   @override
-  String get createIssue => '创建问题';
+  String get emailDeveloper => '给我发邮件';
 
   @override
   String get addExercise => '添加动作';
@@ -3629,7 +3629,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get reportBug => '報告錯誤';
 
   @override
-  String get reportBugDescription => '在 GitHub 上提交問題';
+  String get reportBugDescription => '寄電子郵件給我: brandon@presley.nz';
 
   @override
   String get failedMigrations => '遷移失敗';
@@ -3638,7 +3638,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get errorMessageLabel => '錯誤資訊：';
 
   @override
-  String get createIssue => '建立問題';
+  String get emailDeveloper => '寄電子郵件給我';
 
   @override
   String get addExercise => '新增動作';

@@ -531,7 +531,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get reportBug => 'Báo cáo lỗi';
 
   @override
-  String get reportBugDescription => 'Mở một issue trên GitHub';
+  String get reportBugDescription => 'Gửi email cho tôi: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'Di chuyển không thành công';
@@ -540,7 +540,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errorMessageLabel => 'Thông báo lỗi:';
 
   @override
-  String get createIssue => 'Tạo vấn đề';
+  String get emailDeveloper => 'Gửi email cho tôi';
 
   @override
   String get addExercise => 'Thêm bài tập';

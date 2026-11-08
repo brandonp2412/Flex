@@ -519,7 +519,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get reportBug => '버그 신고';
 
   @override
-  String get reportBugDescription => 'GitHub에서 이슈 열기';
+  String get reportBugDescription => '이메일 보내기: brandon@presley.nz';
 
   @override
   String get failedMigrations => '실패한 마이그레이션';
@@ -528,7 +528,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get errorMessageLabel => '오류 메시지:';
 
   @override
-  String get createIssue => '이슈 만들기';
+  String get emailDeveloper => '이메일 보내기';
 
   @override
   String get addExercise => '운동 추가';

@@ -1107,7 +1107,7 @@ abstract class AppLocalizations {
   /// Description for the bug-report action.
   ///
   /// In en, this message translates to:
-  /// **'Open a ticket on GitHub'**
+  /// **'Email me at brandon@presley.nz'**
   String get reportBugDescription;
 
   /// Title for the database migration failure page.
@@ -1122,11 +1122,11 @@ abstract class AppLocalizations {
   /// **'Error message:'**
   String get errorMessageLabel;
 
-  /// Action for opening a new issue report.
+  /// Action for emailing the developer.
   ///
   /// In en, this message translates to:
-  /// **'Create issue'**
-  String get createIssue;
+  /// **'Email me'**
+  String get emailDeveloper;
 
   /// Title and action for adding an exercise graph.
   ///

@@ -166,7 +166,7 @@ class ImportData extends StatelessWidget {
       final packageInfo = await PackageInfo.fromPlatform();
       final version = packageInfo.version;
 
-      final url = buildImportIssueUrl(
+      final url = buildImportReportEmail(
         kind: 'database',
         error: e,
         stackTrace: stackTrace,
@@ -182,7 +182,7 @@ class ImportData extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
           ),
           action: SnackBarAction(
-            label: l10n.actionReport,
+            label: l10n.emailDeveloper,
             onPressed: () async {
               await launchUrl(url, mode: LaunchMode.externalApplication);
             },
@@ -449,7 +449,7 @@ class ImportData extends StatelessWidget {
       final packageInfo = await PackageInfo.fromPlatform();
       final version = packageInfo.version;
 
-      final url = buildImportIssueUrl(
+      final url = buildImportReportEmail(
         kind: 'plans',
         error: e,
         stackTrace: stackTrace,
@@ -466,7 +466,7 @@ class ImportData extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
           ),
           action: SnackBarAction(
-            label: l10n.actionReport,
+            label: l10n.emailDeveloper,
             onPressed: () async {
               await launchUrl(url, mode: LaunchMode.externalApplication);
             },

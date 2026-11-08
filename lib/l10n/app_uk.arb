@@ -698,7 +698,7 @@
   "@reportBug": {
     "description": "Label for opening the bug-report form."
   },
-  "reportBugDescription": "Створити звернення на GitHub",
+  "reportBugDescription": "Напишіть мені: brandon@presley.nz",
   "@reportBugDescription": {
     "description": "Description for the bug-report action."
   },
@@ -710,9 +710,9 @@
   "@errorMessageLabel": {
     "description": "Label preceding a database migration error message."
   },
-  "createIssue": "Створити звернення",
-  "@createIssue": {
-    "description": "Action for opening a new issue report."
+  "emailDeveloper": "Напишіть мені",
+  "@emailDeveloper": {
+    "description": "Action for emailing the developer."
   },
   "addExercise": "Додати вправу",
   "@addExercise": {

@@ -689,7 +689,7 @@
   "@reportBug": {
     "description": "Label for opening the bug-report form."
   },
-  "reportBugDescription": "Mở một issue trên GitHub",
+  "reportBugDescription": "Gửi email cho tôi: brandon@presley.nz",
   "@reportBugDescription": {
     "description": "Description for the bug-report action."
   },
@@ -701,9 +701,9 @@
   "@errorMessageLabel": {
     "description": "Label preceding a database migration error message."
   },
-  "createIssue": "Tạo vấn đề",
-  "@createIssue": {
-    "description": "Action for opening a new issue report."
+  "emailDeveloper": "Gửi email cho tôi",
+  "@emailDeveloper": {
+    "description": "Action for emailing the developer."
   },
   "addExercise": "Thêm bài tập",
   "@addExercise": {

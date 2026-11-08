@@ -540,7 +540,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get reportBug => 'Сообщить об ошибке';
 
   @override
-  String get reportBugDescription => 'Создать обращение на GitHub';
+  String get reportBugDescription => 'Напишите мне: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'Ошибки миграции';
@@ -549,7 +549,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get errorMessageLabel => 'Сообщение об ошибке:';
 
   @override
-  String get createIssue => 'Создать обращение';
+  String get emailDeveloper => 'Напишите мне';
 
   @override
   String get addExercise => 'Добавить упражнение';

@@ -1,3 +1,4 @@
+import 'package:flex/support_email.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/made_in_new_zealand_badge.dart';
 import 'package:flex/settings/whats_new.dart';
@@ -125,8 +126,10 @@ class AboutPage extends StatelessWidget {
             subtitle: Text(context.l10n.reportBugDescription),
             onTap: () async {
               final version = (await info).version;
-              final url =
-                  'https://github.com/brandonp2412/Flex/issues/new?labels=Bug&body=App version: $version';
+              final url = buildSupportEmail(
+                subject: 'Flex bug report',
+                body: 'App version: $version',
+              ).toString();
               await launchUrlString(url);
             },
           ),

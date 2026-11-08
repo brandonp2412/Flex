@@ -537,7 +537,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get reportBug => 'بگ رپورٹ کریں';
 
   @override
-  String get reportBugDescription => 'GitHub پر ٹکٹ کھولیں';
+  String get reportBugDescription => 'مجھے ای میل کریں: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'ناکام مائیگریشنز';
@@ -546,7 +546,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get errorMessageLabel => 'خرابی کا پیغام:';
 
   @override
-  String get createIssue => 'ایشو بنائیں';
+  String get emailDeveloper => 'مجھے ای میل کریں';
 
   @override
   String get addExercise => 'ورزش شامل کریں';

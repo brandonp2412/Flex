@@ -539,7 +539,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get reportBug => 'Повідомити про помилку';
 
   @override
-  String get reportBugDescription => 'Створити звернення на GitHub';
+  String get reportBugDescription => 'Напишіть мені: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'Невдалі міграції';
@@ -548,7 +548,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get errorMessageLabel => 'Повідомлення про помилку:';
 
   @override
-  String get createIssue => 'Створити звернення';
+  String get emailDeveloper => 'Напишіть мені';
 
   @override
   String get addExercise => 'Додати вправу';

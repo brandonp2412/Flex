@@ -531,7 +531,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportBug => 'الإبلاغ عن خطأ';
 
   @override
-  String get reportBugDescription => 'افتح تذكرة على GitHub';
+  String get reportBugDescription =>
+      'أرسل لي بريدًا إلكترونيًا: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'عمليات ترحيل فاشلة';
@@ -540,7 +541,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errorMessageLabel => 'رسالة الخطأ:';
 
   @override
-  String get createIssue => 'إنشاء مشكلة';
+  String get emailDeveloper => 'أرسل لي بريدًا إلكترونيًا';
 
   @override
   String get addExercise => 'إضافة تمرين';

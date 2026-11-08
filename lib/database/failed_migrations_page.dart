@@ -1,3 +1,4 @@
+import 'package:flex/support_email.dart';
 import 'package:flex/delete_records_button.dart';
 import 'package:flex/export_data.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
@@ -44,24 +45,15 @@ class FailedMigrationsPage extends StatelessWidget {
                 DeleteRecordsButton(ctx: context),
                 TextButton.icon(
                   onPressed: () async {
-                    final url = Uri(
-                      scheme: 'https',
-                      host: 'github.com',
-                      path: '/brandonp2412/Flex/issues/new',
-                      queryParameters: {
-                        'title': context.l10n.failedMigrations,
-                        'body': error.toString(),
-                      },
+                    final url = buildSupportEmail(
+                      subject: context.l10n.failedMigrations,
+                      body: error.toString(),
                     ).toString();
 
                     await launchUrlString(url);
                   },
-                  label: Text(context.l10n.createIssue),
-                  icon: Image.asset(
-                    "assets/github-mark.png",
-                    height: 24,
-                    width: 24,
-                  ),
+                  label: Text(context.l10n.emailDeveloper),
+                  icon: const Icon(Icons.email_outlined),
                 ),
               ],
             ),

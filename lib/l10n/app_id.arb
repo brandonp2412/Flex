@@ -689,7 +689,7 @@
   "@reportBug": {
     "description": "Label for opening the bug-report form."
   },
-  "reportBugDescription": "Buka tiket di GitHub",
+  "reportBugDescription": "Kirim email kepada saya: brandon@presley.nz",
   "@reportBugDescription": {
     "description": "Description for the bug-report action."
   },
@@ -701,9 +701,9 @@
   "@errorMessageLabel": {
     "description": "Label preceding a database migration error message."
   },
-  "createIssue": "Buat isu",
-  "@createIssue": {
-    "description": "Action for opening a new issue report."
+  "emailDeveloper": "Kirim email kepada saya",
+  "@emailDeveloper": {
+    "description": "Action for emailing the developer."
   },
   "addExercise": "Tambah latihan",
   "@addExercise": {

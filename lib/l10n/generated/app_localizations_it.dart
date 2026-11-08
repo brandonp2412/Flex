@@ -535,7 +535,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get reportBug => 'Segnala un bug';
 
   @override
-  String get reportBugDescription => 'Apri un ticket su GitHub';
+  String get reportBugDescription => 'Scrivimi un’email: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'Migrazioni non riuscite';
@@ -544,7 +544,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get errorMessageLabel => 'Messaggio di errore:';
 
   @override
-  String get createIssue => 'Crea segnalazione';
+  String get emailDeveloper => 'Scrivimi un’email';
 
   @override
   String get addExercise => 'Aggiungi esercizio';

@@ -1,5 +1,6 @@
-/// Creates an actionable report URL without exceeding GitHub URL limits.
-Uri buildImportIssueUrl({
+import 'package:flex/support_email.dart';
+
+Uri buildImportReportEmail({
   required String kind,
   required Object error,
   required StackTrace stackTrace,
@@ -10,11 +11,7 @@ Uri buildImportIssueUrl({
       : String.fromCharCodes(text.runes.take(length));
 
   final title = 'Import failed: $kind';
-  Uri issue(String body) => Uri.https(
-    'github.com',
-    '/brandonp2412/Flex/issues/new',
-    {'title': title, 'body': body},
-  );
+  Uri issue(String body) => buildSupportEmail(subject: title, body: body);
 
   final description = 'Failed to import $kind.\n\nFlex version: $version';
   final exception = trim(error.toString(), 200);

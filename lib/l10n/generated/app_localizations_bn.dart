@@ -536,7 +536,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get reportBug => 'বাগ রিপোর্ট করুন';
 
   @override
-  String get reportBugDescription => 'GitHub-এ একটি টিকিট খুলুন';
+  String get reportBugDescription => 'আমাকে ইমেল করুন: brandon@presley.nz';
 
   @override
   String get failedMigrations => 'ব্যর্থ মাইগ্রেশন';
@@ -545,7 +545,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get errorMessageLabel => 'ত্রুটির বার্তা:';
 
   @override
-  String get createIssue => 'ইস্যু তৈরি করুন';
+  String get emailDeveloper => 'আমাকে ইমেল করুন';
 
   @override
   String get addExercise => 'ব্যায়াম যোগ করুন';

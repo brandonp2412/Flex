@@ -699,7 +699,7 @@
   "@reportBug": {
     "description": "Label for opening the bug-report form."
   },
-  "reportBugDescription": "Open a ticket on GitHub",
+  "reportBugDescription": "Email me at brandon@presley.nz",
   "@reportBugDescription": {
     "description": "Description for the bug-report action."
   },
@@ -711,9 +711,9 @@
   "@errorMessageLabel": {
     "description": "Label preceding a database migration error message."
   },
-  "createIssue": "Create issue",
-  "@createIssue": {
-    "description": "Action for opening a new issue report."
+  "emailDeveloper": "Email me",
+  "@emailDeveloper": {
+    "description": "Action for emailing the developer."
   },
   "addExercise": "Add exercise",
   "@addExercise": {
