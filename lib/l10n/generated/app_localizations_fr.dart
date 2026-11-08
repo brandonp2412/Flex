@@ -1654,4 +1654,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return 'Auparavant $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'Importer un CSV d’entraînements';
 }

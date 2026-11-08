@@ -510,5 +510,6 @@
   "setNumber": "{number}. Set",
   "previousPerformance": "Önce {date} · {sets}",
   "chartGridlines": "Grafik ızgara çizgileri",
-  "chartShading": "Grafik gölgelendirmesi"
+  "chartShading": "Grafik gölgelendirmesi",
+  "externalWorkoutCsv": "Antrenman CSV'sini içe aktar"
 }

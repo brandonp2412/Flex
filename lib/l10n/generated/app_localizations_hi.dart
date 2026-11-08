@@ -1621,4 +1621,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return 'पहले $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'वर्कआउट CSV आयात करें';
 }

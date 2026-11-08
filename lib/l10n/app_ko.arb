@@ -510,5 +510,6 @@
   "setNumber": "세트 {number}",
   "previousPerformance": "이전 {date} · {sets}",
   "chartGridlines": "차트 눈금선",
-  "chartShading": "차트 영역 음영"
+  "chartShading": "차트 영역 음영",
+  "externalWorkoutCsv": "운동 CSV 가져오기"
 }

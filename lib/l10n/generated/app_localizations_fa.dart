@@ -1627,4 +1627,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return 'قبلاً $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'وارد کردن CSV تمرین‌ها';
 }

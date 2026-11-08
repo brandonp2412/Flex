@@ -2026,5 +2026,6 @@
   },
   "previousPerformance": "پہلے {date} · {sets}",
   "chartGridlines": "چارٹ کی گرڈ لائنیں",
-  "chartShading": "چارٹ کی شیڈنگ"
+  "chartShading": "چارٹ کی شیڈنگ",
+  "externalWorkoutCsv": "ورزشوں کی CSV درآمد کریں"
 }

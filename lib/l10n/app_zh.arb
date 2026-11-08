@@ -510,5 +510,6 @@
   "setNumber": "第 {number} 组",
   "previousPerformance": "之前 {date} · {sets}",
   "chartGridlines": "图表网格线",
-  "chartShading": "图表区域填充"
+  "chartShading": "图表区域填充",
+  "externalWorkoutCsv": "导入训练 CSV"
 }

@@ -510,5 +510,6 @@
   "setNumber": "Série {number}",
   "previousPerformance": "Anteriormente {date} · {sets}",
   "chartGridlines": "Linhas de grelha do gráfico",
-  "chartShading": "Sombreamento do gráfico"
+  "chartShading": "Sombreamento do gráfico",
+  "externalWorkoutCsv": "Importar CSV de treinos"
 }

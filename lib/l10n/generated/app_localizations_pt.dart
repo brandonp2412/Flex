@@ -1649,6 +1649,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return 'Anteriormente $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'Importar CSV de treinos';
 }
 
 /// The translations for Portuguese, as used in Brazil (`pt_BR`).
@@ -3287,6 +3290,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   String previousPerformance(String date, String sets) {
     return 'Anteriormente $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'Importar CSV de treinos';
 }
 
 /// The translations for Portuguese, as used in Portugal (`pt_PT`).
@@ -4934,4 +4940,7 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
   String previousPerformance(String date, String sets) {
     return 'Anteriormente $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'Importar CSV de treinos';
 }

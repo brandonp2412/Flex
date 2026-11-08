@@ -2026,5 +2026,6 @@
   },
   "previousPerformance": "Sebelumnya {date} · {sets}",
   "chartGridlines": "Garis kisi grafik",
-  "chartShading": "Arsiran grafik"
+  "chartShading": "Arsiran grafik",
+  "externalWorkoutCsv": "Impor CSV latihan"
 }

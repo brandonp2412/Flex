@@ -2026,5 +2026,6 @@
   },
   "previousPerformance": "قبلاً {date} · {sets}",
   "chartGridlines": "خطوط شبکهٔ نمودار",
-  "chartShading": "سایه‌زنی نمودار"
+  "chartShading": "سایه‌زنی نمودار",
+  "externalWorkoutCsv": "وارد کردن CSV تمرین‌ها"
 }

@@ -1636,4 +1636,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return 'Sebelum ini $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'Import CSV senaman';
 }

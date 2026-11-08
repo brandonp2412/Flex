@@ -2026,5 +2026,6 @@
   },
   "previousPerformance": "سابقاً {date} · {sets}",
   "chartGridlines": "خطوط شبكة الرسم البياني",
-  "chartShading": "تظليل الرسم البياني"
+  "chartShading": "تظليل الرسم البياني",
+  "externalWorkoutCsv": "استيراد CSV للتمارين"
 }

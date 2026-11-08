@@ -2101,5 +2101,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "externalWorkoutCsv": "Import workout CSV",
+  "@externalWorkoutCsv": {"description": "Import workout CSV exported by another open-source fitness tracker."}
 }

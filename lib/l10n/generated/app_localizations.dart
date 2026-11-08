@@ -3005,6 +3005,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Previously {date} · {sets}'**
   String previousPerformance(String date, String sets);
+
+  /// Import workout CSV exported by another open-source fitness tracker.
+  ///
+  /// In en, this message translates to:
+  /// **'Import workout CSV'**
+  String get externalWorkoutCsv;
 }
 
 class _AppLocalizationsDelegate

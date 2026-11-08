@@ -510,5 +510,6 @@
   "setNumber": "セット {number}",
   "previousPerformance": "前回 {date} · {sets}",
   "chartGridlines": "グラフのグリッド線",
-  "chartShading": "グラフの塗りつぶし"
+  "chartShading": "グラフの塗りつぶし",
+  "externalWorkoutCsv": "ワークアウトCSVをインポート"
 }

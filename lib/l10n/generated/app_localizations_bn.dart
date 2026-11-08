@@ -1623,4 +1623,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return 'পূর্বে $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'ওয়ার্কআউট CSV আমদানি করুন';
 }

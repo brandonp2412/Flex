@@ -1555,6 +1555,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return '之前 $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => '导入训练 CSV';
 }
 
 /// The translations for Chinese, as used in China (`zh_CN`).
@@ -3108,6 +3111,9 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String previousPerformance(String date, String sets) {
     return '之前 $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => '导入训练 CSV';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -4662,4 +4668,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String previousPerformance(String date, String sets) {
     return '之前 $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => '匯入訓練 CSV';
 }

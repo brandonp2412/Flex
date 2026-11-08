@@ -2026,5 +2026,6 @@
   },
   "previousPerformance": "ก่อนหน้านี้ {date} · {sets}",
   "chartGridlines": "เส้นตารางกราฟ",
-  "chartShading": "การแรเงากราฟ"
+  "chartShading": "การแรเงากราฟ",
+  "externalWorkoutCsv": "นำเข้า CSV การออกกำลังกาย"
 }

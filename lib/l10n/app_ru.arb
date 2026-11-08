@@ -510,5 +510,6 @@
   "setNumber": "Подход {number}",
   "previousPerformance": "Ранее {date} · {sets}",
   "chartGridlines": "Линии сетки графика",
-  "chartShading": "Заливка области графика"
+  "chartShading": "Заливка области графика",
+  "externalWorkoutCsv": "Импортировать CSV тренировок"
 }

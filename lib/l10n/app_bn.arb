@@ -2026,5 +2026,6 @@
   },
   "previousPerformance": "পূর্বে {date} · {sets}",
   "chartGridlines": "গ্রাফের গ্রিডলাইন",
-  "chartShading": "গ্রাফের ছায়া"
+  "chartShading": "গ্রাফের ছায়া",
+  "externalWorkoutCsv": "ওয়ার্কআউট CSV আমদানি করুন"
 }

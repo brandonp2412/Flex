@@ -1633,4 +1633,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return 'Trước đây $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'Nhập CSV buổi tập';
 }

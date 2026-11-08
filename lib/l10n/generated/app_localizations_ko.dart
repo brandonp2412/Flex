@@ -1569,4 +1569,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return '이전 $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => '운동 CSV 가져오기';
 }

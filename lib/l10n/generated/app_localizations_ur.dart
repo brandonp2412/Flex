@@ -1626,4 +1626,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return 'پہلے $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'ورزشوں کی CSV درآمد کریں';
 }

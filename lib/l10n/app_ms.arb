@@ -2026,5 +2026,6 @@
   },
   "previousPerformance": "Sebelum ini {date} · {sets}",
   "chartGridlines": "Garis grid carta",
-  "chartShading": "Lorekan carta"
+  "chartShading": "Lorekan carta",
+  "externalWorkoutCsv": "Import CSV senaman"
 }

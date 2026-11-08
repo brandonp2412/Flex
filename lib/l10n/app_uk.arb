@@ -2035,5 +2035,6 @@
   },
   "previousPerformance": "Раніше {date} · {sets}",
   "chartGridlines": "Лінії сітки графіка",
-  "chartShading": "Затінення графіка"
+  "chartShading": "Затінення графіка",
+  "externalWorkoutCsv": "Імпортувати CSV тренувань"
 }

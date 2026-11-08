@@ -510,5 +510,6 @@
   "setNumber": "Set {number}",
   "previousPerformance": "Vorige keer {date} · {sets}",
   "chartGridlines": "Rasterlijnen van grafiek",
-  "chartShading": "Grafiekschaduw"
+  "chartShading": "Grafiekschaduw",
+  "externalWorkoutCsv": "Trainings-CSV importeren"
 }

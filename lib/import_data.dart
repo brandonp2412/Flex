@@ -5,6 +5,7 @@ import 'package:csv/csv.dart';
 import 'package:drift/drift.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_permissions_dialog.dart';
+import 'package:flex/data_portability/external_workout_csv.dart';
 import 'package:flex/data_portability/graph_csv.dart';
 import 'package:flex/data_portability/import_issue.dart';
 import 'package:flex/database/database.dart';
@@ -37,6 +38,7 @@ String _localizedImportError(Object error, AppLocalizations l10n) {
   }
   if (error is _ImportValidationException) return error.message;
   if (error is GraphCsvImportException) return error.message;
+  if (error is ExternalWorkoutImportException) return error.message;
   return l10n.unexpectedError;
 }
 
@@ -119,6 +121,11 @@ class ImportData extends StatelessWidget {
                     leading: const Icon(Icons.insights),
                     title: Text(context.l10n.navGraphs),
                     onTap: () => importGraphs(context),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.fitness_center_outlined),
+                    title: Text(context.l10n.externalWorkoutCsv),
+                    onTap: () => importOtherAppCsv(context),
                   ),
                   ListTile(
                     leading: const Icon(Icons.event),
@@ -293,6 +300,45 @@ class ImportData extends StatelessWidget {
     }
 
     throw _ImportValidationException(l10n.databaseImportWebUnsupported);
+  }
+
+  Future<void> importOtherAppCsv(BuildContext context) async {
+    final l10n = ctx.l10n;
+    Navigator.pop(context);
+
+    try {
+      final files = await FilePicker.pickFiles();
+      if (files.isEmpty) return;
+      final bytes = await files.single.readAsBytes();
+      final csvContent = utf8.decode(bytes, allowMalformed: false);
+      final result = await importExternalWorkoutCsv(db, csvContent);
+      talker.info(
+        'Imported ${result.format.name} CSV: ${result.workouts} workouts, '
+        '${result.exercises} exercises, ${result.sets} sets',
+      );
+
+      dbVersion.value++;
+      if (!ctx.mounted) return;
+      messengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.graphDataImported),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } catch (e, stackTrace) {
+      talker.handle(e, stackTrace, 'Failed to import third-party workout CSV');
+      if (!ctx.mounted) return;
+      messengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.failedToImportGraphs(_localizedImportError(e, l10n)),
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 10),
+        ),
+      );
+    }
   }
 
   Future<void> importGraphs(BuildContext context) async {

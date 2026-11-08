@@ -510,5 +510,6 @@
   "setNumber": "Satz {number}",
   "previousPerformance": "Zuletzt {date} · {sets}",
   "chartGridlines": "Rasterlinien im Diagramm",
-  "chartShading": "Flächenschattierung im Diagramm"
+  "chartShading": "Flächenschattierung im Diagramm",
+  "externalWorkoutCsv": "Trainings-CSV importieren"
 }

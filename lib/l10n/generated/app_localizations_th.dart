@@ -1612,4 +1612,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String previousPerformance(String date, String sets) {
     return 'ก่อนหน้านี้ $date · $sets';
   }
+
+  @override
+  String get externalWorkoutCsv => 'นำเข้า CSV การออกกำลังกาย';
 }
