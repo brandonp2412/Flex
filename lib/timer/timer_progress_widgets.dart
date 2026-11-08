@@ -338,17 +338,17 @@ class _StopwatchProgressIndicatorState extends State<StopwatchProgressIndicator>
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton.icon(
-                  onPressed: started
-                      ? widget.onRestart
-                      : () => _addOneMinute(context),
-                  icon: Icon(started ? Icons.restart_alt : Icons.add),
-                  label: Text(
-                    started
-                        ? context.l10n.actionRestart
-                        : context.l10n.addOneMinute,
+                if (started)
+                  TextButton.icon(
+                    onPressed: widget.onRestart,
+                    icon: const Icon(Icons.restart_alt),
+                    label: Text(context.l10n.actionRestart),
+                  )
+                else
+                  TextButton(
+                    onPressed: () => _addOneMinute(context),
+                    child: Text(context.l10n.addOneMinute),
                   ),
-                ),
                 if (widget.trailingControl != null) ...[
                   const SizedBox(height: 8),
                   widget.trailingControl!,
