@@ -19,7 +19,41 @@ class FlexPageRoute<T> extends MaterialPageRoute<T> {
     super.fullscreenDialog = false,
     super.allowSnapshotting = true,
     super.barrierDismissible = false,
+    this.snapshotOnPop = false,
   });
+
+  final bool snapshotOnPop;
+  final SnapshotController _popSnapshotController = SnapshotController();
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    final page = super.buildPage(context, animation, secondaryAnimation);
+    if (!snapshotOnPop || isDesktopPlatform) return page;
+    return SnapshotWidget(
+      controller: _popSnapshotController,
+      mode: SnapshotMode.permissive,
+      child: page,
+    );
+  }
+
+  @override
+  bool didPop(T? result) {
+    final popped = super.didPop(result);
+    if (popped && snapshotOnPop && !isDesktopPlatform) {
+      _popSnapshotController.allowSnapshotting = true;
+    }
+    return popped;
+  }
+
+  @override
+  void dispose() {
+    _popSnapshotController.dispose();
+    super.dispose();
+  }
 
   @override
   Duration get transitionDuration =>

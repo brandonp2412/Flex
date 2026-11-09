@@ -34,6 +34,7 @@ Future<void> openStartPlan(
   return navigator.push<void>(
     FlexPageRoute<void>(
       settings: RouteSettings(name: 'start-plan:${plan.id}'),
+      snapshotOnPop: true,
       builder: (context) => StartPlanPage(plan: plan, initial: initial),
     ),
   );
