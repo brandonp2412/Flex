@@ -373,6 +373,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       extendBodyBehindAppBar: true,
       extendBody: !desktop,
       body: SafeArea(
+        maintainBottomViewPadding: true,
         child: desktop
             ? Row(
                 children: [
