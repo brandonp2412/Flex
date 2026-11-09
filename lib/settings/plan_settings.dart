@@ -60,6 +60,12 @@ List<Widget> getPlanSettings(
     if (matches([
       l10n.planTrailingDisplay,
       l10n.planTrailingDisplayDescription,
+      l10n.countLabel,
+      l10n.ratioLabel,
+      l10n.reorder,
+      l10n.none,
+      ...PlanTrailing.values.map((value) => value.name),
+      '%',
     ]))
       Padding(
         padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),

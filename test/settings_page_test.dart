@@ -90,6 +90,38 @@ void main() {
     expect(find.text('Import data'), findsOneWidget);
   });
 
+  testWidgets('Settings search matches selectable values', (tester) async {
+    await render(tester);
+    final search = find.descendant(
+      of: find.byType(SearchBar),
+      matching: find.byType(EditableText),
+    );
+
+    await tester.enterText(search, 'reorder');
+    await tester.pumpAndSettle();
+    expect(find.text('Plan trailing display'), findsOneWidget);
+
+    await tester.enterText(search, 'ratio');
+    await tester.pumpAndSettle();
+    expect(find.text('Plan trailing display'), findsOneWidget);
+
+    await tester.enterText(search, 'outlined');
+    await tester.pumpAndSettle();
+    expect(find.text('Input style'), findsWidgets);
+
+    await tester.enterText(search, 'bottom');
+    await tester.pumpAndSettle();
+    expect(find.text('Progress bar position'), findsOneWidget);
+
+    await tester.enterText(search, 'dd.MM.yy');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Short date format'), findsOneWidget);
+
+    await tester.enterText(search, '100');
+    await tester.pumpAndSettle();
+    expect(find.text('Default graph limit'), findsOneWidget);
+  });
+
   testWidgets('Workout settings reveal graph options on demand', (
     WidgetTester tester,
   ) async {

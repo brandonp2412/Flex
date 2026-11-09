@@ -300,7 +300,15 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
             ),
           ),
         ),
-      if (matches([l10n.defaultGraphLimit]))
+      if (matches([
+        l10n.defaultGraphLimit,
+        '10',
+        '20',
+        '30',
+        '50',
+        '100',
+        '200',
+      ]))
         Padding(
           padding: settingsPadding,
           child: DropdownButtonFormField<int>(

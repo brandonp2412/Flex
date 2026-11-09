@@ -260,9 +260,16 @@ List<Widget> getTimerSettings(
     if (matches([
       l10n.progressBarPosition,
       l10n.progressBarPositionDescription,
+      l10n.top,
+      l10n.bottom,
+      l10n.none,
     ]))
       _ProgressPositionSetting(settings: settings),
-    if (matches([l10n.alarmSound, l10n.alarmSoundDescription]))
+    if (matches([
+      l10n.alarmSound,
+      l10n.alarmSoundDescription,
+      if (settings.alarmSound.isNotEmpty) settings.alarmSound.split('/').last,
+    ]))
       Tooltip(
         message: l10n.alarmSoundDescription,
         child: Wrap(

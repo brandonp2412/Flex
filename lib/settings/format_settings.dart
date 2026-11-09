@@ -92,7 +92,11 @@ List<Widget> getFormatSettings(
           },
         ),
       ),
-    if (matches([l10n.longDateFormat(''), l10n.longDateFormatDescription]))
+    if (matches([
+      l10n.longDateFormat(''),
+      l10n.longDateFormatDescription,
+      ...long,
+    ]))
       Padding(
         padding: settingsPadding,
         child: Tooltip(
@@ -129,7 +133,11 @@ List<Widget> getFormatSettings(
           ),
         ),
       ),
-    if (matches([l10n.shortDateFormat(''), l10n.shortDateFormatDescription]))
+    if (matches([
+      l10n.shortDateFormat(''),
+      l10n.shortDateFormatDescription,
+      ...short,
+    ]))
       Padding(
         padding: settingsPadding,
         child: Tooltip(

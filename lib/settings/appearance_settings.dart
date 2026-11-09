@@ -277,7 +277,16 @@ List<Widget> getAppearanceSettings(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: GraphCurveSettings(showPreview: true),
       ),
-    if (matches([l10n.inputStyle, l10n.inputStyleDescription]))
+    if (matches([
+      l10n.inputStyle,
+      l10n.inputStyleDescription,
+      l10n.inputStyleLine,
+      l10n.inputStyleOutlined,
+      l10n.inputStyleFilled,
+      'underline',
+      'outlined',
+      'filled',
+    ]))
       Tooltip(
         message: l10n.inputStyleDescription,
         child: Padding(
