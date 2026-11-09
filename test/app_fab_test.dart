@@ -62,4 +62,45 @@ void main() {
     expect(tester.getSize(animatedContainer).width, expandedWidth);
     expect(tester.widget<FloatingActionButton>(fab).isExtended, isTrue);
   });
+
+  testWidgets('FAB on a non-resizing page stays put when keyboard closes', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.viewPadding = const FakeViewPadding(bottom: 24);
+    tester.view.padding = const FakeViewPadding(bottom: 24);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetViewPadding);
+    addTearDown(tester.view.resetPadding);
+    addTearDown(tester.view.resetViewInsets);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          resizeToAvoidBottomInset: false,
+          floatingActionButtonAnimator:
+              FloatingActionButtonAnimator.noAnimation,
+          floatingActionButton: AppFab(
+            onPressed: () {},
+            label: const Text('Add'),
+            icon: const Icon(Icons.add),
+          ),
+        ),
+      ),
+    );
+    final fab = find.byType(FloatingActionButton);
+    final top = tester.getTopLeft(fab).dy;
+
+    tester.view.padding = FakeViewPadding.zero;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.pump();
+    expect(tester.getTopLeft(fab).dy, top);
+
+    tester.view.viewInsets = FakeViewPadding.zero;
+    tester.view.padding = const FakeViewPadding(bottom: 24);
+    await tester.pump();
+    expect(tester.getTopLeft(fab).dy, top);
+  });
 }

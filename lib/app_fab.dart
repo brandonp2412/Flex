@@ -2,10 +2,14 @@ import 'package:flex/bottom_nav.dart';
 import 'package:flex/responsive.dart';
 import 'package:flutter/material.dart';
 
-double appFabBottomPadding(BuildContext context) =>
-    isDesktopLayout(context) || MediaQuery.viewInsetsOf(context).bottom > 0
-    ? 16
-    : bottomNavHeight;
+double appFabBottomPadding(BuildContext context) {
+  final resizeForKeyboard =
+      Scaffold.maybeOf(context)?.widget.resizeToAvoidBottomInset ?? true;
+  return isDesktopLayout(context) ||
+          (resizeForKeyboard && MediaQuery.viewInsetsOf(context).bottom > 0)
+      ? 16
+      : bottomNavHeight;
+}
 
 class AppFab extends StatefulWidget {
   final VoidCallback onPressed;
