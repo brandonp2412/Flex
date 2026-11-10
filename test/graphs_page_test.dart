@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/graph/graph_tile.dart';
 import 'package:flex/graph/graphs_page.dart';
 import 'package:flutter/material.dart';
@@ -463,5 +464,24 @@ void main() {
     );
     expect(find.byKey(const Key('desktop-merge-graphs')), findsOneWidget);
     expect(find.byKey(const Key('desktop-select-all')), findsNothing);
+  });
+  testWidgets('select all counts body-weight records before confirmation', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    await harness.database.settings.update().write(
+      testSettings(showGlobalProgress: false),
+    );
+    await recordBodyWeight(harness.database, timestamp: testNow, weightKg: 80);
+    await pumpGraphsPage(tester, harness);
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Select all'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Delete selected'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('1 record'), findsOneWidget);
+    expect(find.textContaining('0 records'), findsNothing);
   });
 }

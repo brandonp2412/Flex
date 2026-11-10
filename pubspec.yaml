@@ -1,7 +1,7 @@
 name: flex
 description: Track gym progress, visualize graphs, enjoy offline support & timers
 publish_to: none
-version: 2.2.40+454
+version: 2.2.41+455
 environment:
   sdk: ">=3.12.0 <4.0.0"
   flutter: ">=3.44.8"

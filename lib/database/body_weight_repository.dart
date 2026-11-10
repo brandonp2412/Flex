@@ -46,3 +46,19 @@ Future<int> recordBodyWeight(
     ),
   );
 }
+
+Future<BodyWeight?> getBodyWeightById(AppDatabase database, int id) =>
+    (database.bodyWeights.select()..where((row) => row.id.equals(id)))
+        .getSingleOrNull();
+
+Future<int> updateBodyWeight(
+  AppDatabase database, {
+  required int id,
+  required double weightKg,
+  String? photo,
+}) => (database.bodyWeights.update()..where((row) => row.id.equals(id))).write(
+  BodyWeightsCompanion(weightKg: Value(weightKg), photo: Value(photo)),
+);
+
+Future<int> deleteBodyWeight(AppDatabase database, int id) =>
+    database.bodyWeights.deleteWhere((row) => row.id.equals(id));

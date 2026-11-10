@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -11,6 +12,7 @@ import 'package:flex/responsive.dart';
 import 'package:flex/set_summary.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/utils.dart';
+import 'package:flex/weight_page.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +25,8 @@ class HistoryList extends StatefulWidget {
   final Function(int) onSelect;
   final Set<int> selected;
   final Function onNext;
+  final bool bodyWeight;
+  final Future<void> Function()? onChanged;
   final double topPadding;
 
   const HistoryList({
@@ -32,6 +36,8 @@ class HistoryList extends StatefulWidget {
     required this.selected,
     required this.onNext,
     required this.scroll,
+    this.bodyWeight = false,
+    this.onChanged,
     this.topPadding = 0,
   });
 
@@ -42,6 +48,23 @@ class HistoryList extends StatefulWidget {
 class _HistoryListState extends State<HistoryList> {
   bool _goingNext = false;
   List<ExerciseSetView> _current = [];
+
+  Future<void> _editEntry(ExerciseSetView exerciseSet) async {
+    if (widget.bodyWeight) {
+      final weight = await getBodyWeightById(db, exerciseSet.id);
+      if (!mounted || weight == null) return;
+      await Navigator.of(
+        context,
+      ).push(FlexPageRoute(builder: (context) => WeightPage(initial: weight)));
+    } else {
+      await Navigator.of(context).push(
+        FlexPageRoute(
+          builder: (context) => EditSetPage(exerciseSet: exerciseSet),
+        ),
+      );
+    }
+    if (mounted) await widget.onChanged?.call();
+  }
 
   Future<void> _showContextMenu(
     BuildContext context,
@@ -72,11 +95,7 @@ class _HistoryListState extends State<HistoryList> {
 
     switch (action) {
       case _HistoryContextAction.edit:
-        await Navigator.of(context).push(
-          FlexPageRoute(
-            builder: (context) => EditSetPage(exerciseSet: exerciseSet),
-          ),
-        );
+        await _editEntry(exerciseSet);
         break;
       case _HistoryContextAction.delete:
         final confirmed = await showAppConfirmation(
@@ -87,7 +106,12 @@ class _HistoryListState extends State<HistoryList> {
           destructive: true,
         );
         if (confirmed == true) {
-          await deleteExerciseSets(db, [exerciseSet.id]);
+          if (widget.bodyWeight) {
+            await deleteBodyWeight(db, exerciseSet.id);
+          } else {
+            await deleteExerciseSets(db, [exerciseSet.id]);
+          }
+          if (mounted) await widget.onChanged?.call();
         }
         break;
       case null:
@@ -265,12 +289,7 @@ class _HistoryListState extends State<HistoryList> {
                   if (widget.selected.isNotEmpty) {
                     widget.onSelect(exerciseSet.id);
                   } else {
-                    Navigator.of(context).push(
-                      FlexPageRoute(
-                        builder: (context) =>
-                            EditSetPage(exerciseSet: exerciseSet),
-                      ),
-                    );
+                    _editEntry(exerciseSet);
                   }
                 },
               ),

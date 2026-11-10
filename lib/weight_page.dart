@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_fab.dart';
+import 'package:flex/app_confirmation.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
@@ -14,7 +15,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class WeightPage extends StatefulWidget {
-  const WeightPage({super.key});
+  const WeightPage({super.key, this.initial});
+
+  final BodyWeight? initial;
 
   @override
   createState() => _WeightPageState();
@@ -25,6 +28,7 @@ class _WeightPageState extends State<WeightPage>
   final TextEditingController _ctrl = TextEditingController();
   BodyWeight? _previousWeight;
   bool _weightLoaded = false;
+  bool _initialValueLoaded = false;
   String? _unit;
   String? _image;
   final _key = GlobalKey<FormState>();
@@ -54,7 +58,17 @@ class _WeightPageState extends State<WeightPage>
       child: Scaffold(
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
         resizeToAvoidBottomInset: true,
-        appBar: AppBar(title: Text(context.l10n.enterWeight)),
+        appBar: AppBar(
+          title: Text(context.l10n.enterWeight),
+          actions: [
+            if (widget.initial != null)
+              IconButton(
+                tooltip: context.l10n.actionDelete,
+                icon: const Icon(Icons.delete),
+                onPressed: _delete,
+              ),
+          ],
+        ),
         body: Form(
           key: _key,
           child: EditorContent(
@@ -147,17 +161,55 @@ class _WeightPageState extends State<WeightPage>
     final unit = _unit ?? 'kg';
     final weightKg = toKg(unit, value);
     if (weightKg == null) return;
-    await recordBodyWeight(
-      db,
-      timestamp: DateTime.now().toLocal(),
-      weightKg: weightKg,
-      photo: _image,
-    );
+    if (widget.initial case final initial?) {
+      await updateBodyWeight(
+        db,
+        id: initial.id,
+        weightKg: weightKg,
+        photo: _image,
+      );
+    } else {
+      await recordBodyWeight(
+        db,
+        timestamp: DateTime.now().toLocal(),
+        weightKg: weightKg,
+        photo: _image,
+      );
+    }
 
     if (mounted) {
       allowPop = true;
       Navigator.pop(context);
     }
+  }
+
+  Future<void> _delete() async {
+    final initial = widget.initial;
+    if (initial == null) return;
+    final confirmed = await showAppConfirmation(
+      context,
+      title: context.l10n.confirmDelete,
+      message: context.l10n.deleteRecordsConfirmation(1),
+      actionLabel: context.l10n.actionDelete,
+      destructive: true,
+    );
+    if (confirmed != true || !mounted) return;
+    await deleteBodyWeight(db, initial.id);
+    if (!mounted) return;
+    allowPop = true;
+    Navigator.pop(context);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final initial = widget.initial;
+    if (_initialValueLoaded || initial == null) return;
+    _initialValueLoaded = true;
+    _ctrl.text = formatDisplayNumber(
+      context,
+      displayBodyWeight(_unit ?? 'kg', initial.weightKg),
+    );
   }
 
   @override
@@ -173,6 +225,7 @@ class _WeightPageState extends State<WeightPage>
     _unit = settings.strengthUnit == 'last-entry'
         ? 'kg'
         : settings.strengthUnit;
+    _image = widget.initial?.photo;
 
     getLatestBodyWeight(db).then((value) {
       if (!mounted) return;

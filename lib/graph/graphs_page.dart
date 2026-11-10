@@ -428,13 +428,18 @@ class GraphsPageState extends State<GraphsPage>
                       });
                     },
                     onDelete: () async => onDelete(),
-                    onSelectAll: () => setState(() {
-                      _selection.addAll(
-                        exerciseSets.map(
-                          (exerciseSet) => exerciseSet.selectionKey,
-                        ),
-                      );
-                    }),
+                    onSelectAll: () async {
+                      setState(() {
+                        _selection.addAll(
+                          exerciseSets.map(
+                            (exerciseSet) => exerciseSet.selectionKey,
+                          ),
+                        );
+                      });
+                      final total = await _countSelectedGraphRecords();
+                      if (!mounted) return;
+                      setState(() => _total = total);
+                    },
                     onEdit: () async {
                       final key = _selection.first;
                       final summary = (await _stream.first).firstWhere(

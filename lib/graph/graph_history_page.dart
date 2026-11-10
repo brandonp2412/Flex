@@ -64,6 +64,8 @@ class _GraphHistoryPageState extends State<GraphHistoryPage> {
                 if (!_selection.remove(id)) _selection.add(id);
               }),
               selected: _selection,
+              bodyWeight: widget.bodyWeight,
+              onChanged: setSets,
               onNext: () {
                 setState(() {
                   limit += 10;
