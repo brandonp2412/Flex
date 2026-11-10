@@ -6,6 +6,38 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/test_app.dart';
 
 void main() {
+  testWidgets('stopwatch circle fills over five minutes and stays full', (
+    WidgetTester tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+
+    for (final seconds in [0, 75, 150, 300, 360]) {
+      await harness.pump(
+        tester,
+        Scaffold(
+          body: StopwatchProgressIndicator(
+            startedAt: null,
+            accumulated: Duration(seconds: seconds),
+            isRunning: false,
+            timerState: harness.timerState,
+            onRestart: () {},
+          ),
+        ),
+      );
+
+      expect(
+        tester
+            .widget<CircularProgressIndicator>(
+              find.byType(CircularProgressIndicator),
+            )
+            .value,
+        (seconds / 300).clamp(0.0, 1.0),
+      );
+    }
+    expect(find.text('06:00'), findsOneWidget);
+    harness.timerState.dispose();
+  });
+
   testWidgets('Timer state resets after manual stop', (
     WidgetTester tester,
   ) async {
@@ -284,7 +316,14 @@ void main() {
 
     final circleFinder = find.byKey(const ValueKey('stopwatch-ring'));
     expect(circleFinder, findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(
+      tester
+          .widget<CircularProgressIndicator>(
+            find.byType(CircularProgressIndicator),
+          )
+          .value,
+      0,
+    );
     final idleRect = tester.getRect(circleFinder);
     final timeFinder = find.byWidgetPredicate(
       (widget) =>

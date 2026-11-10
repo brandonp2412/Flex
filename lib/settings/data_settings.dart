@@ -126,8 +126,8 @@ List<Widget> getDataSettings(
         onTap: () => showAppPermissionsDialog(context),
       ),
     if (matches([l10n.shareDatabase]) && !kIsWeb && !Platform.isLinux)
-      TextButton.icon(
-        onPressed: () async {
+      ListTile(
+        onTap: () async {
           final workDir = await (await getTemporaryDirectory()).createTemp(
             'flex-share-',
           );
@@ -145,8 +145,9 @@ List<Widget> getDataSettings(
             await workDir.delete(recursive: true);
           }
         },
-        label: Text(l10n.shareDatabase),
-        icon: const Icon(Icons.share),
+        title: Text(l10n.shareDatabase),
+        leading: const Icon(Icons.share),
+        trailing: const Icon(Icons.chevron_right_rounded),
       ),
     if (matches([l10n.exportData, 'manual backup'])) const ExportData(),
     if (matches([l10n.importData, 'restore'])) ImportData(ctx: context),

@@ -1,7 +1,12 @@
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flex/responsive.dart';
+import 'package:flex/database/database.dart';
+import 'package:flex/settings/category_management_page.dart';
 import 'package:flex/settings/appearance_settings.dart';
 import 'package:flex/settings/data_settings.dart';
+import 'package:flex/settings/format_settings.dart';
+import 'package:flex/settings/plan_settings.dart';
+import 'package:flex/settings/workout_settings.dart';
 import 'package:flex/settings/tab_settings.dart';
 import 'package:flex/settings/timer_settings.dart';
 import 'package:flutter/material.dart';
@@ -10,43 +15,58 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/test_app.dart';
 
 void main() {
-  testWidgets('Appearance settings use desktop card layout', (
-    WidgetTester tester,
-  ) async {
-    final harness = await FlexTestHarness.create();
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(1200, 900);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-    await harness.pump(
-      tester,
-      const AppearanceSettings(),
-      surfaceSize: const Size(1200, 900),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.byType(ResponsiveSettingsList), findsOneWidget);
-    expect(find.byType(Card), findsWidgets);
-    expect(tester.takeException(), isNull);
-  });
-
   for (final page in <Widget>[
     const AppearanceSettings(),
+    const WorkoutSettings(),
+    const PlanSettings(),
+    const FormatSettings(),
     const TimerSettings(),
     const TabSettings(),
     const DataSettings(),
+    const CategoryManagementPage(),
   ]) {
-    testWidgets('${page.runtimeType} is readable at an 850px window', (
-      WidgetTester tester,
-    ) async {
-      final harness = await FlexTestHarness.create();
-      await harness.pump(tester, page, surfaceSize: const Size(850, 900));
-      await tester.pumpAndSettle();
+    for (final width in [390.0, 850.0, 1200.0]) {
+      testWidgets('${page.runtimeType} uses flat rows at width $width', (
+        tester,
+      ) async {
+        final harness = await FlexTestHarness.create();
+        if (page is TimerSettings) {
+          await harness.database.exercises.insertOne(
+            ExercisesCompanion.insert(
+              name: 'Custom timer exercise',
+              kind: 'strength',
+              displayUnit: 'kg',
+              defaultRestDurationMs: const Value(90000),
+            ),
+          );
+        }
+        await harness.pump(tester, page, surfaceSize: Size(width, 900));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(Card), findsWidgets);
-      expect(tester.getSize(find.byType(Card).first).width, lessThan(740));
-      expect(tester.takeException(), isNull);
-    });
+        expect(find.byType(ResponsiveSettingsList), findsOneWidget);
+        expect(find.byType(Card), findsNothing);
+        final content = find
+            .descendant(
+              of: find.byType(ResponsiveSettingsList),
+              matching: find.byType(ListView),
+            )
+            .first;
+        expect(tester.getSize(content).width, lessThanOrEqualTo(760));
+        expect(tester.takeException(), isNull);
+        if (page is TimerSettings) {
+          await tester.scrollUntilVisible(
+            find.text('Custom timer exercise'),
+            300,
+            scrollable: find
+                .descendant(of: content, matching: find.byType(Scrollable))
+                .first,
+          );
+          await tester.pumpAndSettle();
+          expect(find.byType(Card), findsNothing);
+          expect(tester.takeException(), isNull);
+        }
+      });
+    }
   }
 
   testWidgets('Reordering tabs still updates persisted order', (

@@ -55,6 +55,7 @@ List<Widget> getFormatSettings(
       Padding(
         padding: settingsPadding,
         child: DropdownButtonFormField<String>(
+          isExpanded: true,
           decoration: InputDecoration(labelText: l10n.strengthUnit),
           initialValue: settings.strengthUnit,
           items: [
@@ -79,6 +80,7 @@ List<Widget> getFormatSettings(
       Padding(
         padding: settingsPadding,
         child: DropdownButtonFormField<String>(
+          isExpanded: true,
           decoration: InputDecoration(labelText: l10n.cardioUnit),
           initialValue: settings.cardioUnit,
           items: [
@@ -114,6 +116,7 @@ List<Widget> getFormatSettings(
               }
 
               return DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: settings.longDateFormat,
                 menuMaxHeight: 300,
                 items: long.map((String value) {
@@ -143,6 +146,7 @@ List<Widget> getFormatSettings(
         child: Tooltip(
           message: l10n.shortDateFormatDescription,
           child: DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: settings.shortDateFormat,
             items: short.map((String value) {
               return DropdownMenuItem<String>(value: value, child: Text(value));

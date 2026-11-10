@@ -29,7 +29,7 @@ List<Widget> getAppearanceSettings(
   return [
     if (localeTerms.contains(normalizedTerm))
       Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 16),
         child: Column(
           children: [
             DropdownButtonFormField<String>(
@@ -68,7 +68,7 @@ List<Widget> getAppearanceSettings(
       l10n.themeLight,
     ]))
       Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 16),
         child: SegmentedButton<String>(
           segments: [
             ButtonSegment(
@@ -157,7 +157,7 @@ List<Widget> getAppearanceSettings(
           'accent',
         ]))
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        padding: const EdgeInsets.fromLTRB(4, 16, 4, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -290,7 +290,7 @@ List<Widget> getAppearanceSettings(
       Tooltip(
         message: l10n.inputStyleDescription,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+          padding: const EdgeInsets.fromLTRB(4, 12, 4, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

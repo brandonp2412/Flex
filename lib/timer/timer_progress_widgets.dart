@@ -282,7 +282,6 @@ class _StopwatchProgressIndicatorState extends State<StopwatchProgressIndicator>
   @override
   Widget build(BuildContext context) {
     const double maxCircleSize = 280;
-    const double strokeWidth = 10;
     final controlsHeight = widget.trailingControl == null ? 56.0 : 112.0;
 
     final onSurface = Theme.of(context).colorScheme.onSurface;
@@ -308,30 +307,21 @@ class _StopwatchProgressIndicatorState extends State<StopwatchProgressIndicator>
             SizedBox(
               width: circleSize,
               height: circleSize,
-              child: Stack(
-                alignment: Alignment.center,
-                children: <Widget>[
-                  RepaintBoundary(
-                    key: const ValueKey('stopwatch-ring'),
-                    child: SizedBox.expand(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: onSurface.withValues(alpha: 0.08),
-                            width: strokeWidth,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  _TimeWithMilliseconds(
+              child: RepaintBoundary(
+                key: const ValueKey('stopwatch-ring'),
+                child: _TimerRing(
+                  value:
+                      (_elapsed.inMilliseconds /
+                              const Duration(minutes: 5).inMilliseconds)
+                          .clamp(0.0, 1.0),
+                  circleSize: circleSize,
+                  child: _TimeWithMilliseconds(
                     time: _formatElapsed(_elapsed),
                     duration: _elapsed,
                     fontSize: timeFontSize,
                     color: onSurface,
                   ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: _controlGap),
@@ -478,11 +468,8 @@ class _TimerCircularProgressIndicatorTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double maxCircleSize = 280;
-    const double strokeWidth = 10;
-    const double dotSize = 16;
     final controlsHeight = trailingControl == null ? 56.0 : 112.0;
 
-    final primary = Theme.of(context).colorScheme.primary;
     final onSurface = Theme.of(context).colorScheme.onSurface;
     final remaining = timerState.timer.getRemaining();
 
@@ -498,10 +485,6 @@ class _TimerCircularProgressIndicatorTile extends StatelessWidget {
           maxCircleSize,
           math.min(availableHeight, availableWidth),
         );
-        final dotRadius = circleSize / 2;
-        final angle = (-math.pi / 2) - (2 * math.pi * (1 - value));
-        final dotX = dotRadius * math.cos(angle);
-        final dotY = dotRadius * math.sin(angle);
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -509,45 +492,15 @@ class _TimerCircularProgressIndicatorTile extends StatelessWidget {
             SizedBox(
               width: circleSize,
               height: circleSize,
-              child: Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.none,
-                children: <Widget>[
-                  SizedBox.expand(
-                    child: CircularProgressIndicator(
-                      strokeCap: StrokeCap.round,
-                      value: value,
-                      strokeWidth: strokeWidth,
-                      backgroundColor: onSurface.withValues(alpha: 0.08),
-                      valueColor: AlwaysStoppedAnimation<Color>(primary),
-                    ),
-                  ),
-                  if (value > 0)
-                    Transform.translate(
-                      offset: Offset(dotX, dotY),
-                      child: Container(
-                        width: dotSize,
-                        height: dotSize,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: primary,
-                          boxShadow: [
-                            BoxShadow(
-                              color: primary.withValues(alpha: 0.4),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  _TimeWithMilliseconds(
-                    time: generateTitleText(remaining),
-                    duration: remaining,
-                    fontSize: _faceFontSize,
-                    color: onSurface,
-                  ),
-                ],
+              child: _TimerRing(
+                value: value,
+                circleSize: circleSize,
+                child: _TimeWithMilliseconds(
+                  time: generateTitleText(remaining),
+                  duration: remaining,
+                  fontSize: _faceFontSize,
+                  color: onSurface,
+                ),
               ),
             ),
             const SizedBox(height: _controlGap),
@@ -584,5 +537,77 @@ class _TimerCircularProgressIndicatorTile extends StatelessWidget {
     final minutes = (remaining.inMinutes).toString().padLeft(2, '0');
     final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
     return "$minutes:$seconds";
+  }
+}
+
+class _TimerRing extends StatelessWidget {
+  final double value;
+  final double circleSize;
+  final Widget child;
+
+  const _TimerRing({
+    required this.value,
+    required this.circleSize,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const double strokeWidth = 8;
+    const double dotSize = 16;
+    final primary = Theme.of(context).colorScheme.primary;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final dotRadius = circleSize / 2;
+    final angle = (-math.pi / 2) + (2 * math.pi * value);
+    final dotX = dotRadius * math.cos(angle);
+    final dotY = dotRadius * math.sin(angle);
+    return Stack(
+      alignment: Alignment.center,
+      clipBehavior: Clip.none,
+      children: <Widget>[
+        SizedBox.expand(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: primary.withValues(alpha: value > 0 ? 0.044 : 0),
+                  blurRadius: 14,
+                  blurStyle: BlurStyle.outer,
+                ),
+              ],
+            ),
+            child: CircularProgressIndicator(
+              strokeCap: StrokeCap.round,
+              value: value,
+              strokeWidth: strokeWidth,
+              backgroundColor: onSurface.withValues(alpha: 0.08),
+              valueColor: AlwaysStoppedAnimation<Color>(primary),
+            ),
+          ),
+        ),
+        if (value > 0)
+          Transform.translate(
+            offset: Offset(dotX, dotY),
+            child: Container(
+              width: dotSize,
+              height: dotSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).colorScheme.surface,
+                border: Border.all(color: primary, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: primary.withValues(alpha: 0.22),
+                    blurRadius: 14,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        child,
+      ],
+    );
   }
 }

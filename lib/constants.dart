@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// Consistent padding for input fields (dropdowns, text fields) in settings screens.
-const settingsPadding = EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+const settingsPadding = EdgeInsets.symmetric(horizontal: 4, vertical: 16);
 
 const weekdays = [
   'Monday',

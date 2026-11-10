@@ -26,6 +26,21 @@ Future<FlexTestHarness> render(
 }
 
 void main() {
+  for (final width in [320.0, 1200.0]) {
+    testWidgets('Settings navigation works at width $width', (tester) async {
+      await render(
+        tester,
+        surfaceSize: Size(width, 900),
+        textScaler: const TextScaler.linear(1.5),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Workouts'));
+      await tester.pumpAndSettle();
+      expect(find.text('Show body weight'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('New Zealand branding stays out of phone settings', (
     WidgetTester tester,
   ) async {

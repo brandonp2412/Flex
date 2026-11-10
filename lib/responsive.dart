@@ -44,43 +44,67 @@ class ResponsiveContent extends StatelessWidget {
   }
 }
 
-/// Keeps settings readable at every window width.
 class ResponsiveSettingsList extends StatelessWidget {
   final List<Widget> children;
   final double maxWidth;
-  final bool grouped;
 
   const ResponsiveSettingsList({
     super.key,
     required this.children,
-    this.maxWidth = 720,
-    this.grouped = true,
+    this.maxWidth = 800,
   });
 
   @override
   Widget build(BuildContext context) {
-    final content = grouped
-        ? [
-            Card(
-              margin: EdgeInsets.zero,
-              color: Theme.of(context).colorScheme.surfaceContainerLow,
-              clipBehavior: Clip.antiAlias,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Column(children: children),
-              ),
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Theme(
+      data: theme.copyWith(
+        listTileTheme: ListTileThemeData(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+          shape: Border(
+            bottom: BorderSide(
+              color: colors.outlineVariant.withValues(alpha: 0.35),
             ),
-          ]
-        : children;
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: ListView(
-            padding: const EdgeInsets.only(top: 12, bottom: 116),
-            children: content,
+          ),
+          minLeadingWidth: 24,
+          horizontalTitleGap: 16,
+          minVerticalPadding: 12,
+          iconColor: colors.primary,
+          titleTextStyle: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          subtitleTextStyle: theme.textTheme.bodySmall?.copyWith(
+            color: colors.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
+        iconTheme: theme.iconTheme.copyWith(size: 22),
+        dividerTheme: DividerThemeData(
+          color: colors.outlineVariant.withValues(alpha: 0.35),
+          thickness: 1,
+          space: 1,
+        ),
+        expansionTileTheme: ExpansionTileThemeData(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+          shape: const Border(),
+          collapsedShape: const Border(),
+          iconColor: colors.primary,
+          textColor: colors.primary,
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktopLayout(context) ? 32 : 20,
+            ),
+            child: ListView(
+              padding: const EdgeInsets.only(top: 12, bottom: 116),
+              children: children,
+            ),
           ),
         ),
       ),

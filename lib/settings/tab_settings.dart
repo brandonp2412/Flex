@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
+import 'package:flex/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -80,97 +81,78 @@ class _TabSettingsState extends State<TabSettings> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(title: Text(context.l10n.tabs)),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: ListView(
-              padding: const EdgeInsets.only(top: 12, bottom: 116),
-              children: [
-                Card(
-                  margin: EdgeInsets.zero,
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  child: ListTile(
-                    leading: const Icon(Icons.swipe),
-                    title: Text(context.l10n.swipeBetweenTabs),
-                    trailing: Switch(
-                      value: settings.scrollableTabs,
-                      onChanged: (value) => db.settings.update().write(
-                        SettingsCompanion(scrollableTabs: Value(value)),
-                      ),
-                    ),
-                    onTap: () => db.settings.update().write(
-                      SettingsCompanion(
-                        scrollableTabs: Value(!settings.scrollableTabs),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Card(
-                  margin: EdgeInsets.zero,
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  clipBehavior: Clip.antiAlias,
-                  child: ReorderableListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    buildDefaultDragHandles: false,
-                    itemCount: _tabs.length,
-                    onReorderItem: (oldIndex, newIndex) {
-                      setState(() {
-                        final moved = _tabs.removeAt(oldIndex);
-                        _tabs.insert(newIndex, moved);
-                      });
-                      db.settings.update().write(
-                        SettingsCompanion(
-                          tabs: Value(
-                            _tabs
-                                .where((tab) => tab.enabled)
-                                .map((tab) => tab.name)
-                                .join(','),
-                          ),
-                        ),
-                      );
-                    },
-                    itemBuilder: (context, index) {
-                      final tab = _tabs[index];
-                      final details = labels[tab.name];
-                      if (details == null) {
-                        return ListTile(
-                          key: Key(tab.name),
-                          title: Text(context.l10n.invalidTabSettings),
-                        );
-                      }
-                      return ListTile(
-                        key: Key(tab.name),
-                        leading: Icon(details.$1),
-                        title: Text(details.$2),
-                        onTap: () => setTab(tab.name, !tab.enabled),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Switch(
-                              value: tab.enabled,
-                              onChanged: (value) => setTab(tab.name, value),
-                            ),
-                            const SizedBox(width: 12),
-                            ReorderableDragStartListener(
-                              index: index,
-                              child: const Icon(Icons.drag_handle),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+      body: ResponsiveSettingsList(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.swipe),
+            title: Text(context.l10n.swipeBetweenTabs),
+            trailing: Switch(
+              value: settings.scrollableTabs,
+              onChanged: (value) => db.settings.update().write(
+                SettingsCompanion(scrollableTabs: Value(value)),
+              ),
+            ),
+            onTap: () => db.settings.update().write(
+              SettingsCompanion(
+                scrollableTabs: Value(!settings.scrollableTabs),
+              ),
             ),
           ),
-        ),
+
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            buildDefaultDragHandles: false,
+            itemCount: _tabs.length,
+            onReorderItem: (oldIndex, newIndex) {
+              setState(() {
+                final moved = _tabs.removeAt(oldIndex);
+                _tabs.insert(newIndex, moved);
+              });
+              db.settings.update().write(
+                SettingsCompanion(
+                  tabs: Value(
+                    _tabs
+                        .where((tab) => tab.enabled)
+                        .map((tab) => tab.name)
+                        .join(','),
+                  ),
+                ),
+              );
+            },
+            itemBuilder: (context, index) {
+              final tab = _tabs[index];
+              final details = labels[tab.name];
+              if (details == null) {
+                return ListTile(
+                  key: Key(tab.name),
+                  title: Text(context.l10n.invalidTabSettings),
+                );
+              }
+              return ListTile(
+                key: Key(tab.name),
+                leading: Icon(details.$1),
+                title: Text(details.$2),
+                onTap: () => setTab(tab.name, !tab.enabled),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Switch(
+                      value: tab.enabled,
+                      onChanged: (value) => setTab(tab.name, value),
+                    ),
+                    const SizedBox(width: 12),
+                    ReorderableDragStartListener(
+                      index: index,
+                      child: const Icon(Icons.drag_handle),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

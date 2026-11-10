@@ -112,7 +112,7 @@ class _SettingsPageState extends State<SettingsPage>
         ],
       ),
       body: ResponsiveContent(
-        maxWidth: 1120,
+        maxWidth: 800,
         desktopPadding: EdgeInsets.zero,
         mobilePadding: EdgeInsets.zero,
         child: Column(
@@ -123,12 +123,21 @@ class _SettingsPageState extends State<SettingsPage>
               child: Padding(
                 padding: desktop
                     ? const EdgeInsets.fromLTRB(32, 12, 32, 0)
-                    : const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                    : const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 child: SearchBar(
                   hintText: context.l10n.searchHint,
                   controller: _searchCtrl,
                   focusNode: _focusNode,
                   onTap: () => _focusNode.requestFocus(),
+                  elevation: const WidgetStatePropertyAll(0),
+                  backgroundColor: WidgetStatePropertyAll(
+                    Theme.of(context).colorScheme.surfaceContainerLow,
+                  ),
+                  shape: WidgetStatePropertyAll(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
                   padding: WidgetStateProperty.all(
                     const EdgeInsets.symmetric(horizontal: 16.0),
                   ),
@@ -171,108 +180,28 @@ class _SettingsPageState extends State<SettingsPage>
                 ),
               ),
             ),
-            SizedBox(height: desktop ? 20 : 8),
+            const SizedBox(height: 8),
             Expanded(
-              child: Padding(
-                padding: desktop
-                    ? const EdgeInsets.fromLTRB(32, 0, 32, 28)
-                    : const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                child: switch (_searchCtrl.text.isNotEmpty) {
-                  true => ListView(
-                    padding: EdgeInsets.only(
-                      bottom: isDesktopLayout(context) ? 24 : 116,
-                    ),
-                    children: filtered,
-                  ),
-                  _ when isDesktopLayout(context) => GridView.builder(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 520,
-                          crossAxisSpacing: 14,
-                          mainAxisSpacing: 14,
-                          mainAxisExtent: 112,
-                        ),
-                    itemCount: _categories.length,
-                    itemBuilder: (context, index) {
-                      final category = _categories[index];
-                      final colors = Theme.of(context).colorScheme;
-                      return Card(
-                        color: colors.surfaceContainerLow,
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          onTap: () => _openCategory(category.$4),
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: colors.primaryContainer,
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Icon(
-                                    category.$1,
-                                    color: colors.onPrimaryContainer,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        category.$2,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        category.$3,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: colors.onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(Icons.chevron_right_rounded),
-                              ],
+              child: ResponsiveSettingsList(
+                children: _searchCtrl.text.isNotEmpty
+                    ? filtered
+                    : [
+                        for (final category in _categories)
+                          ListTile(
+                            leading: Icon(category.$1),
+                            title: Text(category.$2),
+                            subtitle: Text(category.$3),
+                            trailing: Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withValues(alpha: 0.6),
                             ),
+                            onTap: () => _openCategory(category.$4),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  _ => ListView(
-                    padding: const EdgeInsets.only(bottom: 116),
-                    children: [
-                      ..._categories.map(
-                        (category) => ListTile(
-                          leading: Icon(category.$1),
-                          title: Text(category.$2),
-                          subtitle: Text(category.$3),
-                          onTap: () => _openCategory(category.$4),
-                        ),
-                      ),
-                    ],
-                  ),
-                },
+                      ],
               ),
             ),
           ],

@@ -31,78 +31,82 @@ class CategoryManagementPage extends StatelessWidget {
           if (categories.isEmpty) {
             return Center(child: Text(l10n.noCategories));
           }
-          return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 116.0),
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final summary = categories[index];
-              return ListTile(
-                title: Text(summary.category.name),
-                subtitle: Text(l10n.categoryUsageCount(summary.usageCount)),
-                trailing: isDesktopLayout(context)
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            tooltip: l10n.renameCategory,
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () => _showCategoryEditor(
-                              context,
-                              category: summary.category,
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: l10n.mergeCategory,
-                            icon: const Icon(Icons.merge_outlined),
-                            onPressed: categories.length > 1
-                                ? () => _showMergeDialog(
-                                    context,
-                                    source: summary.category,
-                                    categories: categories,
-                                  )
-                                : null,
-                          ),
-                          IconButton(
-                            tooltip: l10n.actionDelete,
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () =>
-                                _showDeleteDialog(context, summary),
-                          ),
-                        ],
-                      )
-                    : PopupMenuButton<_CategoryAction>(
-                        onSelected: (action) => switch (action) {
-                          _CategoryAction.rename => _showCategoryEditor(
-                            context,
-                            category: summary.category,
-                          ),
-                          _CategoryAction.merge => _showMergeDialog(
-                            context,
-                            source: summary.category,
-                            categories: categories,
-                          ),
-                          _CategoryAction.delete => _showDeleteDialog(
-                            context,
-                            summary,
-                          ),
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: _CategoryAction.rename,
-                            child: Text(l10n.renameCategory),
-                          ),
-                          PopupMenuItem(
-                            value: _CategoryAction.merge,
-                            child: Text(l10n.mergeCategory),
-                          ),
-                          PopupMenuItem(
-                            value: _CategoryAction.delete,
-                            child: Text(l10n.actionDelete),
-                          ),
-                        ],
+          return ResponsiveSettingsList(
+            children: [
+              for (final summary in categories)
+                Builder(
+                  builder: (context) {
+                    return ListTile(
+                      title: Text(summary.category.name),
+                      subtitle: Text(
+                        l10n.categoryUsageCount(summary.usageCount),
                       ),
-              );
-            },
+                      trailing: isDesktopLayout(context)
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: l10n.renameCategory,
+                                  icon: const Icon(Icons.edit_outlined),
+                                  onPressed: () => _showCategoryEditor(
+                                    context,
+                                    category: summary.category,
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: l10n.mergeCategory,
+                                  icon: const Icon(Icons.merge_outlined),
+                                  onPressed: categories.length > 1
+                                      ? () => _showMergeDialog(
+                                          context,
+                                          source: summary.category,
+                                          categories: categories,
+                                        )
+                                      : null,
+                                ),
+                                IconButton(
+                                  tooltip: l10n.actionDelete,
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: () =>
+                                      _showDeleteDialog(context, summary),
+                                ),
+                              ],
+                            )
+                          : PopupMenuButton<_CategoryAction>(
+                              onSelected: (action) => switch (action) {
+                                _CategoryAction.rename => _showCategoryEditor(
+                                  context,
+                                  category: summary.category,
+                                ),
+                                _CategoryAction.merge => _showMergeDialog(
+                                  context,
+                                  source: summary.category,
+                                  categories: categories,
+                                ),
+                                _CategoryAction.delete => _showDeleteDialog(
+                                  context,
+                                  summary,
+                                ),
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: _CategoryAction.rename,
+                                  child: Text(l10n.renameCategory),
+                                ),
+                                PopupMenuItem(
+                                  value: _CategoryAction.merge,
+                                  child: Text(l10n.mergeCategory),
+                                ),
+                                PopupMenuItem(
+                                  value: _CategoryAction.delete,
+                                  child: Text(l10n.actionDelete),
+                                ),
+                              ],
+                            ),
+                    );
+                  },
+                ),
+            ],
           );
         },
       ),

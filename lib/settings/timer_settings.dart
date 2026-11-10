@@ -188,7 +188,7 @@ List<Widget> getTimerSettings(
       l10n.globalDefault,
     ]))
       Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
         child: Tooltip(
           message: l10n.restDurationDescription,
           child: Column(
@@ -198,10 +198,12 @@ List<Widget> getTimerSettings(
                 children: [
                   const Icon(Icons.public),
                   const SizedBox(width: 8),
-                  Text(
-                    l10n.globalDefault,
-                    textAlign: TextAlign.start,
-                    style: Theme.of(context).textTheme.titleLarge,
+                  Expanded(
+                    child: Text(
+                      l10n.globalDefault,
+                      textAlign: TextAlign.start,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                   ),
                 ],
               ),
@@ -272,35 +274,30 @@ List<Widget> getTimerSettings(
     ]))
       Tooltip(
         message: l10n.alarmSoundDescription,
-        child: Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            TextButton.icon(
-              onPressed: () async {
-                final result = await FilePicker.pickFiles(type: FileType.audio);
-                if (result.isEmpty || result.single.path == null) return;
-                db.settings.update().write(
-                  SettingsCompanion(alarmSound: Value(result.single.path!)),
-                );
-                await player.playFile(result.single.path!);
-              },
-              icon: const Icon(Icons.music_note),
-              label: settings.alarmSound.isEmpty
-                  ? Text(l10n.alarmSound)
-                  : Text(settings.alarmSound.split('/').last),
-            ),
-            if (settings.alarmSound.isNotEmpty)
-              TextButton.icon(
-                onPressed: () {
-                  db.settings.update().write(
+        child: ListTile(
+          leading: const Icon(Icons.music_note),
+          title: Text(
+            settings.alarmSound.isEmpty
+                ? l10n.alarmSound
+                : settings.alarmSound.split('/').last,
+          ),
+          onTap: () async {
+            final result = await FilePicker.pickFiles(type: FileType.audio);
+            if (result.isEmpty || result.single.path == null) return;
+            db.settings.update().write(
+              SettingsCompanion(alarmSound: Value(result.single.path!)),
+            );
+            await player.playFile(result.single.path!);
+          },
+          trailing: settings.alarmSound.isEmpty
+              ? const Icon(Icons.chevron_right_rounded)
+              : IconButton(
+                  tooltip: l10n.actionDelete,
+                  onPressed: () => db.settings.update().write(
                     const SettingsCompanion(alarmSound: Value('')),
-                  );
-                },
-                label: Text(l10n.actionDelete),
-                icon: const Icon(Icons.delete),
-              ),
-          ],
+                  ),
+                  icon: const Icon(Icons.delete_outline),
+                ),
         ),
       ),
   ];
@@ -364,7 +361,7 @@ class _ProgressPositionSettingState extends State<_ProgressPositionSetting> {
     return Tooltip(
       message: context.l10n.progressBarPositionDescription,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -376,7 +373,8 @@ class _ProgressPositionSettingState extends State<_ProgressPositionSetting> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
-            Center(
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
               child: SegmentedButton<String>(
                 segments: [
                   ButtonSegment(
@@ -518,7 +516,7 @@ class _TimerSettingsState extends State<TimerSettings> {
 
   Widget _buildPerExerciseSection() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -527,9 +525,11 @@ class _TimerSettingsState extends State<TimerSettings> {
             children: [
               const Icon(Icons.fitness_center),
               const SizedBox(width: 8),
-              Text(
-                context.l10n.perExerciseRestTimes,
-                style: Theme.of(context).textTheme.titleLarge,
+              Expanded(
+                child: Text(
+                  context.l10n.perExerciseRestTimes,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ),
             ],
           ),
@@ -551,10 +551,18 @@ class _TimerSettingsState extends State<TimerSettings> {
             final minController = _minuteFields[exerciseName]!;
             final secController = _secondFields[exerciseName]!;
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
+            return Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outlineVariant.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -580,7 +588,6 @@ class _TimerSettingsState extends State<TimerSettings> {
                           child: TextField(
                             decoration: InputDecoration(
                               labelText: context.l10n.minutesLabel,
-                              border: const OutlineInputBorder(),
                             ),
                             controller: minController,
                             keyboardType: TextInputType.number,
@@ -602,7 +609,6 @@ class _TimerSettingsState extends State<TimerSettings> {
                           child: TextField(
                             decoration: InputDecoration(
                               labelText: context.l10n.secondsLabel,
-                              border: const OutlineInputBorder(),
                             ),
                             controller: secController,
                             keyboardType: TextInputType.number,

@@ -68,9 +68,9 @@ List<Widget> getPlanSettings(
       '%',
     ]))
       Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
@@ -98,7 +98,7 @@ List<Widget> getPlanSettings(
                 };
                 const otherOptions = {PlanTrailing.reorder, PlanTrailing.none};
                 return Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SegmentedButton<PlanTrailing>(
                       emptySelectionAllowed: true,

@@ -33,6 +33,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final TimerState _timerState;
   final GlobalKey<PlansPageState> _plansPageKey = GlobalKey<PlansPageState>();
   bool _desktopSettingsOpen = false;
+  bool? _lastDesktopLayout;
 
   @override
   void initState() {
@@ -77,6 +78,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         );
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final desktop = isDesktopLayout(context);
+    if (desktop && _lastDesktopLayout != true) {
+      final selectedIndex = _controller.index;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !isDesktopLayout(context) || !_pages.hasClients) return;
+        _pages.jumpToPage(selectedIndex.clamp(0, _controller.length - 1));
+      });
+    }
+    _lastDesktopLayout = desktop;
   }
 
   void _selectDesktopTab(int index) {

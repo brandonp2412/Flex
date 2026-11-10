@@ -387,16 +387,11 @@ class _WorkoutSettingsState extends State<WorkoutSettings> {
       List<Widget> children, {
       bool collapsed = false,
     }) {
-      final rows = <Widget>[
-        for (var index = 0; index < children.length; index++) ...[
-          children[index],
-        ],
-      ];
       final content = collapsed
           ? ExpansionTile(
               title: Text(title!),
               initiallyExpanded: false,
-              children: rows,
+              children: children,
             )
           : Column(
               mainAxisSize: MainAxisSize.min,
@@ -404,28 +399,25 @@ class _WorkoutSettingsState extends State<WorkoutSettings> {
               children: [
                 if (title != null)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
                     child: Text(
                       title,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
-                ...rows,
+                ...children,
               ],
             );
 
-      return Card(
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        clipBehavior: Clip.antiAlias,
-        child: content,
-      );
+      return content;
     }
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(title: Text(context.l10n.workouts)),
       body: ResponsiveSettingsList(
-        grouped: false,
         children: [
           section(null, settings.tracking),
           section(context.l10n.navHistory, settings.history),

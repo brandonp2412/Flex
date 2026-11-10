@@ -71,4 +71,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(BottomNav), findsOneWidget);
   });
+
+  testWidgets('desktop resize preserves the selected mobile tab', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 780);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final harness = await FlexTestHarness.create();
+    await harness.database.settings.update().write(
+      const SettingsCompanion(tabs: Value('HistoryPage,GraphsPage')),
+    );
+    await harness.pump(tester, const HomePage());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('GraphsPage')));
+    await tester.pumpAndSettle();
+    expect(find.text('Search graphs...'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(1200, 800);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DesktopNav), findsOneWidget);
+    expect(find.text('Search graphs...'), findsOneWidget);
+    expect(find.text('Search history...'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }
