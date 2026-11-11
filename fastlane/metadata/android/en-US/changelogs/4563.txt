@@ -1,0 +1,10 @@
+• Replace references to github issues
+• feat: add icons to stopwatch restart control
+• feat: import workout CSV exports from three open-source trackers
+• fix: avoid duplicate plus icon in stopwatch control
+• fix: correct body-weight history actions and counts
+• fix: index selectable values in settings search
+• fix: keep graph layout stable during keyboard dismissal
+• fix: prevent FAB jump when keyboard closes
+• perf: snapshot Start Plan during exit transition
+• polish: refine Flex settings and timer across layouts
