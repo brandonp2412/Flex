@@ -18,6 +18,7 @@ class ExerciseModal extends StatefulWidget {
   final int? workoutId;
   final bool hasData;
   final Function() onSelect;
+  final bool inlineActions;
 
   const ExerciseModal({
     super.key,
@@ -27,6 +28,7 @@ class ExerciseModal extends StatefulWidget {
     required this.workoutId,
     required this.hasData,
     required this.onSelect,
+    this.inlineActions = false,
   });
 
   @override
@@ -68,11 +70,23 @@ class _ExerciseModalState extends State<ExerciseModal> {
         });
   }
 
+  Widget action({
+    required Widget leading,
+    required Widget title,
+    required VoidCallback onTap,
+  }) => widget.inlineActions
+      ? TextButton.icon(onPressed: onTap, icon: leading, label: title)
+      : ListTile(leading: leading, title: title, onTap: onTap);
+
+  void closeActions() {
+    if (!widget.inlineActions) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Wrap(
       children: <Widget>[
-        ListTile(
+        action(
           leading: const Icon(Icons.settings),
           title: Text(context.l10n.navSettings),
           onTap: () async {
@@ -83,7 +97,7 @@ class _ExerciseModalState extends State<ExerciseModal> {
             final maxController = TextEditingController(text: _max.text);
             final warmupCtrl = TextEditingController(text: _warmup.text);
             var timers = _timers;
-            Navigator.pop(context);
+            closeActions();
 
             await showDialog(
               context: rootContext,
@@ -92,6 +106,7 @@ class _ExerciseModalState extends State<ExerciseModal> {
                   title: Text(widget.exerciseName),
                   content: SingleChildScrollView(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Selector<Setting, int?>(
                           selector: (context, settings) => settings.warmupSets,
@@ -157,11 +172,11 @@ class _ExerciseModalState extends State<ExerciseModal> {
           },
         ),
         if (widget.hasData)
-          ListTile(
+          action(
             leading: const Icon(Icons.edit),
             title: Text(context.l10n.actionEdit),
             onTap: () async {
-              Navigator.pop(context);
+              closeActions();
               final workoutId = widget.workoutId;
               if (workoutId == null) return;
               final exerciseSet = await getLatestWorkoutExerciseSet(
@@ -180,11 +195,11 @@ class _ExerciseModalState extends State<ExerciseModal> {
             },
           ),
         if (widget.hasData)
-          ListTile(
+          action(
             leading: const Icon(Icons.undo),
             title: Text(context.l10n.actionUndo),
             onTap: () async {
-              Navigator.pop(context);
+              closeActions();
               final workoutId = widget.workoutId;
               if (workoutId == null) return;
               final exerciseSet = await getLatestWorkoutExerciseSet(
@@ -201,12 +216,12 @@ class _ExerciseModalState extends State<ExerciseModal> {
             },
           ),
         if (!widget.hasData)
-          ListTile(
+          action(
             leading: const Icon(Icons.swap_horiz),
             title: Text(context.l10n.actionSwap),
             onTap: () async {
               final navigator = Navigator.of(context);
-              navigator.pop();
+              if (!widget.inlineActions) navigator.pop();
               final result = await navigator.push(
                 FlexPageRoute(
                   builder: (context) =>

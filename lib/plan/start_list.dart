@@ -89,9 +89,10 @@ class _StartListState extends State<StartList> {
 
     if (trailing == PlanTrailing.reorder)
       return ReorderableListView.builder(
+        shrinkWrap: desktop,
         itemCount: widget.exercises.length,
         buildDefaultDragHandles: !desktop,
-        padding: EdgeInsets.only(bottom: desktop ? 24 : _bottomPadding),
+        padding: EdgeInsets.only(bottom: desktop ? 8 : _bottomPadding),
         itemBuilder: (context, index) =>
             itemBuilder(context, index, max, trailing, counts),
         onReorderItem: (oldIndex, newIndex) async {
@@ -112,7 +113,8 @@ class _StartListState extends State<StartList> {
       );
     else
       return ListView.builder(
-        padding: EdgeInsets.only(bottom: desktop ? 24 : _bottomPadding),
+        padding: EdgeInsets.only(bottom: desktop ? 8 : _bottomPadding),
+        shrinkWrap: desktop,
         itemCount: widget.exercises.length,
         itemBuilder: (context, index) =>
             itemBuilder(context, index, max, trailing, counts),
@@ -215,58 +217,73 @@ class _StartListState extends State<StartList> {
                         horizontal: 16,
                         vertical: 10,
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (!compact) ...[
-                            Icon(
-                              selected
-                                  ? Icons.radio_button_checked_rounded
-                                  : Icons.radio_button_unchecked_rounded,
-                              color: selected
-                                  ? colors.primary
-                                  : colors.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 12),
-                          ],
-                          Expanded(
-                            child: Text(
-                              exercise.exercise.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(
-                                    fontWeight: selected
-                                        ? FontWeight.w700
-                                        : FontWeight.w600,
+                          Row(
+                            children: [
+                              if (!compact) ...[
+                                Icon(
+                                  selected
+                                      ? Icons.radio_button_checked_rounded
+                                      : Icons.radio_button_unchecked_rounded,
+                                  color: selected
+                                      ? colors.primary
+                                      : colors.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 12),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  exercise.exercise.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        fontWeight: selected
+                                            ? FontWeight.w700
+                                            : FontWeight.w600,
+                                      ),
+                                ),
+                              ),
+                              if (!compact) const SizedBox(width: 12),
+                              if (showProgress) ...[
+                                SizedBox(
+                                  width: 150,
+                                  child: CustomSetIndicator(
+                                    count: count,
+                                    max: max,
                                   ),
-                            ),
+                                ),
+                                const SizedBox(width: 12),
+                              ],
+                              if (!compact &&
+                                  (trailing == PlanTrailing.reorder ||
+                                      trailing == PlanTrailing.none)) ...[
+                                Text(
+                                  '${formatDisplayNumber(context, count, maxDigits: 0)} / ${formatDisplayNumber(context, max, maxDigits: 0)}',
+                                  style: Theme.of(context).textTheme.labelLarge
+                                      ?.copyWith(
+                                        color: colors.onSurfaceVariant,
+                                      ),
+                                ),
+                                const SizedBox(width: 10),
+                              ],
+                              trail,
+                            ],
                           ),
-                          if (!compact) const SizedBox(width: 12),
-                          if (showProgress) ...[
-                            SizedBox(
-                              width: 150,
-                              child: CustomSetIndicator(count: count, max: max),
+                          Padding(
+                            padding: EdgeInsets.only(left: compact ? 0 : 36),
+                            child: ExerciseModal(
+                              key: ValueKey(exercise.planExercise.id),
+                              planExerciseId: exercise.planExercise.id,
+                              exerciseId: exercise.exercise.id,
+                              exerciseName: exercise.exercise.name,
+                              workoutId: widget.workoutId,
+                              hasData: count > 0,
+                              onSelect: () => widget.onSelect(index),
+                              inlineActions: true,
                             ),
-                            const SizedBox(width: 12),
-                          ],
-                          if (!compact &&
-                              (trailing == PlanTrailing.reorder ||
-                                  trailing == PlanTrailing.none)) ...[
-                            Text(
-                              '${formatDisplayNumber(context, count, maxDigits: 0)} / ${formatDisplayNumber(context, max, maxDigits: 0)}',
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(color: colors.onSurfaceVariant),
-                            ),
-                            const SizedBox(width: 10),
-                          ],
-                          trail,
-                          const SizedBox(width: 4),
-                          IconButton(
-                            tooltip: MaterialLocalizations.of(
-                              context,
-                            ).moreButtonTooltip,
-                            onPressed: showActions,
-                            icon: const Icon(Icons.more_horiz_rounded),
                           ),
                         ],
                       ),

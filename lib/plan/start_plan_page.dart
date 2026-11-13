@@ -247,13 +247,16 @@ class _StartPlanPageState extends State<StartPlanPage>
                         ),
                         const SizedBox(width: 24),
                         Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colors.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(20),
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: colors.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              clipBehavior: Clip.none,
+                              child: exerciseList(),
                             ),
-                            clipBehavior: Clip.none,
-                            child: exerciseList(),
                           ),
                         ),
                       ],
