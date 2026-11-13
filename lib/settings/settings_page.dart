@@ -22,10 +22,45 @@ class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  createState() => _SettingsPageState();
+  State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage>
+class _SettingsPageState extends State<SettingsPage> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isDesktopLayout(context)) return const _SettingsContent();
+
+    final parentNavigator = Navigator.of(context);
+
+    return NavigatorPopHandler(
+      onPopWithResult: (result) => _navigatorKey.currentState!.pop(result),
+      child: Navigator(
+        key: _navigatorKey,
+        onGenerateRoute: (settings) => FlexPageRoute(
+          settings: settings,
+          builder: (_) => _SettingsContent(
+            onBack: parentNavigator.canPop()
+                ? () => parentNavigator.maybePop()
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsContent extends StatefulWidget {
+  const _SettingsContent({this.onBack});
+
+  final VoidCallback? onBack;
+
+  @override
+  State<_SettingsContent> createState() => _SettingsContentState();
+}
+
+class _SettingsContentState extends State<_SettingsContent>
     with AutomaticKeepAliveClientMixin {
   final _searchCtrl = TextEditingController();
   final _focusNode = FocusNode();
@@ -97,6 +132,9 @@ class _SettingsPageState extends State<SettingsPage>
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
+        leading: widget.onBack == null
+            ? null
+            : BackButton(onPressed: widget.onBack),
         title: Text(context.l10n.navSettings),
         actions: [
           if (!kIsWeb && !Platform.isIOS && !Platform.isMacOS)
