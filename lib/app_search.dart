@@ -239,107 +239,110 @@ class _AppSearchState extends State<AppSearch> {
                 : [
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 150),
-                      child: trailingMain,
+                      child: sel.isNotEmpty
+                          ? Badge.count(
+                              count: sel.length,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              child: trailingMain,
+                            )
+                          : trailingMain,
                       transitionBuilder: (child, animation) =>
                           ScaleTransition(scale: animation, child: child),
                     ),
-                    Badge.count(
-                      count: sel.length,
-                      isLabelVisible: sel.isNotEmpty,
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      child: Selector<Setting, bool>(
-                        selector: (p0, settings) => settings.showBodyWeight,
-                        builder: (context, showBodyWeight, child) => IconButton(
-                          icon: const Icon(Icons.more_vert),
-                          tooltip: context.l10n.showMenu,
-                          onPressed: () async {
-                            final RenderBox button =
-                                context.findRenderObject() as RenderBox;
-                            final RenderBox overlay =
-                                Navigator.of(
-                                      context,
-                                    ).overlay!.context.findRenderObject()
-                                    as RenderBox;
-                            final RelativeRect position = RelativeRect.fromRect(
-                              Rect.fromPoints(
-                                button.localToGlobal(
-                                  Offset.zero,
-                                  ancestor: overlay,
-                                ),
-                                button.localToGlobal(
-                                  button.size.bottomRight(Offset.zero),
-                                  ancestor: overlay,
-                                ),
+                    Selector<Setting, bool>(
+                      selector: (p0, settings) => settings.showBodyWeight,
+                      builder: (context, showBodyWeight, child) => IconButton(
+                        icon: const Icon(Icons.more_vert),
+                        tooltip: context.l10n.showMenu,
+                        onPressed: () async {
+                          final RenderBox button =
+                              context.findRenderObject() as RenderBox;
+                          final RenderBox overlay =
+                              Navigator.of(
+                                    context,
+                                  ).overlay!.context.findRenderObject()
+                                  as RenderBox;
+                          final RelativeRect position = RelativeRect.fromRect(
+                            Rect.fromPoints(
+                              button.localToGlobal(
+                                Offset.zero,
+                                ancestor: overlay,
                               ),
-                              Offset.zero & overlay.size,
-                            );
+                              button.localToGlobal(
+                                button.size.bottomRight(Offset.zero),
+                                ancestor: overlay,
+                              ),
+                            ),
+                            Offset.zero & overlay.size,
+                          );
 
-                            final action = await showMenu<_AppSearchMenuAction>(
-                              context: context,
-                              position: position,
-                              items: [
-                                if (sel.length > 1 && widget.onMerge != null)
-                                  PopupMenuItem(
-                                    value: _AppSearchMenuAction.merge,
-                                    child: ListTile(
-                                      leading: const Icon(
-                                        Icons.merge_type_rounded,
-                                      ),
-                                      title: Text(context.l10n.mergeGraphs),
+                          final action = await showMenu<_AppSearchMenuAction>(
+                            context: context,
+                            position: position,
+                            items: [
+                              if (sel.length > 1 && widget.onMerge != null)
+                                PopupMenuItem(
+                                  value: _AppSearchMenuAction.merge,
+                                  child: ListTile(
+                                    leading: const Icon(
+                                      Icons.merge_type_rounded,
                                     ),
-                                  )
-                                else
-                                  PopupMenuItem(
-                                    value: _AppSearchMenuAction.selectAll,
-                                    child: ListTile(
-                                      leading: const Icon(Icons.done_all),
-                                      title: Text(context.l10n.selectAll),
-                                    ),
+                                    title: Text(context.l10n.mergeGraphs),
                                   ),
-                                if (sel.isNotEmpty) ...[
-                                  PopupMenuItem(
-                                    value: _AppSearchMenuAction.clearSelection,
-                                    child: ListTile(
-                                      leading: const Icon(Icons.deselect),
-                                      title: Text(context.l10n.clearSelection),
-                                    ),
+                                )
+                              else
+                                PopupMenuItem(
+                                  value: _AppSearchMenuAction.selectAll,
+                                  child: ListTile(
+                                    leading: const Icon(Icons.done_all),
+                                    title: Text(context.l10n.selectAll),
                                   ),
-                                  PopupMenuItem(
-                                    value: _AppSearchMenuAction.edit,
-                                    child: ListTile(
-                                      leading: const Icon(Icons.edit),
-                                      title: Text(context.l10n.actionEdit),
-                                    ),
+                                ),
+                              if (sel.isNotEmpty) ...[
+                                PopupMenuItem(
+                                  value: _AppSearchMenuAction.clearSelection,
+                                  child: ListTile(
+                                    leading: const Icon(Icons.deselect),
+                                    title: Text(context.l10n.clearSelection),
                                   ),
-                                  PopupMenuItem(
-                                    value: _AppSearchMenuAction.share,
-                                    child: ListTile(
-                                      leading: const Icon(Icons.share),
-                                      title: Text(context.l10n.actionShare),
-                                    ),
+                                ),
+                                PopupMenuItem(
+                                  value: _AppSearchMenuAction.edit,
+                                  child: ListTile(
+                                    leading: const Icon(Icons.edit),
+                                    title: Text(context.l10n.actionEdit),
                                   ),
-                                ],
-                                if (sel.isEmpty)
-                                  PopupMenuItem(
-                                    value: _AppSearchMenuAction.weight,
-                                    child: ListTile(
-                                      leading: const Icon(Icons.scale),
-                                      title: Text(context.l10n.weightLabel),
-                                    ),
+                                ),
+                                PopupMenuItem(
+                                  value: _AppSearchMenuAction.share,
+                                  child: ListTile(
+                                    leading: const Icon(Icons.share),
+                                    title: Text(context.l10n.actionShare),
                                   ),
-                                if (sel.isEmpty)
-                                  PopupMenuItem(
-                                    value: _AppSearchMenuAction.settings,
-                                    child: ListTile(
-                                      leading: const Icon(Icons.settings),
-                                      title: Text(context.l10n.navSettings),
-                                    ),
-                                  ),
+                                ),
                               ],
-                            );
-                            await _handleMenuAction(action);
-                          },
-                        ),
+                              if (sel.isEmpty)
+                                PopupMenuItem(
+                                  value: _AppSearchMenuAction.weight,
+                                  child: ListTile(
+                                    leading: const Icon(Icons.scale),
+                                    title: Text(context.l10n.weightLabel),
+                                  ),
+                                ),
+                              if (sel.isEmpty)
+                                PopupMenuItem(
+                                  value: _AppSearchMenuAction.settings,
+                                  child: ListTile(
+                                    leading: const Icon(Icons.settings),
+                                    title: Text(context.l10n.navSettings),
+                                  ),
+                                ),
+                            ],
+                          );
+                          await _handleMenuAction(action);
+                        },
                       ),
                     ),
                   ],

@@ -131,6 +131,47 @@ void main() {
     expect(selection.isEmpty, isTrue);
   });
 
+  testWidgets('Selection badge is on delete, not the overflow menu', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    final selection = <String>{'first', 'second'};
+
+    await harness.pump(
+      tester,
+      Scaffold(
+        body: AppSearch(
+          controller: selection,
+          onChange: (_) {},
+          onSelectAll: () {},
+          onDelete: () async {},
+          onEdit: () async {},
+          onShare: () async {},
+        ),
+      ),
+      surfaceSize: const Size(430, 600),
+    );
+    await tester.pumpAndSettle();
+
+    final deleteButton = find.byKey(const ValueKey('deleteButton'));
+    final deleteBadge = find.ancestor(
+      of: deleteButton,
+      matching: find.byType(Badge),
+    );
+    expect(deleteBadge, findsOneWidget);
+    expect(
+      find.descendant(of: deleteBadge, matching: find.text('2')),
+      findsOneWidget,
+    );
+    expect(
+      find.ancestor(
+        of: find.byIcon(Icons.more_vert),
+        matching: find.byType(Badge),
+      ),
+      findsNothing,
+    );
+  });
+
   testWidgets('AppSearch popup rows have one interactive surface', (
     tester,
   ) async {
