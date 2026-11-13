@@ -13,6 +13,7 @@ import 'package:flex/graph/graph_history_page.dart';
 import 'package:flex/graph/graph_metric_chips.dart';
 import 'package:flex/graph/graph_notes_page.dart';
 import 'package:flex/graph/graph_options_controls.dart';
+import 'package:flex/graph/graph_period_picker.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/platform_page_route.dart';
@@ -252,21 +253,11 @@ class _CardioPageState extends State<CardioPage> {
         _savePreferences();
       },
     );
-    final periodSelector = SegmentedButton<Period>(
-      showSelectedIcon: false,
-      segments: [
-        ButtonSegment(value: Period.day, label: Text(context.l10n.periodDay)),
-        ButtonSegment(value: Period.week, label: Text(context.l10n.periodWeek)),
-        ButtonSegment(
-          value: Period.month,
-          label: Text(context.l10n.periodMonth),
-        ),
-        ButtonSegment(value: Period.year, label: Text(context.l10n.periodYear)),
-      ],
-      selected: {period},
-      onSelectionChanged: (value) {
+    final periodSelector = GraphPeriodPicker(
+      selected: period,
+      onChanged: (value) {
         setState(() {
-          period = value.first;
+          period = value;
         });
         setData();
         _savePreferences();

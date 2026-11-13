@@ -4,6 +4,7 @@ import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/graph/flex_line_chart.dart';
 import 'package:flex/graph/graph_options_controls.dart';
+import 'package:flex/graph/graph_period_picker.dart';
 import 'package:flex/graph/strength_data.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/responsive.dart';
@@ -181,21 +182,11 @@ class _GlobalProgressPageState extends State<GlobalProgressPage> {
         setData();
       },
     );
-    final periodSelector = SegmentedButton<Period>(
-      showSelectedIcon: false,
-      segments: [
-        ButtonSegment(value: Period.day, label: Text(context.l10n.periodDay)),
-        ButtonSegment(value: Period.week, label: Text(context.l10n.periodWeek)),
-        ButtonSegment(
-          value: Period.month,
-          label: Text(context.l10n.periodMonth),
-        ),
-        ButtonSegment(value: Period.year, label: Text(context.l10n.periodYear)),
-      ],
-      selected: {period},
-      onSelectionChanged: (value) {
+    final periodSelector = GraphPeriodPicker(
+      selected: period,
+      onChanged: (value) {
         setState(() {
-          period = value.first;
+          period = value;
         });
         setData();
       },
