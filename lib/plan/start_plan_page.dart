@@ -314,7 +314,11 @@ class _StartPlanPageState extends State<StartPlanPage>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: MediaQuery.viewInsetsOf(context).bottom > 0
+                            ? 0
+                            : 8,
+                      ),
                       AppFab(
                         onPressed: () async => await _save(),
                         label: Text(context.l10n.actionSave),

@@ -108,6 +108,7 @@ class _SessionSetsState extends State<SessionSets> {
   }
 
   Widget _buildPreviousChips(PreviousExerciseDay previous) {
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     return SingleChildScrollView(
       key: const Key('previous-set-scroll'),
       scrollDirection: Axis.horizontal,
@@ -115,7 +116,14 @@ class _SessionSetsState extends State<SessionSets> {
         children: [
           for (var i = 0; i < previous.sets.length; i++)
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: EdgeInsets.only(
+                right:
+                    widget.compact &&
+                        keyboardOpen &&
+                        i == previous.sets.length - 1
+                    ? 4
+                    : 8,
+              ),
               child: _SetChip(
                 previousSet: previous.sets[i],
                 onPreviousTap: widget.onPreviousSetTap,
@@ -132,6 +140,7 @@ class _SessionSetsState extends State<SessionSets> {
   Widget _buildChips(List<ExerciseSetView> sets) {
     final best = _bestId(sets);
     final hasNextSet = sets.length < (widget.previous?.sets.length ?? 0);
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -150,7 +159,15 @@ class _SessionSetsState extends State<SessionSets> {
                   key: !hasNextSet && i == sets.length - 1
                       ? _focusSetKey
                       : null,
-                  padding: const EdgeInsets.only(right: 8.0),
+                  padding: EdgeInsets.only(
+                    right:
+                        widget.compact &&
+                            keyboardOpen &&
+                            !hasNextSet &&
+                            i == sets.length - 1
+                        ? 4
+                        : 8,
+                  ),
                   child: _SetChip(
                     exerciseSet: sets[i],
                     number: i + 1,
@@ -165,7 +182,14 @@ class _SessionSetsState extends State<SessionSets> {
               )
                 Padding(
                   key: hasNextSet && i == sets.length ? _focusSetKey : null,
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: EdgeInsets.only(
+                    right:
+                        widget.compact &&
+                            keyboardOpen &&
+                            i == widget.previous!.sets.length - 1
+                        ? 4
+                        : 8,
+                  ),
                   child: _SetChip(
                     previousSet: widget.previous!.sets[i],
                     onPreviousTap: widget.onPreviousSetTap,

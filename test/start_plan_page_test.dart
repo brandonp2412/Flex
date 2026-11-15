@@ -496,6 +496,11 @@ void main() {
         .dy;
     final preview = find.byKey(const Key('start-plan-set-preview'));
     final initialPreviewCenter = tester.getCenter(preview).dy;
+    expect(
+      tester.getTopLeft(find.byType(FloatingActionButton)).dx -
+          tester.getTopRight(preview).dx,
+      closeTo(8, 1),
+    );
     addTearDown(tester.view.resetViewInsets);
     tester.view.viewInsets = FakeViewPadding(
       bottom: 40 * tester.view.devicePixelRatio,
@@ -510,6 +515,11 @@ void main() {
       closeTo(initialFabBottom, 1),
     );
     expect(tester.getCenter(preview).dy, closeTo(initialPreviewCenter, 1));
+    expect(
+      tester.getTopLeft(find.byType(FloatingActionButton)).dx -
+          tester.getTopRight(preview).dx,
+      closeTo(0, 1),
+    );
 
     tester.view.viewInsets = const FakeViewPadding(bottom: 300);
     await tester.pumpAndSettle();
@@ -605,6 +615,23 @@ void main() {
       expect(find.text('6 × 95 kg'), findsOneWidget);
       expect(find.text('12 × 30 kg'), findsNothing);
 
+      Padding lastPreviousChip() {
+        final strip = tester.widget<SingleChildScrollView>(
+          find.byKey(const Key('previous-set-scroll')),
+        );
+        return (strip.child! as Row).children.last as Padding;
+      }
+
+      expect(lastPreviousChip().padding, const EdgeInsets.only(right: 8));
+      addTearDown(tester.view.resetViewInsets);
+      tester.view.viewInsets = FakeViewPadding(
+        bottom: 300 * tester.view.devicePixelRatio,
+      );
+      await tester.pumpAndSettle();
+      expect(lastPreviousChip().padding, const EdgeInsets.only(right: 4));
+      tester.view.resetViewInsets();
+      await tester.pumpAndSettle();
+
       await tester.tap(find.text('Cable fly'));
       await tester.pumpAndSettle();
       expect(find.text('12 × 30 kg'), findsOneWidget);
@@ -647,6 +674,20 @@ void main() {
       expect(find.text('7 × 95 kg'), findsOneWidget);
       expect(find.text('6 × 95 kg'), findsNothing);
       expect(find.byIcon(Icons.history_rounded), findsNothing);
+
+      Padding lastCurrentChip() {
+        final strip = tester.widget<SingleChildScrollView>(
+          find.byKey(const Key('session-set-scroll')),
+        );
+        return (strip.child! as Row).children.last as Padding;
+      }
+
+      expect(lastCurrentChip().padding, const EdgeInsets.only(right: 8));
+      tester.view.viewInsets = FakeViewPadding(
+        bottom: 300 * tester.view.devicePixelRatio,
+      );
+      await tester.pumpAndSettle();
+      expect(lastCurrentChip().padding, const EdgeInsets.only(right: 4));
     },
   );
 
