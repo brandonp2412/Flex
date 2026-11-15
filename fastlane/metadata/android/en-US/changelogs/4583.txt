@@ -1,0 +1,5 @@
+• Fix nested settings pages on desktop
+• Fix padding in some settings pages being too big
+• Rework period selector for desktop
+• Tweak start plan page on desktop
+• fix: anchor selection badge to delete action
