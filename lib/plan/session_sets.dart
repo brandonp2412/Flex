@@ -107,33 +107,64 @@ class _SessionSetsState extends State<SessionSets> {
     );
   }
 
+  // The scrolling region fills the space beside Save. When the keyboard is
+  // visible, short strips must align their actual cards to its trailing edge;
+  // otherwise a blank viewport can remain between the cards and the FAB.
+  Widget _scrollingChips({
+    required Key key,
+    required List<Widget> children,
+    ScrollController? controller,
+    EdgeInsetsGeometry? padding,
+  }) {
+    final alignToSave =
+        widget.compact && MediaQuery.viewInsetsOf(context).bottom > 0;
+    return LayoutBuilder(
+      builder: (context, viewport) => SingleChildScrollView(
+        key: key,
+        controller: controller,
+        scrollDirection: Axis.horizontal,
+        padding: padding,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: alignToSave && viewport.hasBoundedWidth
+                ? viewport.maxWidth
+                : 0,
+          ),
+          child: Row(
+            mainAxisAlignment: alignToSave
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            children: children,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPreviousChips(PreviousExerciseDay previous) {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    return SingleChildScrollView(
+    return _scrollingChips(
       key: const Key('previous-set-scroll'),
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (var i = 0; i < previous.sets.length; i++)
-            Padding(
-              padding: EdgeInsets.only(
-                right:
-                    widget.compact &&
-                        keyboardOpen &&
-                        i == previous.sets.length - 1
-                    ? 4
-                    : 8,
-              ),
-              child: _SetChip(
-                previousSet: previous.sets[i],
-                onPreviousTap: widget.onPreviousSetTap,
-                number: i + 1,
-                best: false,
-                compact: widget.compact,
-              ),
+      children: [
+        for (var i = 0; i < previous.sets.length; i++)
+          Padding(
+            padding: EdgeInsets.only(
+              right:
+                  widget.compact &&
+                      keyboardOpen &&
+                      i == previous.sets.length - 1
+                  ? 4
+                  : 8,
             ),
-        ],
-      ),
+            child: _SetChip(
+              previousSet: previous.sets[i],
+              onPreviousTap: widget.onPreviousSetTap,
+              number: i + 1,
+              best: false,
+              compact: widget.compact,
+            ),
+          ),
+      ],
     );
   }
 
@@ -147,59 +178,54 @@ class _SessionSetsState extends State<SessionSets> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (!widget.compact) const SizedBox(height: 16.0),
-        SingleChildScrollView(
+        _scrollingChips(
           key: const Key('session-set-scroll'),
           controller: _scrollController,
-          scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              for (var i = 0; i < sets.length; i++)
-                Padding(
-                  key: !hasNextSet && i == sets.length - 1
-                      ? _focusSetKey
-                      : null,
-                  padding: EdgeInsets.only(
-                    right:
-                        widget.compact &&
-                            keyboardOpen &&
-                            !hasNextSet &&
-                            i == sets.length - 1
-                        ? 4
-                        : 8,
-                  ),
-                  child: _SetChip(
-                    exerciseSet: sets[i],
-                    number: i + 1,
-                    best: sets[i].id == best,
-                    compact: widget.compact,
-                  ),
+          children: [
+            for (var i = 0; i < sets.length; i++)
+              Padding(
+                key: !hasNextSet && i == sets.length - 1 ? _focusSetKey : null,
+                padding: EdgeInsets.only(
+                  right:
+                      widget.compact &&
+                          keyboardOpen &&
+                          !hasNextSet &&
+                          i == sets.length - 1
+                      ? 4
+                      : 8,
                 ),
-              for (
-                var i = sets.length;
-                i < (widget.previous?.sets.length ?? 0);
-                i++
-              )
-                Padding(
-                  key: hasNextSet && i == sets.length ? _focusSetKey : null,
-                  padding: EdgeInsets.only(
-                    right:
-                        widget.compact &&
-                            keyboardOpen &&
-                            i == widget.previous!.sets.length - 1
-                        ? 4
-                        : 8,
-                  ),
-                  child: _SetChip(
-                    previousSet: widget.previous!.sets[i],
-                    onPreviousTap: widget.onPreviousSetTap,
-                    number: i + 1,
-                    best: false,
-                    compact: widget.compact,
-                  ),
+                child: _SetChip(
+                  exerciseSet: sets[i],
+                  number: i + 1,
+                  best: sets[i].id == best,
+                  compact: widget.compact,
                 ),
-            ],
-          ),
+              ),
+            for (
+              var i = sets.length;
+              i < (widget.previous?.sets.length ?? 0);
+              i++
+            )
+              Padding(
+                key: hasNextSet && i == sets.length ? _focusSetKey : null,
+                padding: EdgeInsets.only(
+                  right:
+                      widget.compact &&
+                          keyboardOpen &&
+                          i == widget.previous!.sets.length - 1
+                      ? 4
+                      : 8,
+                ),
+                child: _SetChip(
+                  previousSet: widget.previous!.sets[i],
+                  onPreviousTap: widget.onPreviousSetTap,
+                  number: i + 1,
+                  best: false,
+                  compact: widget.compact,
+                ),
+              ),
+          ],
         ),
       ],
     );

@@ -619,7 +619,8 @@ void main() {
         final strip = tester.widget<SingleChildScrollView>(
           find.byKey(const Key('previous-set-scroll')),
         );
-        return (strip.child! as Row).children.last as Padding;
+        return ((strip.child! as ConstrainedBox).child! as Row).children.last
+            as Padding;
       }
 
       expect(lastPreviousChip().padding, const EdgeInsets.only(right: 8));
@@ -636,6 +637,23 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('12 × 30 kg'), findsOneWidget);
       expect(find.text('8 × 90 kg'), findsNothing);
+      tester.view.viewInsets = FakeViewPadding(
+        bottom: 300 * tester.view.devicePixelRatio,
+      );
+      await tester.pumpAndSettle();
+      final visibleCard = find.ancestor(
+        of: find.text('12 × 30 kg'),
+        matching: find.byType(Card),
+      );
+      expect(
+        tester.getRect(find.byType(FloatingActionButton)).left -
+            tester.getRect(visibleCard).right,
+        closeTo(4, 1),
+        reason:
+            'The visible preview card, not just its scroll viewport, must be close to Save',
+      );
+      tester.view.resetViewInsets();
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Bench press'));
       await tester.pumpAndSettle();
@@ -679,7 +697,8 @@ void main() {
         final strip = tester.widget<SingleChildScrollView>(
           find.byKey(const Key('session-set-scroll')),
         );
-        return (strip.child! as Row).children.last as Padding;
+        return ((strip.child! as ConstrainedBox).child! as Row).children.last
+            as Padding;
       }
 
       expect(lastCurrentChip().padding, const EdgeInsets.only(right: 8));
@@ -688,6 +707,16 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(lastCurrentChip().padding, const EdgeInsets.only(right: 4));
+      final currentSetCard = find.ancestor(
+        of: find.text('7 × 95 kg'),
+        matching: find.byType(Card),
+      );
+      expect(
+        tester.getRect(find.byType(FloatingActionButton)).left -
+            tester.getRect(currentSetCard).right,
+        closeTo(4, 1),
+        reason: 'Saved set cards must sit beside Save when the IME opens',
+      );
     },
   );
 
@@ -1337,20 +1366,44 @@ void main() {
     await harness.pump(
       tester,
       StartPlanPage(plan: plan),
-      surfaceSize: const Size(800, 1200),
+      surfaceSize: const Size(360, 780),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Set 1'), findsNothing);
 
-    await tester.enterText(textFieldWithLabel('Reps'), '5');
-    await tester.enterText(textFieldWithLabel('Weight (kg)'), '50');
+    await tester.enterText(textFieldWithLabel('Reps'), '18');
+    await tester.enterText(textFieldWithLabel('Weight (kg)'), '40');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
     expect(find.text('Set 1'), findsOne);
-    expect(find.text('5 × 50 kg'), findsOne);
+    expect(find.text('18 × 40 kg'), findsOne);
+
+    await tester.enterText(textFieldWithLabel('Reps'), '6');
+    await tester.enterText(textFieldWithLabel('Weight (kg)'), '82.5');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Set 2'), findsOne);
+    expect(find.text('6 × 82.5 kg'), findsOne);
+
+    addTearDown(tester.view.resetViewInsets);
+    tester.view.viewInsets = FakeViewPadding(
+      bottom: 300 * tester.view.devicePixelRatio,
+    );
+    await tester.pumpAndSettle();
+    final savedCard = find.ancestor(
+      of: find.text('6 × 82.5 kg'),
+      matching: find.byType(Card),
+    );
+    expect(
+      tester.getRect(find.byType(FloatingActionButton)).left -
+          tester.getRect(savedCard).right,
+      closeTo(4, 1),
+      reason:
+          'A short list of saved sets must align beside Save, not leave unused space',
+    );
   });
 
   testWidgets('many set previews leave room below the chip cards', (
