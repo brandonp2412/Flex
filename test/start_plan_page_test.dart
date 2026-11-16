@@ -491,11 +491,7 @@ void main() {
       bottomNavHeight,
     );
 
-    final initialFabBottom = tester
-        .getBottomRight(find.byType(FloatingActionButton))
-        .dy;
     final preview = find.byKey(const Key('start-plan-set-preview'));
-    final initialPreviewCenter = tester.getCenter(preview).dy;
     expect(
       tester.getTopLeft(find.byType(FloatingActionButton)).dx -
           tester.getTopRight(preview).dx,
@@ -508,13 +504,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       (tester.widget<Padding>(floatingRow).padding as EdgeInsets).bottom,
-      bottomNavHeight - 40,
+      0,
     );
     expect(
-      tester.getBottomRight(find.byType(FloatingActionButton)).dy,
-      closeTo(initialFabBottom, 1),
+      tester.getRect(find.byType(Scaffold).first).bottom -
+          40 -
+          tester.getBottomRight(find.byType(FloatingActionButton)).dy,
+      closeTo(16, 1),
+      reason: 'FAB should sit 16dp above keyboard even with small IME insets',
     );
-    expect(tester.getCenter(preview).dy, closeTo(initialPreviewCenter, 1));
+    expect(
+      tester.getCenter(preview).dy,
+      closeTo(tester.getCenter(find.byType(FloatingActionButton)).dy, 1),
+    );
     expect(
       tester.getTopLeft(find.byType(FloatingActionButton)).dx -
           tester.getTopRight(preview).dx,
@@ -526,6 +528,13 @@ void main() {
     expect(
       (tester.widget<Padding>(floatingRow).padding as EdgeInsets).bottom,
       0,
+    );
+    expect(
+      tester.getRect(find.byType(Scaffold).first).bottom -
+          100 -
+          tester.getBottomRight(find.byType(FloatingActionButton)).dy,
+      closeTo(16, 1),
+      reason: 'FAB should stay 16dp above the keyboard when it fully opens',
     );
   });
 
@@ -1469,6 +1478,23 @@ void main() {
         1,
       ),
     );
+    expect(tester.takeException(), isNull);
+
+    addTearDown(tester.view.resetViewInsets);
+    tester.view.viewInsets = FakeViewPadding(
+      bottom: 300 * tester.view.devicePixelRatio,
+    );
+    await tester.pumpAndSettle();
+    final keyboardTop =
+        tester.getRect(find.byType(Scaffold).first).bottom - 300;
+    final saveBottom = tester.getRect(fab).bottom;
+    expect(
+      keyboardTop - saveBottom,
+      closeTo(16, 1),
+      reason:
+          'Save and the set previews must float directly above the keyboard',
+    );
+    expect(tester.getCenter(card).dy, closeTo(tester.getCenter(fab).dy, 1));
     expect(tester.takeException(), isNull);
   });
 

@@ -40,6 +40,21 @@ Future<void> openStartPlan(
   );
 }
 
+/// Keeps the compact set-preview row directly above the IME instead of also
+/// reserving the phone's bottom safe-area clearance a second time.
+class _KeyboardFabLocation extends FloatingActionButtonLocation {
+  const _KeyboardFabLocation();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry geometry) {
+    final centered = FloatingActionButtonLocation.centerFloat.getOffset(
+      geometry,
+    );
+    final height = geometry.floatingActionButtonSize.height;
+    return Offset(centered.dx, geometry.contentBottom - height - 16);
+  }
+}
+
 class StartPlanPage extends StatefulWidget {
   final Plan plan;
   final List<PlanExerciseEntry>? initial;
@@ -273,7 +288,9 @@ class _StartPlanPageState extends State<StartPlanPage>
             ),
           ),
           floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerFloat,
+              !desktop && MediaQuery.viewInsetsOf(context).bottom > 0
+              ? const _KeyboardFabLocation()
+              : FloatingActionButtonLocation.centerFloat,
           floatingActionButton:
               desktop ||
                   workout == null ||
@@ -285,10 +302,12 @@ class _StartPlanPageState extends State<StartPlanPage>
                   padding: EdgeInsets.only(
                     left: 16,
                     right: 16,
-                    bottom: max(
-                      0,
-                      bottomNavHeight - MediaQuery.viewInsetsOf(context).bottom,
-                    ),
+                    // The keyboard already lifts the Scaffold's FAB. Keeping
+                    // any part of the nav-dock inset here leaves an unwanted
+                    // blank gap between Save/the previews and the IME.
+                    bottom: MediaQuery.viewInsetsOf(context).bottom > 0
+                        ? 0
+                        : bottomNavHeight,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
