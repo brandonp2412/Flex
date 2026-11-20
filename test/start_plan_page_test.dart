@@ -482,13 +482,17 @@ void main() {
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
     expect(scaffold.floatingActionButton, isNotNull);
     expect(scaffold.bottomNavigationBar, isNull);
-    expect(
-      scaffold.floatingActionButtonLocation,
-      FloatingActionButtonLocation.centerFloat,
-    );
+    final dockLocation = scaffold.floatingActionButtonLocation;
+    expect(dockLocation, isNot(FloatingActionButtonLocation.centerFloat));
     expect(
       (tester.widget<Padding>(floatingRow).padding as EdgeInsets).bottom,
-      bottomNavHeight,
+      0,
+    );
+    expect(
+      tester.getRect(find.byType(Scaffold).first).bottom -
+          bottomNavHeight -
+          tester.getBottomRight(find.byType(FloatingActionButton)).dy,
+      closeTo(16, 1),
     );
 
     final preview = find.byKey(const Key('start-plan-set-preview'));
@@ -508,10 +512,16 @@ void main() {
     );
     expect(
       tester.getRect(find.byType(Scaffold).first).bottom -
-          40 -
+          bottomNavHeight -
           tester.getBottomRight(find.byType(FloatingActionButton)).dy,
       closeTo(16, 1),
-      reason: 'FAB should sit 16dp above keyboard even with small IME insets',
+      reason: 'Before the keyboard rises past the nav dock, Save must stay put',
+    );
+    expect(
+      tester
+          .widget<Scaffold>(find.byType(Scaffold))
+          .floatingActionButtonLocation,
+      dockLocation,
     );
     expect(
       tester.getCenter(preview).dy,
@@ -580,6 +590,97 @@ void main() {
       closeTo(16, 1),
       reason: 'Real Android keyboard must be 16dp below Save, not 40dp',
     );
+  });
+
+  testWidgets('keyboard transitions never move Save through the bottom dock', (
+    WidgetTester tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    final database = harness.database;
+    final planId = await database.plans.insertOne(planFixture());
+    await insertPlanExerciseFixture(
+      database,
+      planId: planId,
+      exercise: 'Bench press',
+    );
+    final plan =
+        await (database.plans.select()..where((p) => p.id.equals(planId)))
+            .getSingle();
+    final pixelRatio = tester.view.devicePixelRatio;
+    tester.view.viewPadding = FakeViewPadding(bottom: 24 * pixelRatio);
+    addTearDown(tester.view.resetViewPadding);
+    addTearDown(tester.view.resetViewInsets);
+
+    await harness.pump(
+      tester,
+      SafeArea(
+        maintainBottomViewPadding: true,
+        child: StartPlanPage(plan: plan),
+      ),
+      surfaceSize: const Size(412, 892),
+    );
+    await tester.pumpAndSettle();
+
+    double? lastSaveBottom;
+    int? lastInset;
+    // Sample an opening AND closing keyboard animation, not just endpoints.
+    for (final inset in [
+      0,
+      20,
+      40,
+      60,
+      80,
+      100,
+      120,
+      140,
+      180,
+      220,
+      300,
+      220,
+      180,
+      140,
+      120,
+      100,
+      80,
+      60,
+      40,
+      20,
+      0,
+    ]) {
+      tester.view.viewInsets = FakeViewPadding(bottom: inset * pixelRatio);
+      await tester.pumpAndSettle();
+      final scaffold = find.byType(Scaffold).first;
+      final scaffoldBottom = tester.getRect(scaffold).bottom;
+      final saveBottom = tester
+          .getRect(find.byType(FloatingActionButton))
+          .bottom;
+      final previewCenter = tester
+          .getCenter(find.byKey(const Key('start-plan-set-preview')))
+          .dy;
+      final saveCenter = tester.getCenter(find.byType(FloatingActionButton)).dy;
+      final keyboardTop = scaffoldBottom + 24 - inset;
+      final navTop = scaffoldBottom - 24 - bottomNavHeight;
+      final expectedBottom = (keyboardTop < navTop ? keyboardTop : navTop) - 16;
+      expect(
+        saveBottom,
+        closeTo(expectedBottom, 1),
+        reason: 'IME inset $inset: Save must stay above keyboard AND dock',
+      );
+      expect(
+        previewCenter,
+        closeTo(saveCenter, 1),
+        reason: 'IME inset $inset: the preview must follow Save',
+      );
+      if (lastSaveBottom != null) {
+        expect(
+          (saveBottom - lastSaveBottom).abs(),
+          lessThanOrEqualTo((inset - lastInset!).abs() + 1),
+          reason: 'IME inset $inset: FAB jumped faster than keyboard moved',
+        );
+      }
+      lastSaveBottom = saveBottom;
+      lastInset = inset;
+    }
   });
 
   testWidgets(

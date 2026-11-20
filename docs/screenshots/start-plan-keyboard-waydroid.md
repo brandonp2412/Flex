@@ -12,3 +12,13 @@
 - **Validation:** `flutter analyze --no-pub` clean; `flutter test --no-pub` all 594 tests passed; live APK installed and visually checked on Waydroid.
 
 This is raw device evidence, not a mocked screenshot. The changes use the actual Android bottom view padding rather than hard-coded additional spacing.
+
+## Keyboard opening/closing regression (20 November 2026)
+
+[Waydroid frame-captured Android recording](start-plan-keyboard-transition-waydroid.mp4)
+
+The next regression test reproduces the previous transition bug: with only a 20dp keyboard inset, Save jumped **108dp**, crossing the bottom dock. `keyboard transitions never move Save through the bottom dock` now samples **21 keyboard positions** across opening and closing with a 24dp Android gesture inset. It asserts that the Save row stays 16dp above the higher of the visible keyboard or dock, that previews track Save, and that the FAB never moves farther between samples than the keyboard itself moves.
+
+The new `_StartPlanDockLocation` is used continuously rather than swapping locations when the IME becomes visible. The FAB row keeps a constant height/padding. Waydroid was rebuilt from these changes and the recorded open/close sequence was visually inspected.
+
+The Android 13 Waydroid video was assembled from 40 unmodified device screenshots at approximately 5fps because that Waydroid build's `screenrecord` native video encoder was unavailable. No screen contents were simulated or drawn.

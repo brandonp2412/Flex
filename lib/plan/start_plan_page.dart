@@ -40,36 +40,36 @@ Future<void> openStartPlan(
   );
 }
 
-/// Keeps the compact set-preview row directly above the IME instead of also
-/// reserving the phone's bottom safe-area clearance a second time.
-class _KeyboardFabLocation extends FloatingActionButtonLocation {
-  const _KeyboardFabLocation(this.bottomViewPadding);
+/// Keep Save and its previews above *both* the bottom dock and Android IME.
+/// Using a single location throughout the keyboard animation avoids the
+/// 80dp teleport caused by swapping FAB locations at the first nonzero inset.
+class _StartPlanDockLocation extends FloatingActionButtonLocation {
+  const _StartPlanDockLocation(this.bottomViewPadding);
 
-  // On Android, the IME inset is measured from the full window bottom while
-  // Scaffold geometry can already exclude the gesture-navigation safe area.
-  // Compensating for it keeps the Save row 16dp above the *visible* keyboard.
   final double bottomViewPadding;
 
-  // MediaQuery can rebuild the Scaffold during IME animation. Treat locations
-  // with the same inset as equal so that each frame does not restart the FAB
-  // relocation animation.
   @override
   bool operator ==(Object other) =>
-      other is _KeyboardFabLocation &&
+      other is _StartPlanDockLocation &&
       other.bottomViewPadding == bottomViewPadding;
 
   @override
-  int get hashCode => Object.hash(_KeyboardFabLocation, bottomViewPadding);
+  int get hashCode => Object.hash(_StartPlanDockLocation, bottomViewPadding);
 
   @override
   Offset getOffset(ScaffoldPrelayoutGeometry geometry) {
     final centered = FloatingActionButtonLocation.centerFloat.getOffset(
       geometry,
     );
-    final height = geometry.floatingActionButtonSize.height;
+    final dockTop =
+        geometry.scaffoldSize.height - bottomViewPadding - bottomNavHeight;
+    // The IME inset starts at the window bottom, but our route's Scaffold
+    // already excludes the persistent bottom gesture-navigation safe area.
+    final keyboardTop = geometry.contentBottom + bottomViewPadding;
+    final bottom = min(dockTop, keyboardTop) - 16;
     return Offset(
       centered.dx,
-      geometry.contentBottom + bottomViewPadding - height - 16,
+      bottom - geometry.floatingActionButtonSize.height,
     );
   }
 }
@@ -306,10 +306,11 @@ class _StartPlanPageState extends State<StartPlanPage>
                     ),
             ),
           ),
-          floatingActionButtonLocation:
-              !desktop && MediaQuery.viewInsetsOf(context).bottom > 0
-              ? _KeyboardFabLocation(MediaQuery.viewPaddingOf(context).bottom)
-              : FloatingActionButtonLocation.centerFloat,
+          floatingActionButtonLocation: desktop
+              ? FloatingActionButtonLocation.centerFloat
+              : _StartPlanDockLocation(
+                  MediaQuery.viewPaddingOf(context).bottom,
+                ),
           floatingActionButton:
               desktop ||
                   workout == null ||
@@ -321,12 +322,10 @@ class _StartPlanPageState extends State<StartPlanPage>
                   padding: EdgeInsets.only(
                     left: 16,
                     right: 16,
-                    // The keyboard already lifts the Scaffold's FAB. Keeping
-                    // any part of the nav-dock inset here leaves an unwanted
-                    // blank gap between Save/the previews and the IME.
-                    bottom: MediaQuery.viewInsetsOf(context).bottom > 0
-                        ? 0
-                        : bottomNavHeight,
+                    // The dock location handles keyboard and nav clearance.
+                    // Keeping padding fixed prevents the row from resizing
+                    // mid-animation.
+                    bottom: 0,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
