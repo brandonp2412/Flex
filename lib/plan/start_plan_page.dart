@@ -43,7 +43,23 @@ Future<void> openStartPlan(
 /// Keeps the compact set-preview row directly above the IME instead of also
 /// reserving the phone's bottom safe-area clearance a second time.
 class _KeyboardFabLocation extends FloatingActionButtonLocation {
-  const _KeyboardFabLocation();
+  const _KeyboardFabLocation(this.bottomViewPadding);
+
+  // On Android, the IME inset is measured from the full window bottom while
+  // Scaffold geometry can already exclude the gesture-navigation safe area.
+  // Compensating for it keeps the Save row 16dp above the *visible* keyboard.
+  final double bottomViewPadding;
+
+  // MediaQuery can rebuild the Scaffold during IME animation. Treat locations
+  // with the same inset as equal so that each frame does not restart the FAB
+  // relocation animation.
+  @override
+  bool operator ==(Object other) =>
+      other is _KeyboardFabLocation &&
+      other.bottomViewPadding == bottomViewPadding;
+
+  @override
+  int get hashCode => Object.hash(_KeyboardFabLocation, bottomViewPadding);
 
   @override
   Offset getOffset(ScaffoldPrelayoutGeometry geometry) {
@@ -51,7 +67,10 @@ class _KeyboardFabLocation extends FloatingActionButtonLocation {
       geometry,
     );
     final height = geometry.floatingActionButtonSize.height;
-    return Offset(centered.dx, geometry.contentBottom - height - 16);
+    return Offset(
+      centered.dx,
+      geometry.contentBottom + bottomViewPadding - height - 16,
+    );
   }
 }
 
@@ -289,7 +308,7 @@ class _StartPlanPageState extends State<StartPlanPage>
           ),
           floatingActionButtonLocation:
               !desktop && MediaQuery.viewInsetsOf(context).bottom > 0
-              ? const _KeyboardFabLocation()
+              ? _KeyboardFabLocation(MediaQuery.viewPaddingOf(context).bottom)
               : FloatingActionButtonLocation.centerFloat,
           floatingActionButton:
               desktop ||

@@ -538,6 +538,50 @@ void main() {
     );
   });
 
+  testWidgets('keyboard dock accounts for Android gesture-navigation inset', (
+    WidgetTester tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    final database = harness.database;
+    final planId = await database.plans.insertOne(planFixture());
+    await insertPlanExerciseFixture(
+      database,
+      planId: planId,
+      exercise: 'Bench press',
+    );
+    final plan =
+        await (database.plans.select()..where((p) => p.id.equals(planId)))
+            .getSingle();
+
+    final pixelRatio = tester.view.devicePixelRatio;
+    tester.view.viewPadding = FakeViewPadding(bottom: 24 * pixelRatio);
+    tester.view.viewInsets = FakeViewPadding(bottom: 300 * pixelRatio);
+    addTearDown(tester.view.resetViewPadding);
+    addTearDown(tester.view.resetViewInsets);
+
+    // The real app's root Scaffold has SafeArea(maintainBottomViewPadding:
+    // true). With gesture navigation this reduces the route's height while
+    // the IME inset still measures from the bottom of the full window.
+    await harness.pump(
+      tester,
+      SafeArea(
+        maintainBottomViewPadding: true,
+        child: StartPlanPage(plan: plan),
+      ),
+      surfaceSize: const Size(412, 892),
+    );
+    await tester.pumpAndSettle();
+
+    final scaffoldBottom = tester.getRect(find.byType(Scaffold).first).bottom;
+    final saveBottom = tester.getRect(find.byType(FloatingActionButton)).bottom;
+    final keyboardTop = scaffoldBottom + 24 - 300;
+    expect(
+      keyboardTop - saveBottom,
+      closeTo(16, 1),
+      reason: 'Real Android keyboard must be 16dp below Save, not 40dp',
+    );
+  });
+
   testWidgets(
     'StartPlanPage replaces history previews as current sets are saved',
     (WidgetTester tester) async {
