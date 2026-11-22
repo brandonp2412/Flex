@@ -1,0 +1,18 @@
+{
+  "desktop": {
+    "startupP95Ms": 6000,
+    "navigationP95Ms": 1800,
+    "scrollFrameP95Ms": 120,
+    "scrollLongFrames": 40,
+    "heapDeltaMb": 60,
+    "errors": 0
+  },
+  "mobile": {
+    "startupP95Ms": 35000,
+    "navigationP95Ms": 5000,
+    "scrollFrameP95Ms": 180,
+    "scrollLongFrames": 50,
+    "heapDeltaMb": 80,
+    "errors": 0
+  }
+}

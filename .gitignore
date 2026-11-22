@@ -61,3 +61,6 @@ coverage/
 .serena/
 /android/app/build/
 /android/build/
+
+# Browser performance tool dependencies
+scripts/web-perf/node_modules/

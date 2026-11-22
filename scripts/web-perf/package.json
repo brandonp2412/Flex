@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node run.mjs"},
+  "dependencies": {"playwright-core": "1.57.0"}
+}

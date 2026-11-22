@@ -1,0 +1,53 @@
+name: Web Performance
+
+on:
+  pull_request:
+    paths:
+      - "lib/**"
+      - "web/**"
+      - "test_driver/web_performance.dart"
+      - "scripts/web-perf/**"
+      - "scripts/web-performance.sh"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - ".github/workflows/web-performance.yml"
+  schedule:
+    - cron: "15 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Setup Flutter
+        run: |
+          echo "$PWD/flutter/bin" >> "$GITHUB_PATH"
+          flutter/bin/flutter config --no-analytics
+          flutter/bin/flutter config --enable-web
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - name: Install dependencies
+        run: |
+          flutter pub get --enforce-lockfile
+          npm ci --prefix scripts/web-perf --ignore-scripts --no-audit --no-fund
+          cd scripts/web-perf
+          npx playwright-core install --with-deps chromium
+      - name: Benchmark production web build
+        run: ./scripts/web-performance.sh --runs 3 --cycles 3
+      - name: Upload performance report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: flex-web-performance
+          path: build/reports/web-performance/
+          if-no-files-found: warn
+          retention-days: 30
