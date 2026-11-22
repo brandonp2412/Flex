@@ -42,10 +42,11 @@ jobs:
         run: |
           flutter pub get --enforce-lockfile
           npm ci --prefix scripts/web-perf --ignore-scripts --no-audit --no-fund
-          cd scripts/web-perf
-          npx playwright-core install --with-deps chromium
+          command -v google-chrome
+          google-chrome --version
       - name: Benchmark production web build
-        run: ./scripts/web-performance.sh --runs 3 --cycles 3
+        run: |
+          FLEX_CHROME_BINARY="$(command -v google-chrome)" ./scripts/web-performance.sh --runs 3 --cycles 3
       - name: Upload performance report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

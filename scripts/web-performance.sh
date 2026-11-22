@@ -7,6 +7,12 @@ if [[ " $* " != *" --no-stress "* ]]; then
 fi
 npm ci --prefix scripts/web-perf --ignore-scripts --no-audit --no-fund
 if [[ -z "${FLEX_CHROME_BINARY:-}" ]]; then
-  (cd scripts/web-perf && npx playwright-core install chromium)
+  if command -v google-chrome >/dev/null 2>&1; then
+    export FLEX_CHROME_BINARY="$(command -v google-chrome)"
+  elif command -v chromium >/dev/null 2>&1; then
+    export FLEX_CHROME_BINARY="$(command -v chromium)"
+  else
+    (cd scripts/web-perf && npx playwright-core install chromium)
+  fi
 fi
 node scripts/web-perf/run.mjs "$@"
