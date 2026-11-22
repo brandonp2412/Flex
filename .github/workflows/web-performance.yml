@@ -29,7 +29,10 @@ jobs:
           persist-credentials: false
       - name: Setup Flutter
         run: |
+          git -C flutter fetch --depth=1 origin tag 3.47.7
+          chmod +x flutter/bin/*
           echo "$PWD/flutter/bin" >> "$GITHUB_PATH"
+          flutter/bin/flutter --version
           flutter/bin/flutter config --no-analytics
           flutter/bin/flutter config --enable-web
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
