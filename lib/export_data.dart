@@ -81,8 +81,6 @@ class _ExportDataState extends State<ExportData> {
                       await FilePicker.saveFile(
                         fileName: 'plans.csv',
                         bytes: bytes,
-                        type: FileType.custom,
-                        allowedExtensions: ['csv'],
                       );
                       talker.info('Exported ${plans.length} plans to CSV');
                     },
@@ -106,8 +104,6 @@ class _ExportDataState extends State<ExportData> {
                         await FilePicker.saveFile(
                           fileName: 'flex-backup.zip',
                           bytes: await archive.readAsBytes(),
-                          type: FileType.custom,
-                          allowedExtensions: ['zip'],
                         );
                         talker.info('Exported Flex data and image backup');
                       } finally {

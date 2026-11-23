@@ -5990,10 +5990,11 @@ class $$CategoriesTableTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (exercisesRefs)
-                    await $_getPrefetchedData<
+                    await $_getPrefetchedDataByColumns<
                       Category,
                       $CategoriesTable,
-                      Exercise
+                      Exercise,
+                      $ExercisesTable
                     >(
                       currentTable: table,
                       referencedTable: $$CategoriesTableReferences
@@ -6004,8 +6005,8 @@ class $$CategoriesTableTableManager
                             table,
                             p0,
                           ).exercisesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.categoryId == item.id),
+                      currentColumn: 'id',
+                      referencedColumn: 'category_id',
                       typedResults: items,
                     ),
                 ];
@@ -6338,7 +6339,12 @@ class $$PlansTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (workoutsRefs)
-                        await $_getPrefetchedData<Plan, $PlansTable, Workout>(
+                        await $_getPrefetchedDataByColumns<
+                          Plan,
+                          $PlansTable,
+                          Workout,
+                          $WorkoutsTable
+                        >(
                           currentTable: table,
                           referencedTable: $$PlansTableReferences
                               ._workoutsRefsTable(db),
@@ -6348,17 +6354,16 @@ class $$PlansTableTableManager
                                 table,
                                 p0,
                               ).workoutsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.planId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'plan_id',
                           typedResults: items,
                         ),
                       if (planExercisesRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Plan,
                           $PlansTable,
-                          PlanExercise
+                          PlanExercise,
+                          $PlanExercisesTable
                         >(
                           currentTable: table,
                           referencedTable: $$PlansTableReferences
@@ -6369,10 +6374,8 @@ class $$PlansTableTableManager
                                 table,
                                 p0,
                               ).planExercisesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.planId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'plan_id',
                           typedResults: items,
                         ),
                     ];
@@ -7000,10 +7003,11 @@ class $$ExercisesTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (exerciseSetsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Exercise,
                           $ExercisesTable,
-                          ExerciseSet
+                          ExerciseSet,
+                          $ExerciseSetsTable
                         >(
                           currentTable: table,
                           referencedTable: $$ExercisesTableReferences
@@ -7014,17 +7018,16 @@ class $$ExercisesTableTableManager
                                 table,
                                 p0,
                               ).exerciseSetsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.exerciseId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'exercise_id',
                           typedResults: items,
                         ),
                       if (planExercisesRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Exercise,
                           $ExercisesTable,
-                          PlanExercise
+                          PlanExercise,
+                          $PlanExercisesTable
                         >(
                           currentTable: table,
                           referencedTable: $$ExercisesTableReferences
@@ -7035,10 +7038,8 @@ class $$ExercisesTableTableManager
                                 table,
                                 p0,
                               ).planExercisesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.exerciseId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'exercise_id',
                           typedResults: items,
                         ),
                     ];
@@ -7407,10 +7408,11 @@ class $$WorkoutsTableTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (exerciseSetsRefs)
-                    await $_getPrefetchedData<
+                    await $_getPrefetchedDataByColumns<
                       Workout,
                       $WorkoutsTable,
-                      ExerciseSet
+                      ExerciseSet,
+                      $ExerciseSetsTable
                     >(
                       currentTable: table,
                       referencedTable: $$WorkoutsTableReferences
@@ -7420,8 +7422,8 @@ class $$WorkoutsTableTableManager
                         table,
                         p0,
                       ).exerciseSetsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.workoutId == item.id),
+                      currentColumn: 'id',
+                      referencedColumn: 'workout_id',
                       typedResults: items,
                     ),
                 ];
