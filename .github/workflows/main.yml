@@ -265,20 +265,7 @@ jobs:
           CHANGELOG_FILE="fastlane/metadata/android/en-US/changelogs/$CHANGELOG_NUMBER.txt"
           mkdir -p "$(dirname "$CHANGELOG_FILE")"
 
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -n "$LAST_TAG" ]; then
-            git --no-pager log --pretty=format:'%s' "$LAST_TAG"..HEAD
-          else
-            git --no-pager log --pretty=format:'%s'
-          fi | sort -u \
-            | grep -v "^Merge " \
-            | grep -v "^Release " \
-            | grep -v "^Bump " \
-            | grep -v "\[skip ci\]" \
-            | head -10 \
-            | sed 's/^/• /' > "$CHANGELOG_FILE"
-
-          [ -s "$CHANGELOG_FILE" ] || echo "• Bug fixes and improvements" > "$CHANGELOG_FILE"
+          python3 scripts/release_notes.py "release-notes/$NEW_VERSION.txt" "$CHANGELOG_FILE" release-notes/current.txt
 
           mkdir -p assets/changelogs
           cp "$CHANGELOG_FILE" "assets/changelogs/$(date +%s).txt"
@@ -289,7 +276,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ steps.bump.outputs.version }}
         run: |
-          git add pubspec.yaml fastlane/metadata fastlane/screenshots assets/changelogs
+          git add release-notes/current.txt pubspec.yaml fastlane/metadata fastlane/screenshots assets/changelogs
           git commit -m "Release $RELEASE_VERSION [skip ci]"
           gh auth setup-git
           git push origin main
@@ -611,7 +598,9 @@ jobs:
       - name: Deploy to Google Play
         run: |
           bundle exec fastlane android metadata track:production
+          python3 scripts/release_notes.py release-notes/current.txt "$RUNNER_TEMP/release-notes/en-US/changelogs/default.txt"
           bundle exec fastlane supply \
+            --metadata_path "$RUNNER_TEMP/release-notes" \
             --aab android-builds/bundle/release/app-release.aab \
             --json_key ~/.config/googlePlay.json \
             --package_name com.presley.flexify \
