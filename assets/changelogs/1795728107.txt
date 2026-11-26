@@ -1,0 +1,10 @@
+• Delete slop files
+• Gitignore graphify
+• chore(deps): refresh Flex storage and notification plugins
+• fix(android): remove NZ badge from launch splash
+• fix: anchor Start Plan save and previews to visible Android keyboard
+• fix: keep Start Plan dock steady during keyboard animation
+• fix: resolve pinned Flutter SDK version in performance CI
+• fix: show new exercises and hide sparse graph previews
+• fix: tolerate existing indexes during database upgrades
+• fix: tolerate unavailable crash log storage at startup
