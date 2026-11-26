@@ -931,6 +931,9 @@ class AppDatabase extends _$AppDatabase {
               await customStatement('DROP TABLE IF EXISTS metadata');
             },
             from63To64: (m, schema) async {
+              await customStatement(
+                'DROP INDEX IF EXISTS exercise_sets_timestamp',
+              );
               await m.createIndex(schema.exerciseSetsTimestamp);
             },
             from64To65: (m, schema) async {
@@ -1048,29 +1051,23 @@ class AppDatabase extends _$AppDatabase {
               ''');
 
               await customStatement(
-                'DROP INDEX IF EXISTS exercise_sets_exercise_timestamp',
-              );
-              await customStatement(
-                'DROP INDEX IF EXISTS exercise_sets_workout_exercise',
-              );
-              await customStatement(
-                'DROP INDEX IF EXISTS workouts_plan_ended_started',
-              );
-              await customStatement(
-                'DROP INDEX IF EXISTS body_weights_timestamp',
-              );
-              await customStatement(
                 'DROP INDEX IF EXISTS plan_exercises_plan_id',
               );
-
-              await m.createIndex(schema.exercisesCategoryId);
-              await m.createIndex(schema.exerciseSetsExerciseTimestamp);
-              await m.createIndex(schema.exerciseSetsWorkoutExercise);
-              await m.createIndex(schema.workoutsPlanEndedStarted);
-              await m.createIndex(schema.workoutsActivePlan);
-              await m.createIndex(schema.bodyWeightsTimestamp);
-              await m.createIndex(schema.planExercisesPlanExercise);
-              await m.createIndex(schema.planExercisesExerciseId);
+              for (final index in [
+                schema.exercisesCategoryId,
+                schema.exerciseSetsExerciseTimestamp,
+                schema.exerciseSetsWorkoutExercise,
+                schema.workoutsPlanEndedStarted,
+                schema.workoutsActivePlan,
+                schema.bodyWeightsTimestamp,
+                schema.planExercisesPlanExercise,
+                schema.planExercisesExerciseId,
+              ]) {
+                await customStatement(
+                  'DROP INDEX IF EXISTS ${index.entityName}',
+                );
+                await m.createIndex(index);
+              }
             },
             from65To66: (m, schema) async {
               await m.addColumn(schema.settings, schema.settings.keepRinging);

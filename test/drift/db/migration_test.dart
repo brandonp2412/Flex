@@ -50,6 +50,53 @@ void main() {
     }
   });
 
+  for (final version in [63, 64]) {
+    test('v$version upgrade repairs pre-existing indexes', () async {
+      final schema = await verifier.schemaAt(version);
+      final raw = schema.rawDatabase;
+      raw.execute(
+        "INSERT INTO exercises (id, name, kind, display_unit) "
+        "VALUES (10, 'Bench Press', 'strength', 'kg')",
+      );
+      raw.execute(
+        'CREATE INDEX IF NOT EXISTS exercises_category_id ON exercises (category_id)',
+      );
+      raw.execute(
+        'CREATE INDEX IF NOT EXISTS exercise_sets_timestamp ON exercise_sets (timestamp)',
+      );
+      raw.execute(
+        'CREATE INDEX IF NOT EXISTS workouts_active_plan ON workouts (plan_id)',
+      );
+      raw.execute(
+        'CREATE INDEX IF NOT EXISTS plan_exercises_plan_exercise ON plan_exercises (plan_id, exercise_id)',
+      );
+      raw.execute(
+        'CREATE INDEX IF NOT EXISTS plan_exercises_exercise_id ON plan_exercises (exercise_id)',
+      );
+      final db = AppDatabase(schema.newConnection());
+      try {
+        await verifier.migrateAndValidate(db, db.schemaVersion);
+        final exercise = await db.exercises.select().getSingle();
+        expect(exercise.id, 10);
+        expect(exercise.name, 'Bench Press');
+        final indexes = await db
+            .customSelect('PRAGMA index_list(plan_exercises)')
+            .get();
+        expect(
+          indexes
+              .singleWhere(
+                (row) =>
+                    row.read<String>('name') == 'plan_exercises_plan_exercise',
+              )
+              .read<int>('unique'),
+          1,
+        );
+      } finally {
+        await db.close();
+      }
+    });
+  }
+
   test('migration from v1 to v2 does not corrupt data', () async {
     final testDate = DateTime(2024, 1, 1);
 
