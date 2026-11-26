@@ -118,7 +118,9 @@ class GraphTile extends StatelessWidget {
           builder: (context, dateFormat, child) => Padding(
             padding: const EdgeInsets.only(top: 3),
             child: Text(
-              dateFormat == 'timeago'
+              !exerciseSet.hasData
+                  ? context.l10n.noDataYet
+                  : dateFormat == 'timeago'
                   ? formatRelativeTime(context, exerciseSet.created)
                   : formatDisplayDate(context, exerciseSet.created, dateFormat),
               style: Theme.of(
@@ -127,13 +129,15 @@ class GraphTile extends StatelessWidget {
             ),
           ),
         ),
-        trailing: Text(
-          trailing,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: colors.onSurface,
-          ),
-        ),
+        trailing: exerciseSet.hasData
+            ? Text(
+                trailing,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurface,
+                ),
+              )
+            : null,
         onTap: () async {
           if (selected.isNotEmpty) {
             onSelect(exerciseSet.selectionKey);

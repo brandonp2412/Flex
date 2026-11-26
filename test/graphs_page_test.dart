@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/graph/graph_tile.dart';
 import 'package:flex/graph/graphs_page.dart';
@@ -28,6 +29,48 @@ Future<void> pumpGraphsPage(
 }
 
 void main() {
+  testWidgets('new exercise appears immediately without a recorded set', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    await harness.database.settings.update().write(
+      const SettingsCompanion(
+        showGlobalProgress: Value(false),
+        peekGraph: Value(true),
+      ),
+    );
+    await pumpGraphsPage(tester, harness, withTabController: true);
+    await tester.tap(find.text('Add exercise').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.bySemanticsLabel('Name'), 'New exercise');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('New exercise'), findsOneWidget);
+    expect(find.text('No data yet'), findsOneWidget);
+    expect(find.byKey(const Key('graphs-peek-preview')), findsNothing);
+    await tester.tap(find.text('New exercise'));
+    await tester.pumpAndSettle();
+    expect(find.text('No data yet'), findsOneWidget);
+    expect(tester.takeException(), null);
+  });
+
+  testWidgets('unrecorded cardio exercise is listed', (tester) async {
+    final harness = await FlexTestHarness.create();
+    await createExerciseDefinition(
+      harness.database,
+      name: 'Fresh run',
+      cardio: true,
+      displayUnit: 'km',
+    );
+    await pumpGraphsPage(tester, harness, withTabController: true);
+    expect(find.text('Fresh run'), findsOneWidget);
+    expect(find.text('No data yet'), findsOneWidget);
+    await tester.tap(find.text('Fresh run'));
+    await tester.pumpAndSettle();
+    expect(find.text('No data yet for Fresh run'), findsOneWidget);
+    expect(tester.takeException(), null);
+  });
+
   testWidgets('GraphsPage lists items', (WidgetTester tester) async {
     final harness = await FlexTestHarness.create();
     await harness.database.settings.update().write(
@@ -189,6 +232,24 @@ void main() {
       await pumpGraphsPage(tester, harness, surfaceSize: size);
 
       const preview = Key('graphs-peek-preview');
+      expect(find.byKey(preview), findsNothing);
+      await insertExerciseSetFixture(
+        harness.database,
+        'Preview press',
+        reps: 9,
+        weight: 55,
+        created: DateTime(2026, 10, 15, 12),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(preview), findsNothing);
+      await insertExerciseSetFixture(
+        harness.database,
+        'Preview press',
+        reps: 9,
+        weight: 60,
+        created: DateTime(2026, 10, 16),
+      );
+      await tester.pumpAndSettle();
       expect(find.byKey(preview), findsOneWidget);
       expect(
         tester.getSize(find.byKey(preview)).height,
@@ -233,6 +294,15 @@ void main() {
       weight: 120,
       created: DateTime(2026, 9, 1),
     );
+    for (final name in ['Bench', 'Squat']) {
+      await insertExerciseSetFixture(
+        harness.database,
+        name,
+        reps: 5,
+        weight: 90,
+        created: DateTime(2026, 8, 31),
+      );
+    }
     await pumpGraphsPage(tester, harness, surfaceSize: const Size(1400, 900));
 
     Future<List<dynamic>> peekFuture() => tester

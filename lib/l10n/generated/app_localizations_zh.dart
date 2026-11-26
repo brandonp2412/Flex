@@ -558,6 +558,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => '运动已存在';
+
+  @override
   String get noDataYet => '暂无数据';
 
   @override
@@ -1147,7 +1150,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get completeSetsForHistory => '完成几组训练，即可在此查看该动作的历史记录。';
 
   @override
-  String get completeSetForFirstGraph => '完成一组训练即可创建第一个动作图表。';
+  String get completeSetForFirstGraph => '添加运动以创建你的第一个图表。';
 
   @override
   String nothingMatchesGraphSearch(String query) {
@@ -2114,6 +2117,9 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   }
 
   @override
+  String get exerciseAlreadyExists => '运动已存在';
+
+  @override
   String get noDataYet => '暂无数据';
 
   @override
@@ -2703,7 +2709,7 @@ class AppLocalizationsZhCn extends AppLocalizationsZh {
   String get completeSetsForHistory => '完成几组训练，即可在此查看该动作的历史记录。';
 
   @override
-  String get completeSetForFirstGraph => '完成一组训练即可创建第一个动作图表。';
+  String get completeSetForFirstGraph => '添加运动以创建你的第一个图表。';
 
   @override
   String nothingMatchesGraphSearch(String query) {
@@ -3670,6 +3676,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
+  String get exerciseAlreadyExists => '運動已存在';
+
+  @override
   String get noDataYet => '暫無資料';
 
   @override
@@ -4259,7 +4268,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get completeSetsForHistory => '完成幾組訓練，即可在此檢視該動作的歷史記錄。';
 
   @override
-  String get completeSetForFirstGraph => '完成一組訓練即可建立第一個動作圖表。';
+  String get completeSetForFirstGraph => '新增運動以建立你的第一個圖表。';
 
   @override
   String nothingMatchesGraphSearch(String query) {

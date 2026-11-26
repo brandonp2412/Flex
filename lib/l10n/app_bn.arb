@@ -746,6 +746,7 @@
       }
     }
   },
+  "exerciseAlreadyExists": "ব্যায়ামটি ইতিমধ্যেই রয়েছে",
   "noDataYet": "এখনো কোনো ডেটা নেই",
   "@noDataYet": {
     "description": "Generic empty state when a graph has no data."
@@ -1514,7 +1515,7 @@
   "@completeSetsForHistory": {
     "description": "Empty guidance for exercise history."
   },
-  "completeSetForFirstGraph": "প্রথম ব্যায়াম গ্রাফ তৈরি করতে একটি সেট সম্পন্ন করুন।",
+  "completeSetForFirstGraph": "প্রথম গ্রাফ তৈরি করতে একটি ব্যায়াম যোগ করুন।",
   "@completeSetForFirstGraph": {
     "description": "Empty guidance when no exercise graphs exist."
   },

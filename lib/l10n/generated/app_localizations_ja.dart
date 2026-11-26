@@ -559,6 +559,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'このエクササイズは既に存在します';
+
+  @override
   String get noDataYet => 'データはまだありません';
 
   @override
@@ -1150,7 +1153,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get completeSetsForHistory => 'いくつかのセットを完了すると、この種目の履歴をここで確認できます。';
 
   @override
-  String get completeSetForFirstGraph => 'セットを完了すると最初の種目グラフを作成できます。';
+  String get completeSetForFirstGraph => '最初のグラフを作成するにはエクササイズを追加してください。';
 
   @override
   String nothingMatchesGraphSearch(String query) {

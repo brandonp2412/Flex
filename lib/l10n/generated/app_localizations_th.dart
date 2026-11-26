@@ -574,6 +574,9 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'มีท่าออกกำลังกายนี้อยู่แล้ว';
+
+  @override
   String get noDataYet => 'ยังไม่มีข้อมูล';
 
   @override
@@ -1177,7 +1180,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get completeSetForFirstGraph =>
-      'ทำหนึ่งเซ็ตให้เสร็จเพื่อสร้างกราฟการออกกำลังกายแรกของคุณ';
+      'เพิ่มท่าออกกำลังกายเพื่อสร้างกราฟแรกของคุณ';
 
   @override
   String nothingMatchesGraphSearch(String query) {

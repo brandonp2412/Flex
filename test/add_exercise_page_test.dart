@@ -1,10 +1,46 @@
 import 'package:flex/graph/add_exercise_page.dart';
+import 'package:flex/database/exercise_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/test_app.dart';
 
 void main() {
+  testWidgets('duplicate name is rejected and can be corrected', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    await createExerciseDefinition(
+      harness.database,
+      name: 'Existing press',
+      cardio: false,
+      displayUnit: 'kg',
+    );
+    final initialCount =
+        (await harness.database.select(harness.database.exercises).get())
+            .length;
+    await harness.pump(tester, const AddExercisePage());
+    for (final name in ['Existing press', ' existing PRESS ']) {
+      await tester.enterText(find.bySemanticsLabel('Name'), name);
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.text('Exercise already exists'), findsOneWidget);
+      expect(find.text('Add exercise'), findsOneWidget);
+      expect(
+        await harness.database.select(harness.database.exercises).get(),
+        hasLength(initialCount),
+      );
+    }
+    await tester.enterText(find.bySemanticsLabel('Name'), 'Another press');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Exercise already exists'), findsNothing);
+    expect(
+      await harness.database.select(harness.database.exercises).get(),
+      hasLength(initialCount + 1),
+    );
+  });
+
   testWidgets('AddExercise', (WidgetTester tester) async {
     final harness = await FlexTestHarness.create();
     await harness.pump(tester, const AddExercisePage());

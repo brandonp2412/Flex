@@ -287,15 +287,21 @@ class GraphsPageState extends State<GraphsPage>
   }
 
   Widget _peekPreview(GraphExerciseSummary summary, String dateFormat) {
-    return SizedBox(
-      key: const Key('graphs-peek-preview'),
-      height: MediaQuery.sizeOf(context).height * 0.15,
-      child: FutureBuilder<List<dynamic>>(
-        future: _peekData(summary),
-        builder: (context, snapshot) => snapshot.data == null
-            ? const SizedBox.shrink()
-            : getPeek(summary, snapshot.data!, dateFormat),
-      ),
+    return FutureBuilder<List<dynamic>>(
+      future: _peekData(summary),
+      builder: (context, snapshot) {
+        final data = snapshot.data;
+        if (snapshot.connectionState != ConnectionState.done ||
+            data == null ||
+            data.length < 2) {
+          return const SizedBox.shrink();
+        }
+        return SizedBox(
+          key: const Key('graphs-peek-preview'),
+          height: MediaQuery.sizeOf(context).height * 0.15,
+          child: getPeek(summary, data, dateFormat),
+        );
+      },
     );
   }
 
@@ -550,8 +556,10 @@ class GraphsPageState extends State<GraphsPage>
         _category == null &&
         showProgress;
     final settings = context.read<Setting>();
-    final showPeekGraph =
-        settings.peekGraph && exerciseSets.firstOrNull != null;
+    final preview = exerciseSets
+        .where((summary) => summary.hasData)
+        .firstOrNull;
+    final showPeekGraph = settings.peekGraph && preview != null;
 
     Widget graphTile(GraphExerciseSummary exerciseSet) => GraphTile(
       selected: _selection,
@@ -619,13 +627,10 @@ class GraphsPageState extends State<GraphsPage>
           SliverToBoxAdapter(
             child: Consumer<Setting>(
               builder: (BuildContext context, Setting settings, Widget? child) {
-                if (!settings.peekGraph || exerciseSets.firstOrNull == null) {
+                if (!settings.peekGraph) {
                   return const SizedBox();
                 }
-                return _peekPreview(
-                  exerciseSets.first,
-                  settings.shortDateFormat,
-                );
+                return _peekPreview(preview, settings.shortDateFormat);
               },
             ),
           ),
@@ -661,8 +666,10 @@ class GraphsPageState extends State<GraphsPage>
     if (showGlobal) itemCount++;
 
     final settings = context.read<Setting>();
-    final showPeekGraph =
-        settings.peekGraph && exerciseSets.firstOrNull != null;
+    final preview = exerciseSets
+        .where((summary) => summary.hasData)
+        .firstOrNull;
+    final showPeekGraph = settings.peekGraph && preview != null;
     if (showPeekGraph) itemCount++;
 
     return ListView.builder(
@@ -733,9 +740,8 @@ class GraphsPageState extends State<GraphsPage>
           return Consumer<Setting>(
             builder: (BuildContext context, Setting settings, Widget? child) {
               if (!settings.peekGraph) return const SizedBox();
-              if (exerciseSets.firstOrNull == null) return const SizedBox();
 
-              return _peekPreview(exerciseSets.first, settings.shortDateFormat);
+              return _peekPreview(preview, settings.shortDateFormat);
             },
           );
         }

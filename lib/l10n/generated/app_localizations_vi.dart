@@ -572,6 +572,9 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'Bài tập đã tồn tại';
+
+  @override
   String get noDataYet => 'Chưa có dữ liệu';
 
   @override
@@ -1177,7 +1180,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get completeSetForFirstGraph =>
-      'Hoàn thành một hiệp để tạo biểu đồ bài tập đầu tiên.';
+      'Thêm bài tập để tạo biểu đồ đầu tiên của bạn.';
 
   @override
   String nothingMatchesGraphSearch(String query) {

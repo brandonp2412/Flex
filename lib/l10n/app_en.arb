@@ -756,6 +756,10 @@
       }
     }
   },
+  "exerciseAlreadyExists": "Exercise already exists",
+  "@exerciseAlreadyExists": {
+    "description": "Validation message for a duplicate exercise name."
+  },
   "noDataYet": "No data yet",
   "@noDataYet": {
     "description": "Generic empty state when a graph has no data."
@@ -1532,7 +1536,7 @@
   "@completeSetsForHistory": {
     "description": "Empty guidance for exercise history."
   },
-  "completeSetForFirstGraph": "Complete a set to create your first exercise graph.",
+  "completeSetForFirstGraph": "Add an exercise to create your first graph.",
   "@completeSetForFirstGraph": {
     "description": "Empty guidance when no exercise graphs exist."
   },

@@ -1182,6 +1182,12 @@ abstract class AppLocalizations {
   /// **'No data yet for {name}'**
   String noDataFor(String name);
 
+  /// Validation message for a duplicate exercise name.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise already exists'**
+  String get exerciseAlreadyExists;
+
   /// Generic empty state when a graph has no data.
   ///
   /// In en, this message translates to:
@@ -2241,7 +2247,7 @@ abstract class AppLocalizations {
   /// Empty guidance when no exercise graphs exist.
   ///
   /// In en, this message translates to:
-  /// **'Complete a set to create your first exercise graph.'**
+  /// **'Add an exercise to create your first graph.'**
   String get completeSetForFirstGraph;
 
   /// Empty graph search guidance.

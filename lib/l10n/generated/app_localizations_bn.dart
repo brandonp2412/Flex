@@ -577,6 +577,9 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'ব্যায়ামটি ইতিমধ্যেই রয়েছে';
+
+  @override
   String get noDataYet => 'এখনো কোনো ডেটা নেই';
 
   @override
@@ -1178,7 +1181,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get completeSetForFirstGraph =>
-      'প্রথম ব্যায়াম গ্রাফ তৈরি করতে একটি সেট সম্পন্ন করুন।';
+      'প্রথম গ্রাফ তৈরি করতে একটি ব্যায়াম যোগ করুন।';
 
   @override
   String nothingMatchesGraphSearch(String query) {

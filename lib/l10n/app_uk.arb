@@ -755,6 +755,7 @@
       }
     }
   },
+  "exerciseAlreadyExists": "Вправа вже існує",
   "noDataYet": "Даних ще немає",
   "@noDataYet": {
     "description": "Generic empty state when a graph has no data."
@@ -1523,7 +1524,7 @@
   "@completeSetsForHistory": {
     "description": "Empty guidance for exercise history."
   },
-  "completeSetForFirstGraph": "Завершіть підхід, щоб створити перший графік вправи.",
+  "completeSetForFirstGraph": "Додайте вправу, щоб створити свій перший графік.",
   "@completeSetForFirstGraph": {
     "description": "Empty guidance when no exercise graphs exist."
   },

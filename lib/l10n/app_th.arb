@@ -746,6 +746,7 @@
       }
     }
   },
+  "exerciseAlreadyExists": "มีท่าออกกำลังกายนี้อยู่แล้ว",
   "noDataYet": "ยังไม่มีข้อมูล",
   "@noDataYet": {
     "description": "Generic empty state when a graph has no data."
@@ -1514,7 +1515,7 @@
   "@completeSetsForHistory": {
     "description": "Empty guidance for exercise history."
   },
-  "completeSetForFirstGraph": "ทำหนึ่งเซ็ตให้เสร็จเพื่อสร้างกราฟการออกกำลังกายแรกของคุณ",
+  "completeSetForFirstGraph": "เพิ่มท่าออกกำลังกายเพื่อสร้างกราฟแรกของคุณ",
   "@completeSetForFirstGraph": {
     "description": "Empty guidance when no exercise graphs exist."
   },

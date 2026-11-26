@@ -578,6 +578,9 @@ class AppLocalizationsUr extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'یہ ورزش پہلے سے موجود ہے';
+
+  @override
   String get noDataYet => 'ابھی کوئی ڈیٹا نہیں';
 
   @override
@@ -1179,7 +1182,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get completeSetForFirstGraph =>
-      'اپنا پہلا ورزش گراف بنانے کے لیے ایک سیٹ مکمل کریں۔';
+      'اپنا پہلا گراف بنانے کے لیے ایک ورزش شامل کریں۔';
 
   @override
   String nothingMatchesGraphSearch(String query) {

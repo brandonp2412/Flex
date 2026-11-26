@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/database/defaults.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/graph/cardio_data.dart';
 import 'package:flex/graph/strength_data.dart';
@@ -21,12 +22,14 @@ class GraphExerciseSummary {
     required this.duration,
     required this.distance,
     required this.created,
+    this.hasData = true,
     this.image,
     this.category,
   }) : normalizedName = name.toLowerCase();
 
   final int? exerciseId;
   final bool bodyWeight;
+  final bool hasData;
   final String name;
   final String normalizedName;
 
@@ -519,7 +522,7 @@ Stream<List<GraphExerciseSummary>> watchGraphs() {
             LIMIT 1
           )
           WHERE exercises.archived = 0
-            AND latest.id IS NOT NULL
+            AND (latest.id IS NOT NULL OR exercises.name NOT IN (${List.filled(defaultExercises.length, "?").join(", ")}))
 
           UNION ALL
 
@@ -544,8 +547,9 @@ Stream<List<GraphExerciseSummary>> watchGraphs() {
             LIMIT 1
           )
 
-          ORDER BY timestamp DESC, name COLLATE NOCASE
+          ORDER BY timestamp DESC NULLS FIRST, name COLLATE NOCASE
         ''',
+        variables: [for (final entry in defaultExercises) Variable(entry.$1)],
         readsFrom: {
           db.exercises,
           db.categories,
@@ -561,6 +565,7 @@ Stream<List<GraphExerciseSummary>> watchGraphs() {
           return GraphExerciseSummary(
             exerciseId: result.readNullable<int>('exercise_id'),
             bodyWeight: result.read<int>('body_weight') != 0,
+            hasData: timestamp != null,
             name: result.read<String>('name'),
             unit: unit,
             cardio: result.read<int>('cardio') != 0,

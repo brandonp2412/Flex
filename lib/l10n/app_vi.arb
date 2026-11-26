@@ -746,6 +746,7 @@
       }
     }
   },
+  "exerciseAlreadyExists": "Bài tập đã tồn tại",
   "noDataYet": "Chưa có dữ liệu",
   "@noDataYet": {
     "description": "Generic empty state when a graph has no data."
@@ -1514,7 +1515,7 @@
   "@completeSetsForHistory": {
     "description": "Empty guidance for exercise history."
   },
-  "completeSetForFirstGraph": "Hoàn thành một hiệp để tạo biểu đồ bài tập đầu tiên.",
+  "completeSetForFirstGraph": "Thêm bài tập để tạo biểu đồ đầu tiên của bạn.",
   "@completeSetForFirstGraph": {
     "description": "Empty guidance when no exercise graphs exist."
   },

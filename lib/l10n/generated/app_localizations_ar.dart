@@ -573,6 +573,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'التمرين موجود بالفعل';
+
+  @override
   String get noDataYet => 'لا توجد بيانات بعد';
 
   @override
@@ -1172,8 +1175,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'أكمل بعض المجموعات لرؤية سجل هذا التمرين هنا.';
 
   @override
-  String get completeSetForFirstGraph =>
-      'أكمل مجموعة لإنشاء أول رسم بياني للتمرين.';
+  String get completeSetForFirstGraph => 'أضف تمرينًا لإنشاء أول رسم بياني لك.';
 
   @override
   String nothingMatchesGraphSearch(String query) {

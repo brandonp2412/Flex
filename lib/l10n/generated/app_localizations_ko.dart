@@ -560,6 +560,9 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => '이미 존재하는 운동입니다';
+
+  @override
   String get noDataYet => '아직 데이터가 없습니다';
 
   @override
@@ -1151,7 +1154,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get completeSetsForHistory => '세트를 몇 개 완료하면 이 운동의 기록을 여기서 볼 수 있습니다.';
 
   @override
-  String get completeSetForFirstGraph => '세트를 완료하면 첫 운동 그래프를 만들 수 있습니다.';
+  String get completeSetForFirstGraph => '첫 그래프를 만들려면 운동을 추가하세요.';
 
   @override
   String nothingMatchesGraphSearch(String query) {

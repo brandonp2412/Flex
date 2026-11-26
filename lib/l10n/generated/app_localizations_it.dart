@@ -576,6 +576,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'L’esercizio esiste già';
+
+  @override
   String get noDataYet => 'Ancora nessun dato';
 
   @override
@@ -1183,7 +1186,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get completeSetForFirstGraph =>
-      'Completa una serie per creare il primo grafico dell’esercizio.';
+      'Aggiungi un esercizio per creare il tuo primo grafico.';
 
   @override
   String nothingMatchesGraphSearch(String query) {

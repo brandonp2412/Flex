@@ -580,6 +580,9 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'Вправа вже існує';
+
+  @override
   String get noDataYet => 'Даних ще немає';
 
   @override
@@ -1196,7 +1199,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get completeSetForFirstGraph =>
-      'Завершіть підхід, щоб створити перший графік вправи.';
+      'Додайте вправу, щоб створити свій перший графік.';
 
   @override
   String nothingMatchesGraphSearch(String query) {

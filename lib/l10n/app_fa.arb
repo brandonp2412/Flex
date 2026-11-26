@@ -746,6 +746,7 @@
       }
     }
   },
+  "exerciseAlreadyExists": "تمرین از قبل وجود دارد",
   "noDataYet": "هنوز داده‌ای وجود ندارد",
   "@noDataYet": {
     "description": "Generic empty state when a graph has no data."
@@ -1514,7 +1515,7 @@
   "@completeSetsForHistory": {
     "description": "Empty guidance for exercise history."
   },
-  "completeSetForFirstGraph": "برای ساخت اولین نمودار تمرین یک ست را کامل کنید.",
+  "completeSetForFirstGraph": "برای ایجاد اولین نمودار، یک تمرین اضافه کنید.",
   "@completeSetForFirstGraph": {
     "description": "Empty guidance when no exercise graphs exist."
   },

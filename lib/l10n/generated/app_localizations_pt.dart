@@ -580,6 +580,9 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'O exercício já existe';
+
+  @override
   String get noDataYet => 'Ainda não há dados';
 
   @override
@@ -1188,7 +1191,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get completeSetForFirstGraph =>
-      'Conclua uma série para criar seu primeiro gráfico de exercício.';
+      'Adiciona um exercício para criar o teu primeiro gráfico.';
 
   @override
   String nothingMatchesGraphSearch(String query) {
@@ -2226,6 +2229,9 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
   }
 
   @override
+  String get exerciseAlreadyExists => 'O exercício já existe';
+
+  @override
   String get noDataYet => 'Ainda não há dados';
 
   @override
@@ -2833,7 +2839,7 @@ class AppLocalizationsPtBr extends AppLocalizationsPt {
 
   @override
   String get completeSetForFirstGraph =>
-      'Conclua uma série para criar seu primeiro gráfico de exercício.';
+      'Adicione um exercício para criar seu primeiro gráfico.';
 
   @override
   String nothingMatchesGraphSearch(String query) {
@@ -3871,6 +3877,9 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
   }
 
   @override
+  String get exerciseAlreadyExists => 'O exercício já existe';
+
+  @override
   String get noDataYet => 'Ainda não há dados';
 
   @override
@@ -4479,7 +4488,7 @@ class AppLocalizationsPtPt extends AppLocalizationsPt {
 
   @override
   String get completeSetForFirstGraph =>
-      'Conclua uma série para criar seu primeiro gráfico de exercício.';
+      'Adiciona um exercício para criar o teu primeiro gráfico.';
 
   @override
   String nothingMatchesGraphSearch(String query) {

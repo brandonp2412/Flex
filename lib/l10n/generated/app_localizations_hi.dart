@@ -575,6 +575,9 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get exerciseAlreadyExists => 'व्यायाम पहले से मौजूद है';
+
+  @override
   String get noDataYet => 'अभी कोई डेटा नहीं';
 
   @override
@@ -1176,7 +1179,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get completeSetForFirstGraph =>
-      'अपना पहला व्यायाम ग्राफ़ बनाने के लिए एक सेट पूरा करें।';
+      'अपना पहला ग्राफ़ बनाने के लिए एक व्यायाम जोड़ें।';
 
   @override
   String nothingMatchesGraphSearch(String query) {

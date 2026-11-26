@@ -26,6 +26,8 @@ class _AddExercisePageState extends State<AddExercisePage>
     with UnsavedChanges<AddExercisePage> {
   final TextEditingController _nameCtrl = TextEditingController();
   bool _cardio = false;
+  bool _saving = false;
+  String? _duplicateName;
 
   late var settings = context.watch<Setting>();
   late String _unit = settings.strengthUnit == 'last-entry'
@@ -63,10 +65,22 @@ class _AddExercisePageState extends State<AddExercisePage>
                   ),
                   textCapitalization: TextCapitalization.sentences,
                   autofocus: true,
-                  onChanged: (_) => markDirty(),
-                  validator: (value) => value?.isNotEmpty == true
-                      ? null
-                      : context.l10n.requiredField,
+                  onChanged: (_) {
+                    markDirty();
+                    if (_duplicateName != null) {
+                      _duplicateName = null;
+                      _key.currentState!.validate();
+                    }
+                  },
+                  validator: (value) {
+                    if (value?.trim().isNotEmpty != true) {
+                      return context.l10n.requiredField;
+                    }
+                    if (value!.trim().toLowerCase() == _duplicateName) {
+                      return context.l10n.exerciseAlreadyExists;
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
@@ -161,22 +175,42 @@ class _AddExercisePageState extends State<AddExercisePage>
   }
 
   Future<void> save() async {
-    if (!_key.currentState!.validate()) return;
+    if (_saving || !_key.currentState!.validate()) return;
 
     if (settings.strengthUnit != 'last-entry' && !_cardio)
       _unit = settings.strengthUnit;
     else if (settings.cardioUnit != 'last-entry' && _cardio)
       _unit = settings.cardioUnit;
 
-    final exercise = await createExerciseDefinition(
-      db,
-      name: _nameCtrl.text,
-      cardio: _cardio,
-      displayUnit: _unit,
-      image: _image,
-    );
-    talker.info('Created exercise definition');
+    final name = _nameCtrl.text.trim();
+    _saving = true;
+    final Exercise? exercise;
+    try {
+      exercise = await db.transaction(() async {
+        final existing = await db.select(db.exercises).get();
+        if (existing.any(
+          (row) => row.name.trim().toLowerCase() == name.toLowerCase(),
+        )) {
+          return null;
+        }
+        return createExerciseDefinition(
+          db,
+          name: name,
+          cardio: _cardio,
+          displayUnit: _unit,
+          image: _image,
+        );
+      });
+    } finally {
+      _saving = false;
+    }
     if (!mounted) return;
+    if (exercise == null) {
+      _duplicateName = name.toLowerCase();
+      _key.currentState!.validate();
+      return;
+    }
+    talker.info('Created exercise definition');
 
     allowPop = true;
     Navigator.pop(context, exercise);
