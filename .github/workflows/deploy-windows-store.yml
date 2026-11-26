@@ -74,6 +74,9 @@ jobs:
         shell: pwsh
         env:
           PRODUCT_ID: ${{ secrets.PRODUCT_ID }}
+          NOTES_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          NOTES_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          NOTES_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
           $packages = @(Get-ChildItem -Path "build/windows/x64/runner/Release" -Filter "*.msix" -File -Recurse)
           if ($packages.Count -ne 1) {
@@ -82,10 +85,12 @@ jobs:
           $package = $packages[0]
           $packageDirectory = $package.Directory.FullName
           Write-Host "Publishing $($package.FullName) to Microsoft Store product $env:PRODUCT_ID"
-          & msstore publish . --inputDirectory $packageDirectory --appId $env:PRODUCT_ID
+          if (-not (Test-Path -LiteralPath "release-notes/current.txt")) { throw "Missing release notes" }
+          & msstore publish . --inputDirectory $packageDirectory --appId $env:PRODUCT_ID --noCommit
           if ($LASTEXITCODE -ne 0) {
             throw "Microsoft Store publish failed with exit code $LASTEXITCODE."
           }
+          ./scripts/publish-store-notes.ps1 -ProductId $env:PRODUCT_ID -NotesFile "release-notes/current.txt"
           & msstore submission status $env:PRODUCT_ID
           if ($LASTEXITCODE -ne 0) {
             throw "Microsoft Store submission status verification failed with exit code $LASTEXITCODE."
