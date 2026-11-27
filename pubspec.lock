@@ -808,7 +808,7 @@ packages:
     source: hosted
     version: "0.1.4+1"
   permission_handler_platform_interface:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: permission_handler_platform_interface
       sha256: ed86a61c190258fdd65de395ea0632822e3415c1faec38eae0c31b479c28a531

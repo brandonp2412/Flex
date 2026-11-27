@@ -66,7 +66,7 @@ jobs:
       - name: Build screenshot fixtures
         run: |
           flutter pub get --enforce-lockfile
-          flutter build web --release --no-wasm-dry-run --no-web-resources-cdn --dart-define=SCREENSHOT_WEB_ANDROID_INSETS=true --target=integration_test/screenshot_test.dart
+          flutter build web --release --no-wasm-dry-run --no-web-resources-cdn --dart-define=SCREENSHOT_WEB_ANDROID_INSETS=true --dart-define=SCREENSHOT_FULL=true --target=integration_test/screenshot_test.dart
 
       - name: Install Chromium
         run: |
@@ -82,6 +82,18 @@ jobs:
           for number in {1..8}; do
             cp "$RUNNER_TEMP/flex-screenshots/desktop/${number}_en-US.png" "fastlane/screenshots/desktop-${number}_en-US.png"
           done
+
+      - name: Capture full screenshot gallery
+        run: |
+          python scripts/capture-screenshots.py --full --web build/web --output "$RUNNER_TEMP/flex-screenshots" --gallery "$RUNNER_TEMP/flex-gallery"
+
+      - name: Upload full screenshot gallery
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: flex-screenshot-gallery
+          path: ${{ runner.temp }}/flex-gallery/
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload browser diagnostics
         if: failure()
@@ -123,6 +135,33 @@ jobs:
           path: fastlane/screenshots/desktop-*_en-US.png
           if-no-files-found: error
           retention-days: 7
+
+  publish-screenshot-gallery:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: generate-screenshots
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: true
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: flex-screenshot-gallery
+          path: ${{ runner.temp }}/flex-gallery
+      - name: Publish current screenshot gallery
+        run: |
+          if [ "$(git ls-remote origin refs/heads/main | cut -f1)" != "$GITHUB_SHA" ]; then
+            echo "A newer main commit exists; skipping stale screenshots."
+            exit 0
+          fi
+          old="$(git ls-remote origin refs/heads/screenshots | cut -f1)"
+          git switch --orphan screenshots
+          cp -a "$RUNNER_TEMP/flex-gallery/." .
+          git add .
+          git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com commit -m "Screenshots for $GITHUB_SHA"
+          git push --force-with-lease="refs/heads/screenshots:$old" origin HEAD:refs/heads/screenshots
 
   version-bump:
     if: ${{ always() && github.event_name == 'workflow_dispatch' && needs.quality-checks.result == 'success' }}

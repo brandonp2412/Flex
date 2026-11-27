@@ -7,105 +7,20 @@ import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flex/main.dart' as app;
 import 'package:flex/main.dart';
 import 'package:flex/plan/edit_plan_page.dart';
-import 'package:flex/plan/plans_page.dart';
-import 'package:flex/sets/history_page.dart';
 import 'package:flex/settings/settings_page.dart';
-import 'package:flex/timer/timer_page.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:provider/provider.dart';
 
+import 'full_screenshot_suite.dart';
+import 'support/screenshot_helpers.dart';
 import 'support/mock_tab_controller.dart';
 import 'support/fixtures.dart';
 import 'support/graph_fixtures.dart';
 import 'test_database.dart';
-
-Future<void> appWrapper(
-  WidgetTester tester, {
-  required String localeIdentifier,
-}) async {
-  if (kIsWeb &&
-      const bool.fromEnvironment('SCREENSHOT_WEB_ANDROID_INSETS') &&
-      tester.view.devicePixelRatio > 1) {
-    final scale = tester.view.devicePixelRatio;
-    final phone = tester.view.physicalSize.width / scale < 600;
-    final padding = FakeViewPadding(
-      top: 24 * scale,
-      bottom: (phone ? 24 : 32) * scale,
-    );
-    tester.view.padding = padding;
-    tester.view.viewPadding = padding;
-  }
-  await app.db.settings.update().write(
-    SettingsCompanion(
-      themeMode: Value(ThemeMode.dark.toString()),
-      explainedPermissions: const Value(true),
-      restTimers: const Value(true),
-      systemColors: const Value(false),
-      curveLines: const Value(true),
-      showImages: const Value(false),
-      showGlobalProgress: const Value(false),
-      localeOverride: Value(localeIdentifier),
-    ),
-  );
-  final settings = await (db.settings.select()..limit(1)).getSingle();
-
-  await tester.pumpWidget(app.appProviders(settings));
-}
-
-BuildContext getBuildContext(WidgetTester tester, String tabBarState) {
-  switch (tabBarState) {
-    case 'PlansPage':
-      return (tester.state(find.byType(PlansPage)) as PlansPageState)
-          .navKey
-          .currentContext!;
-    case 'GraphsPage':
-      return (tester.state(find.byType(GraphsPage)) as GraphsPageState)
-          .navKey
-          .currentContext!;
-    case 'TimerPage':
-      return (tester.state(find.byType(TimerPage)) as TimerPageState).context;
-    case 'HistoryPage':
-      return (tester.state(find.byType(HistoryPage)) as HistoryPageState)
-          .context;
-  }
-
-  return tester.element(find.byType(MaterialApp));
-}
-
-void navigateTo({required BuildContext context, required Widget page}) {
-  Navigator.of(context).push(MaterialPageRoute(builder: (context) => page));
-}
-
-Future<void> generateScreenshot({
-  required IntegrationTestWidgetsFlutterBinding binding,
-  required WidgetTester tester,
-  required String screenshotName,
-  required String tabBarState,
-  required String localeIdentifier,
-  Future<void> Function(BuildContext context)? navigateToPage,
-  bool skipSettle = false,
-}) async {
-  await appWrapper(tester, localeIdentifier: localeIdentifier);
-  await tester.pumpAndSettle();
-
-  await tester.tap(find.byKey(Key(tabBarState)));
-  await tester.pumpAndSettle();
-
-  if (navigateToPage != null) {
-    final navState = getBuildContext(tester, tabBarState);
-    if (navState.mounted) await navigateToPage(navState);
-  }
-
-  skipSettle ? await tester.pump() : await tester.pumpAndSettle();
-  await binding.convertFlutterSurfaceToImage();
-  skipSettle ? await tester.pump() : await tester.pumpAndSettle();
-  await binding.takeScreenshot(screenshotName);
-}
 
 const _only = String.fromEnvironment('SCREENSHOT_ONLY');
 const _screenshotLocales = String.fromEnvironment(
@@ -153,6 +68,12 @@ List<MapEntry<String, String>> _requestedScreenshotLocales() =>
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   late AppDatabase database;
+  final previousReporter = reportTestException;
+  reportTestException = (details, description) {
+    previousReporter(details, description);
+    (binding.reportData ??= {})['exception-$description'] = details.exception
+        .toString();
+  };
 
   testWidgets('Prepare screenshot fixtures', (tester) async {
     await tester.runAsync(() async {
@@ -163,6 +84,7 @@ void main() {
       IntegrationTestWidgetsFlutterBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(app.androidChannel, (message) => null);
 
+      await app.db.delete(app.db.bodyWeights).go();
       await app.db.delete(app.db.exerciseSets).go();
       await app.db.delete(app.db.workouts).go();
       await app.db.delete(app.db.planExercises).go();
@@ -186,6 +108,14 @@ void main() {
   tearDownAll(() async {
     await database.close();
   });
+
+  final fullGallery =
+      const bool.fromEnvironment('SCREENSHOT_FULL') &&
+      (!kIsWeb || Uri.base.queryParameters['gallery'] == 'full');
+  if (fullGallery) {
+    registerFullScreenshotSuite(binding);
+    return;
+  }
 
   for (final screenshotLocale in _requestedScreenshotLocales()) {
     final storeLocale = screenshotLocale.key;

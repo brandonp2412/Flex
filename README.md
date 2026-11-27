@@ -35,6 +35,8 @@ A private, offline-first workout tracker for logging gym sessions and building s
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6_en-US.png" alt="Flex history screen listing recorded exercise sets and weights" width="360" />
 </p>
 
+[View all screenshots — phone, tablets and desktop](https://github.com/brandonp2412/Flex/tree/screenshots)
+
 ## Build from source
 
 Flex is open source and built with Flutter.
