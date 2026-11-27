@@ -1,3 +1,4 @@
+import 'package:flex/duration_input.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_confirmation.dart';
@@ -31,8 +32,7 @@ class ExerciseEditorPage extends StatefulWidget {
 class _ExerciseEditorPageState extends State<ExerciseEditorPage>
     with UnsavedChanges<ExerciseEditorPage> {
   late final name = TextEditingController(text: widget.name);
-  final minutes = TextEditingController();
-  final seconds = TextEditingController();
+  final rest = DurationInput();
   final key = GlobalKey<FormState>();
   bool? cardio;
   int? _exerciseId;
@@ -93,10 +93,10 @@ class _ExerciseEditorPageState extends State<ExerciseEditorPage>
               Row(
                 children: [
                   for (final (controller, label) in [
-                    (minutes, l10n.restMinutes),
-                    (seconds, l10n.restSeconds),
+                    (rest.minutes, l10n.restMinutes),
+                    (rest.seconds, l10n.restSeconds),
                   ]) ...[
-                    if (controller == seconds) const SizedBox(width: 8),
+                    if (controller == rest.seconds) const SizedBox(width: 8),
                     Expanded(
                       child: WorkoutNumberField(
                         controller: controller,
@@ -182,8 +182,7 @@ class _ExerciseEditorPageState extends State<ExerciseEditorPage>
   @override
   void dispose() {
     name.dispose();
-    minutes.dispose();
-    seconds.dispose();
+    rest.dispose();
     super.dispose();
   }
 
@@ -209,11 +208,7 @@ class _ExerciseEditorPageState extends State<ExerciseEditorPage>
         unit = exercise.displayUnit;
         category = categoryName;
         if (exercise.defaultRestDurationMs != null) {
-          final duration = Duration(
-            milliseconds: exercise.defaultRestDurationMs!,
-          );
-          minutes.text = duration.inMinutes.toString();
-          seconds.text = (duration.inSeconds % 60).toString();
+          rest.fill(Duration(milliseconds: exercise.defaultRestDurationMs!));
         }
       });
     });
@@ -271,8 +266,6 @@ class _ExerciseEditorPageState extends State<ExerciseEditorPage>
       );
       if (!confirmed) return;
     }
-    final min = int.tryParse(minutes.text) ?? 0;
-    final sec = int.tryParse(seconds.text) ?? 0;
     final exerciseId =
         _exerciseId ?? (await getExerciseByName(db, widget.name!))?.id;
     if (exerciseId != null && cardio != null && unit != null) {
@@ -282,9 +275,7 @@ class _ExerciseEditorPageState extends State<ExerciseEditorPage>
         name: name.text.isEmpty ? widget.name! : name.text,
         cardio: cardio!,
         displayUnit: unit!,
-        defaultRestDurationMs: min > 0 || sec > 0
-            ? Duration(minutes: min, seconds: sec).inMilliseconds
-            : null,
+        defaultRestDurationMs: rest.positiveMilliseconds,
         image: image,
         category: category,
       );

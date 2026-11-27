@@ -621,6 +621,82 @@ void main() {
     await expectSameIds(weightGt: 200);
   });
 
+  test(
+    'ID-only queries ignore page limits and share all date and identity filters',
+    () async {
+      final id = await addExercise(
+        name: 'Filtered exercise',
+        unit: 'kg',
+        cardio: false,
+      );
+      final now = DateTime(2026, 10, 20);
+      final saved = [
+        for (var i = 0; i < 4; i++)
+          await insertExerciseSet(
+            database,
+            exerciseSet: draft(
+              name: 'Filtered exercise',
+              unit: 'kg',
+              created: now.add(Duration(hours: i)),
+            ),
+            exerciseId: id,
+          ),
+      ];
+      final query = ExerciseSetQuery(
+        database,
+        exerciseId: id,
+        startDate: now.add(const Duration(hours: 1)),
+        endDateExclusive: now.add(const Duration(hours: 3)),
+        ids: saved.map((row) => row.id),
+        limit: 1,
+      );
+      expect(await query.get(), hasLength(1));
+      expect((await query.getIds()).toSet(), {saved[1].id, saved[2].id});
+    },
+  );
+
+  test(
+    'weight filters use the same display unit as non-weight strength rows',
+    () async {
+      final id = await addExercise(
+        name: 'Calorie strength',
+        unit: 'kcal',
+        cardio: false,
+      );
+      final set = await insertExerciseSet(
+        database,
+        exerciseSet: draft(
+          name: 'Calorie strength',
+          unit: 'kcal',
+          weight: 100,
+          created: DateTime(2026, 10, 20),
+        ),
+        exerciseId: id,
+      );
+      await database.settings.update().write(
+        const SettingsCompanion(strengthUnit: Value('lb')),
+      );
+      final rows = await ExerciseSetQuery(
+        database,
+        exerciseId: id,
+        weightGt: 150,
+      ).get();
+      expect(rows, isEmpty);
+      expect(
+        await ExerciseSetQuery(
+          database,
+          exerciseId: id,
+          weightLt: 150,
+        ).getIds(),
+        [set.id],
+      );
+      expect(
+        (await ExerciseSetQuery(database, exerciseId: id).get()).single.weight,
+        100,
+      );
+    },
+  );
+
   test('history ordering uses the timestamp index', () async {
     final queryPlan = await database.customSelect('''
       EXPLAIN QUERY PLAN

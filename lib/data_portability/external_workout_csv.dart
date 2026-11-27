@@ -135,10 +135,12 @@ List<ImportedSet> _parse(
               durationMs: seconds == null ? null : (seconds * 1000).round(),
               distanceMetres: distance == null
                   ? null
-                  : distance *
-                        (distanceUnit == 'mi' || distanceUnit == 'mile'
-                            ? 1609.344
-                            : 1000),
+                  : distanceMetres(
+                      distanceUnit == 'mi' || distanceUnit == 'mile'
+                          ? 'mi'
+                          : 'km',
+                      distance,
+                    ),
               notes: _note(row.get('notes'), ''),
             ),
           );

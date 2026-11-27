@@ -462,8 +462,7 @@ class _StartPlanPageState extends State<StartPlanPage>
     final difference = DateTime.now().difference(_lastSavedAt!);
 
     if (_cardio && settings.durationEstimation) {
-      _input.minutes.text = difference.inMinutes.toString();
-      _input.seconds.text = (difference.inSeconds % 60).toString();
+      _input.durationInput.fill(difference);
     }
   }
 

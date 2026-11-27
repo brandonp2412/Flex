@@ -1,3 +1,4 @@
+import 'package:flex/duration_input.dart';
 import 'package:flex/audio/safe_audio_player.dart';
 import 'package:flex/database/database.dart';
 import 'package:flutter/foundation.dart';
@@ -9,24 +10,20 @@ class SettingsInputs {
       warmupSets = TextEditingController(
         text: (settings.warmupSets ?? 0).toString(),
       ),
-      minutes = TextEditingController(
-        text: Duration(
-          milliseconds: settings.timerDuration,
-        ).inMinutes.toString(),
-      ),
-      seconds = TextEditingController(
-        text: (Duration(milliseconds: settings.timerDuration).inSeconds % 60)
-            .toString(),
+      rest = DurationInput(
+        initial: Duration(milliseconds: settings.timerDuration),
       );
 
-  final TextEditingController maxSets, warmupSets, minutes, seconds;
+  final TextEditingController maxSets, warmupSets;
+  final DurationInput rest;
   SafeAudioPlayer? _player;
   SafeAudioPlayer get player => _player ??= SafeAudioPlayer(enabled: !kIsWeb);
 
   void dispose() {
-    for (final controller in [maxSets, warmupSets, minutes, seconds]) {
+    for (final controller in [maxSets, warmupSets]) {
       controller.dispose();
     }
+    rest.dispose();
     _player?.dispose();
   }
 }

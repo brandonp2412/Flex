@@ -287,16 +287,12 @@ Future<List<List<ExerciseSetView>>> _exerciseBuckets({
   final sets = await ExerciseSetQuery(
     db,
     exerciseName: name,
+    cardio: cardio,
     startDate: start,
     endDateExclusive: end,
     order: OrderingMode.asc,
   ).get();
-  return _groupPeriods(
-    sets.where((set) => set.cardio == cardio),
-    (set) => set.created,
-    period,
-    limit,
-  );
+  return _groupPeriods(sets, (set) => set.created, period, limit);
 }
 
 Future<List<StrengthData>> getStrengthData({
@@ -549,11 +545,8 @@ Future<List<ExerciseSetView>> getBodyWeightGraphHistory({
       .map(
         (row) => ExerciseSetView(
           id: row.id,
-          bodyWeight: 0,
           cardio: false,
           created: row.timestamp.toLocal(),
-          distance: 0,
-          duration: 0,
           image: row.photo,
           name: 'Weight',
           reps: 1,

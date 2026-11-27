@@ -1,3 +1,4 @@
+import 'package:flex/duration_input.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flex/database/exercise_set_view.dart';
 import 'package:flex/l10n/l10n.dart';
@@ -12,11 +13,13 @@ class WorkoutInput {
     : reps = TextEditingController(text: session ? '0.0' : ''),
       weight = TextEditingController(text: session ? '0.0' : ''),
       distance = TextEditingController(text: session ? '0.0' : ''),
-      minutes = TextEditingController(text: session ? '0.0' : ''),
-      seconds = TextEditingController(text: session ? '0.0' : ''),
+      durationInput = DurationInput(empty: session ? '0.0' : ''),
       incline = TextEditingController(text: session ? '0' : '');
 
-  final TextEditingController reps, weight, distance, minutes, seconds, incline;
+  final TextEditingController reps, weight, distance, incline;
+  final DurationInput durationInput;
+  TextEditingController get minutes => durationInput.minutes;
+  TextEditingController get seconds => durationInput.seconds;
 
   Iterable<TextEditingController> get controllers => [
     reps,
@@ -45,17 +48,16 @@ class WorkoutInput {
     if (!preserveZeroFields || set.distance != 0)
       distance.text = toString(set.distance);
     if (!preserveZeroFields || set.duration != 0) {
-      minutes.text = set.duration.floor().toString();
-      seconds.text = ((set.duration * 60) % 60).floor().toString();
+      durationInput.fill(
+        Duration(milliseconds: (set.duration * 60000).round()),
+      );
     }
     if (!preserveZeroFields || (set.incline != null && set.incline != 0)) {
       incline.text = set.incline == null ? '0' : toString(set.incline!);
     }
   }
 
-  double get duration =>
-      (int.tryParse(seconds.text) ?? 0) / 60 +
-      (int.tryParse(minutes.text) ?? 0);
+  double get duration => durationInput.value.inSeconds / 60;
 
   ExerciseSetView apply(BuildContext context, ExerciseSetView original) =>
       snapshot(context)(original);
@@ -67,10 +69,7 @@ class WorkoutInput {
     final parsedReps = parseDisplayNumber(context, reps.text);
     final parsedWeight = parseDisplayNumber(context, weight.text);
     final parsedDistance = parseDisplayNumber(context, distance.text);
-    final parsedDuration =
-        partial && seconds.text.isEmpty && minutes.text.isEmpty
-        ? null
-        : duration;
+    final parsedDuration = partial && durationInput.isEmpty ? null : duration;
     final parsedIncline = partial && incline.text.isEmpty
         ? const Value<double?>.absent()
         : Value(parseDisplayNumber(context, incline.text));

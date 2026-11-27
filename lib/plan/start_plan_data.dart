@@ -109,15 +109,7 @@ Stream<StartPlanData> watchStartPlanData(
       categories[exercise.id] = category;
       final set = row.readTableOrNull(database.exerciseSets);
       if (set == null) continue;
-      final view = exerciseSetView(
-        set,
-        exercise,
-        category: category,
-        planId: row.readTableOrNull(database.workouts)?.planId,
-        strengthUnit:
-            row.readTableOrNull(database.settings)?.strengthUnit ??
-            'last-entry',
-      );
+      final view = exerciseSetView(database, row);
       if (set.id == row.read(defaultId)) defaults[exercise.id] = view;
       if (set.workoutId == workout.id)
         sets.putIfAbsent(exercise.id, () => []).add(view);

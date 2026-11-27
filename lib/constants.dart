@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/measurement_units.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -143,5 +144,4 @@ List<String> positiveReinforcementMessages(AppLocalizations l10n) => [
   l10n.recordEncouragement29,
 ];
 
-bool isWeightUnit(String? unit) =>
-    unit == 'kg' || unit == 'lb' || unit == 'stone';
+bool isWeightUnit(String? unit) => weightUnitFactors.containsKey(unit);

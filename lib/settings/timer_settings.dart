@@ -1,3 +1,4 @@
+import 'package:flex/duration_input.dart';
 import 'package:flex/settings/setting_toggle.dart';
 
 import 'package:drift/drift.dart' hide Column;
@@ -9,7 +10,6 @@ import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
 import 'package:flex/settings/progress_position_setting.dart';
 import 'package:flex/timer/timer_state.dart';
-import 'package:flex/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -17,8 +17,7 @@ import 'package:provider/provider.dart';
 List<Widget> getTimerSettings(
   String term,
   Setting settings,
-  TextEditingController minCtrl,
-  TextEditingController secCtrl,
+  DurationInput rest,
   SafeAudioPlayer player,
   BuildContext context,
 ) {
@@ -125,36 +124,13 @@ List<Widget> getTimerSettings(
                 ],
               ),
               const SizedBox(height: 16),
-              timerDurationFields(
+              rest.settingsFields(
                 context,
-                minCtrl,
-                secCtrl,
                 minutesLabel: l10n.restMinutes,
                 gap: 8,
-                onMinutes: (minutes) => db.settings.update().write(
+                onChanged: (duration) => db.settings.update().write(
                   SettingsCompanion(
-                    timerDuration: Value(
-                      Duration(
-                        minutes: minutes,
-                        seconds:
-                            Duration(
-                              milliseconds: settings.timerDuration,
-                            ).inSeconds %
-                            60,
-                      ).inMilliseconds,
-                    ),
-                  ),
-                ),
-                onSeconds: (seconds) => db.settings.update().write(
-                  SettingsCompanion(
-                    timerDuration: Value(
-                      Duration(
-                        minutes: Duration(
-                          milliseconds: settings.timerDuration,
-                        ).inMinutes,
-                        seconds: seconds,
-                      ).inMilliseconds,
-                    ),
+                    timerDuration: Value(duration.inMilliseconds),
                   ),
                 ),
               ),
@@ -204,35 +180,4 @@ List<Widget> getTimerSettings(
         ),
       ),
   ];
-}
-
-Widget timerDurationFields(
-  BuildContext context,
-  TextEditingController minutes,
-  TextEditingController seconds, {
-  required String minutesLabel,
-  required double gap,
-  required ValueChanged<int> onMinutes,
-  required ValueChanged<int> onSeconds,
-}) {
-  Widget field(
-    TextEditingController controller,
-    String label,
-    ValueChanged<int> onChanged,
-  ) => Expanded(
-    child: TextField(
-      decoration: InputDecoration(labelText: label),
-      controller: controller,
-      keyboardType: TextInputType.number,
-      onTap: () => selectAll(controller),
-      onChanged: (value) => onChanged(int.tryParse(value) ?? 0),
-    ),
-  );
-  return Row(
-    children: [
-      field(minutes, minutesLabel, onMinutes),
-      SizedBox(width: gap),
-      field(seconds, context.l10n.secondsLabel, onSeconds),
-    ],
-  );
 }

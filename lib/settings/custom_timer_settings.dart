@@ -1,12 +1,10 @@
-import 'dart:async';
-
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flutter/material.dart';
 
-import 'package:flex/settings/timer_settings.dart';
+import 'package:flex/duration_input.dart';
 
 class CustomTimerSettings extends StatefulWidget {
   const CustomTimerSettings({super.key});
@@ -17,8 +15,7 @@ class CustomTimerSettings extends StatefulWidget {
 
 class _CustomTimerSettingsState extends State<CustomTimerSettings> {
   List<Exercise> _customExercises = [];
-  final Map<String, TextEditingController> _minuteFields = {};
-  final Map<String, TextEditingController> _secondFields = {};
+  final _fields = <int, DurationInput>{};
 
   @override
   void initState() {
@@ -41,55 +38,29 @@ class _CustomTimerSettingsState extends State<CustomTimerSettings> {
     setState(() {
       _customExercises = exercises;
 
-      for (final result in exercises) {
-        final exerciseName = result.name;
-        final restMs = result.defaultRestDurationMs;
-        if (restMs != null) {
-          final duration = Duration(milliseconds: restMs);
-          _minuteFields[exerciseName] = TextEditingController(
-            text: duration.inMinutes.toString(),
-          );
-          _secondFields[exerciseName] = TextEditingController(
-            text: (duration.inSeconds % 60).toString(),
-          );
-        }
+      for (final exercise in exercises) {
+        _fields[exercise.id] = DurationInput(
+          initial: Duration(milliseconds: exercise.defaultRestDurationMs!),
+        );
       }
     });
   }
 
   Future<void> _updateExerciseRestTime(
-    String exerciseName,
-    int? minutes,
-    int? seconds,
+    int exerciseId,
+    Duration duration,
   ) async {
-    Duration? duration;
-    final mins = minutes ?? 0;
-    final secs = seconds ?? 0;
-
-    if (mins > 0 || secs > 0) {
-      duration = Duration(minutes: mins, seconds: secs);
-    }
-
+    final durationMs = duration > Duration.zero
+        ? duration.inMilliseconds
+        : null;
     await (db.exercises.update()
-          ..where((exercise) => exercise.name.equals(exerciseName)))
-        .write(
-          ExercisesCompanion(
-            defaultRestDurationMs: Value(duration?.inMilliseconds),
-          ),
-        );
-
-    if (!mounted) return;
-    if (duration == null) {
-      _minuteFields.remove(exerciseName)?.dispose();
-      _secondFields.remove(exerciseName)?.dispose();
-      setState(() {
-        _customExercises.removeWhere((e) => e.name == exerciseName);
-      });
-    }
+          ..where((exercise) => exercise.id.equals(exerciseId)))
+        .write(ExercisesCompanion(defaultRestDurationMs: Value(durationMs)));
+    if (!mounted || durationMs != null) return;
+    final input = _fields.remove(exerciseId);
+    setState(() => _customExercises.removeWhere((e) => e.id == exerciseId));
+    WidgetsBinding.instance.addPostFrameCallback((_) => input?.dispose());
   }
-
-  Future<void> _removeCustomTimer(String exerciseName) =>
-      _updateExerciseRestTime(exerciseName, null, null);
 
   Widget _buildPerExerciseSection() {
     return Padding(
@@ -121,12 +92,8 @@ class _CustomTimerSettingsState extends State<CustomTimerSettings> {
           ),
           const SizedBox(height: 16),
           ..._customExercises.map((exercise) {
-            final exerciseName = exercise.name;
-            if (_minuteFields[exerciseName] == null ||
-                _secondFields[exerciseName] == null)
-              return const SizedBox();
-            final minController = _minuteFields[exerciseName]!;
-            final secController = _secondFields[exerciseName]!;
+            final fields = _fields[exercise.id];
+            if (fields == null) return const SizedBox();
 
             return Container(
               decoration: BoxDecoration(
@@ -147,34 +114,27 @@ class _CustomTimerSettingsState extends State<CustomTimerSettings> {
                       children: [
                         Expanded(
                           child: Text(
-                            exerciseName,
+                            exercise.name,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete_outline),
-                          onPressed: () => _removeCustomTimer(exerciseName),
+                          onPressed: () => _updateExerciseRestTime(
+                            exercise.id,
+                            Duration.zero,
+                          ),
                           tooltip: context.l10n.removeCustomTimer,
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    timerDurationFields(
+                    fields.settingsFields(
                       context,
-                      minController,
-                      secController,
                       minutesLabel: context.l10n.minutesLabel,
                       gap: 12,
-                      onMinutes: (minutes) => _updateExerciseRestTime(
-                        exerciseName,
-                        minutes,
-                        int.tryParse(secController.text) ?? 0,
-                      ),
-                      onSeconds: (seconds) => _updateExerciseRestTime(
-                        exerciseName,
-                        int.tryParse(minController.text) ?? 0,
-                        seconds,
-                      ),
+                      onChanged: (duration) =>
+                          _updateExerciseRestTime(exercise.id, duration),
                     ),
                   ],
                 ),
@@ -193,13 +153,9 @@ class _CustomTimerSettingsState extends State<CustomTimerSettings> {
 
   @override
   void dispose() {
-    for (final controller in _minuteFields.values) {
-      controller.dispose();
+    for (final fields in _fields.values) {
+      fields.dispose();
     }
-    for (final controller in _secondFields.values) {
-      controller.dispose();
-    }
-
     super.dispose();
   }
 }

@@ -159,6 +159,27 @@ void main() {
     expect(find.text('Default graph metric'), findsOneWidget);
   });
 
+  testWidgets('Rest duration retains rapid edits to both fields', (
+    tester,
+  ) async {
+    final harness = await render(tester);
+    await tester.enterText(find.bySemanticsLabel('Search...'), 'Rest minutes');
+    await tester.pumpAndSettle();
+    final fields = find.byType(TextField);
+    final minutes = find.byWidgetPredicate(
+      (w) => w is TextField && w.decoration?.labelText == 'Rest minutes',
+    );
+    final seconds = find.byWidgetPredicate(
+      (w) => w is TextField && w.decoration?.labelText == 'Seconds',
+    );
+    expect(fields, findsWidgets);
+    await tester.enterText(minutes, '2');
+    await tester.enterText(seconds, '17');
+    await tester.pumpAndSettle();
+    final settings = await harness.database.settings.select().getSingle();
+    expect(settings.timerDuration, 137000);
+  });
+
   testWidgets('Plan warmup setting displays an actual zero', (
     WidgetTester tester,
   ) async {

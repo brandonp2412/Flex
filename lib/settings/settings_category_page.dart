@@ -49,8 +49,7 @@ List<Widget> settingsItems(
               ...getTimerSettings(
                 term,
                 settings,
-                inputs.minutes,
-                inputs.seconds,
+                inputs.rest,
                 inputs.player,
                 context,
               ),

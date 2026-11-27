@@ -1,4 +1,3 @@
-import 'package:flex/database/exercise_set_repository.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
@@ -7,27 +6,6 @@ import 'package:flex/measurement_units.dart';
 
 export 'package:flex/measurement_units.dart';
 
-/// Converts a stored distance in metres to the exercise display unit.
-double displayDistance(String unit, double? distanceMetres) {
-  if (distanceMetres == null) return 0;
-  return switch (unit) {
-    'km' => distanceMetres / 1000,
-    'mi' => distanceMetres / 1609.344,
-    _ => distanceMetres,
-  };
-}
-
-/// Converts a displayed distance to metres.
-double? distanceMetres(String unit, double value) {
-  return switch (unit) {
-    'm' => value,
-    'km' => value * 1000,
-    'mi' => value * 1609.344,
-    'kcal' => value,
-    _ => null,
-  };
-}
-
 double? storedExerciseLoad(ExerciseSetView exerciseSet) {
   if (isWeightUnit(exerciseSet.unit)) {
     return loadKg(exerciseSet.unit, exerciseSet.weight);
@@ -35,28 +13,11 @@ double? storedExerciseLoad(ExerciseSetView exerciseSet) {
   return exerciseSet.cardio ? null : exerciseSet.weight;
 }
 
-ExerciseSetView _toExerciseSetView(AppDatabase database, TypedResult row) {
+ExerciseSetView exerciseSetView(AppDatabase database, TypedResult row) {
   final set = row.readTable(database.exerciseSets);
   final exercise = row.readTable(database.exercises);
-  final category = row.readTableOrNull(database.categories);
-  final workout = row.readTableOrNull(database.workouts);
-  return exerciseSetView(
-    set,
-    exercise,
-    category: category?.name,
-    planId: workout?.planId,
-    strengthUnit:
-        row.readTableOrNull(database.settings)?.strengthUnit ?? 'last-entry',
-  );
-}
-
-ExerciseSetView exerciseSetView(
-  ExerciseSet set,
-  Exercise exercise, {
-  String? category,
-  int? planId,
-  String strengthUnit = 'last-entry',
-}) {
+  final strengthUnit =
+      row.readTableOrNull(database.settings)?.strengthUnit ?? 'last-entry';
   final unit =
       exercise.kind == 'strength' &&
           isWeightUnit(exercise.displayUnit) &&
@@ -68,7 +29,7 @@ ExerciseSetView exerciseSetView(
     id: set.id,
     bodyWeight: displayLoad(unit, set.bodyWeightKg),
     cardio: exercise.kind == 'cardio',
-    category: category,
+    category: row.readTableOrNull(database.categories)?.name,
     created: set.timestamp.toLocal(),
     distance: displayDistance(unit, set.distanceMetres),
     duration: (set.durationMs ?? 0) / 60000,
@@ -76,48 +37,12 @@ ExerciseSetView exerciseSetView(
     incline: set.incline,
     name: exercise.name,
     notes: set.notes,
-    planId: planId,
+    planId: row.readTableOrNull(database.workouts)?.planId,
     reps: set.reps ?? 0,
     restMs: exercise.defaultRestDurationMs,
     unit: unit,
     weight: displayLoad(unit, set.loadKg),
   );
-}
-
-JoinedSelectStatement<HasResultSet, dynamic> _exerciseSetQuery(
-  AppDatabase database, {
-  OrderingMode order = OrderingMode.desc,
-  bool idsOnly = false,
-}) {
-  final sets = database.exerciseSets;
-  final joins = [
-    leftOuterJoin(database.settings, const Constant(true)),
-    innerJoin(
-      database.exercises,
-      database.exercises.id.equalsExp(sets.exerciseId),
-    ),
-    leftOuterJoin(
-      database.categories,
-      database.categories.id.equalsExp(database.exercises.categoryId),
-    ),
-    if (!idsOnly)
-      leftOuterJoin(
-        database.workouts,
-        database.workouts.id.equalsExp(sets.workoutId),
-      ),
-  ];
-  final query = idsOnly
-      ? database.selectOnly(sets).join(joins)
-      : database.select(sets).join(joins);
-  if (idsOnly) {
-    query.addColumns([sets.id]);
-  } else {
-    query.orderBy([
-      OrderingTerm(expression: sets.timestamp, mode: order),
-      OrderingTerm(expression: sets.id, mode: order),
-    ]);
-  }
-  return query;
 }
 
 class ExerciseSetQuery {
@@ -153,11 +78,47 @@ class ExerciseSetQuery {
   final OrderingMode order;
 
   JoinedSelectStatement<HasResultSet, dynamic> _query({bool idsOnly = false}) {
-    final query = _exerciseSetQuery(database, idsOnly: idsOnly, order: order);
     final sets = database.exerciseSets;
     final exercises = database.exercises;
-    for (final term
-        in search.toLowerCase().split(' ').where((term) => term.isNotEmpty)) {
+    final terms = search
+        .toLowerCase()
+        .split(' ')
+        .where((term) => term.isNotEmpty)
+        .toList();
+    final filterWeight = weightGt != null || weightLt != null;
+    final filterReps = repsGt != null || repsLt != null;
+    final joins = [
+      if (!idsOnly || filterWeight)
+        leftOuterJoin(database.settings, const Constant(true)),
+      if (!idsOnly ||
+          terms.isNotEmpty ||
+          category != null ||
+          exerciseName != null ||
+          cardio != null ||
+          filterWeight ||
+          filterReps)
+        innerJoin(exercises, exercises.id.equalsExp(sets.exerciseId)),
+      if (!idsOnly || category != null)
+        leftOuterJoin(
+          database.categories,
+          database.categories.id.equalsExp(exercises.categoryId),
+        ),
+      if (!idsOnly)
+        leftOuterJoin(
+          database.workouts,
+          database.workouts.id.equalsExp(sets.workoutId),
+        ),
+    ];
+    final query = idsOnly
+        ? (database.selectOnly(sets)..addColumns([sets.id])).join(joins)
+        : database.select(sets).join(joins);
+    if (!idsOnly) {
+      query.orderBy([
+        OrderingTerm(expression: sets.timestamp, mode: order),
+        OrderingTerm(expression: sets.id, mode: order),
+      ]);
+    }
+    for (final term in terms) {
       query.where(exercises.name.lower().contains(term));
     }
     if (category != null)
@@ -179,78 +140,59 @@ class ExerciseSetQuery {
 
     // History's numeric filters apply to strength sets only, in displayed units.
     final isCardio = exercises.kind.equals('cardio');
-    final reps = ifNull(sets.reps, const Constant(0.0));
-    final load = ifNull(sets.loadKg, const Constant(0.0));
-    final preferredUnit = ifNull(
-      database.settings.strengthUnit,
-      const Constant('last-entry'),
-    );
-    final unit = exercises.kind.caseMatch<String>(
-      when: {
-        const Constant('strength'): preferredUnit.caseMatch<String>(
-          when: {const Constant('last-entry'): exercises.displayUnit},
-          orElse: preferredUnit,
-        ),
-      },
-      orElse: exercises.displayUnit,
-    );
-    final weight = unit.caseMatch<double>(
-      when: {
-        const Constant('lb'): load / const Constant(0.45359237),
-        const Constant('stone'): load / const Constant(6.35029318),
-      },
-      orElse: load,
-    );
-    if (repsGt != null) query.where(isCardio | reps.isBiggerThanValue(repsGt!));
-    if (repsLt != null)
-      query.where(isCardio | reps.isSmallerThanValue(repsLt!));
-    if (weightGt != null)
-      query.where(isCardio | weight.isBiggerThanValue(weightGt!));
-    if (weightLt != null)
-      query.where(isCardio | weight.isSmallerThanValue(weightLt!));
+    if (filterReps) {
+      final reps = ifNull(sets.reps, const Constant(0.0));
+      if (repsGt != null)
+        query.where(isCardio | reps.isBiggerThanValue(repsGt!));
+      if (repsLt != null)
+        query.where(isCardio | reps.isSmallerThanValue(repsLt!));
+    }
+    if (filterWeight) {
+      final load = ifNull(sets.loadKg, const Constant(0.0));
+      final preferredUnit = ifNull(
+        database.settings.strengthUnit,
+        const Constant('last-entry'),
+      );
+      final unit = CaseWhenExpression<String>(
+        cases: [
+          CaseWhen(
+            exercises.kind.equals('strength') &
+                exercises.displayUnit.isIn(weightUnitFactors.keys) &
+                preferredUnit.isNotValue('last-entry'),
+            then: preferredUnit,
+          ),
+        ],
+        orElse: exercises.displayUnit,
+      );
+      final weight = unit.caseMatch<double>(
+        when: {
+          for (final entry in weightUnitFactors.entries)
+            Constant(entry.key): load / Constant(entry.value),
+        },
+        orElse: load,
+      );
+      if (weightGt != null)
+        query.where(isCardio | weight.isBiggerThanValue(weightGt!));
+      if (weightLt != null)
+        query.where(isCardio | weight.isSmallerThanValue(weightLt!));
+    }
     if (!idsOnly && limit != null) query.limit(limit!);
     return query;
   }
 
-  List<ExerciseSetView> _project(List<TypedResult> rows) => [
-    for (final row in rows) _toExerciseSetView(database, row),
-  ];
-
-  Future<List<ExerciseSetView>> get() async => _project(await _query().get());
-
-  Stream<List<ExerciseSetView>> watch() => _query().watch().map(_project);
-
-  Future<ExerciseSetView?> firstOrNull() async {
-    final row = await (_query()..limit(1)).getSingleOrNull();
-    return row == null ? null : _toExerciseSetView(database, row);
+  Selectable<ExerciseSetView> _views({bool first = false}) {
+    final query = _query();
+    if (first) query.limit(1);
+    return query.map((row) => exerciseSetView(database, row));
   }
 
-  Future<List<int>> getIds() async {
-    final sets = database.exerciseSets;
-    if (search.trim().isEmpty &&
-        category == null &&
-        exerciseName == null &&
-        exerciseId == null &&
-        workoutId == null &&
-        timestamp == null &&
-        endDateExclusive == null &&
-        ids == null &&
-        cardio == null &&
-        repsGt == null &&
-        repsLt == null &&
-        weightGt == null &&
-        weightLt == null) {
-      final query = database.selectOnly(sets)..addColumns([sets.id]);
-      if (startDate != null)
-        query.where(sets.timestamp.isBiggerOrEqualValue(startDate!));
-      if (endDate != null)
-        query.where(sets.timestamp.isSmallerOrEqualValue(endDate!));
-      return [for (final row in await query.get()) row.read(sets.id)!];
-    }
-    return [
-      for (final row in await _query(idsOnly: true).get()) row.read(sets.id)!,
-    ];
-  }
+  Future<List<ExerciseSetView>> get() => _views().get();
+  Stream<List<ExerciseSetView>> watch() => _views().watch();
+  Future<ExerciseSetView?> firstOrNull() =>
+      _views(first: true).getSingleOrNull();
+  Future<List<int>> getIds() => _query(
+    idsOnly: true,
+  ).map((row) => row.read(database.exerciseSets.id)!).get();
 }
 
 Future<int> countExerciseSetsForExercises(
@@ -355,39 +297,34 @@ Future<bool> isBestExerciseSet(
   AppDatabase database,
   ExerciseSetView exerciseSet,
 ) async {
-  final exercise =
-      await (database.exercises.select()
-            ..where((row) => row.name.equals(exerciseSet.name))
-            ..limit(1))
-          .getSingleOrNull();
-  if (exercise == null) return false;
-
+  final ids = database.exercises.selectOnly()
+    ..addColumns([database.exercises.id])
+    ..where(database.exercises.name.equals(exerciseSet.name));
   final previous = database.exerciseSets.select()
     ..where(
       (set) =>
-          set.exerciseId.equals(exercise.id) &
-          set.id.isNotValue(exerciseSet.id),
+          set.exerciseId.isInQuery(ids) & set.id.isNotValue(exerciseSet.id),
     );
 
   final weightedCardio = exerciseSet.cardio && isWeightUnit(exerciseSet.unit);
 
   if (exerciseSet.cardio && !weightedCardio) {
     if (exerciseSet.duration == 0) return false;
-    final candidates = await previous.get();
-    var bestPace = 0.0;
-    var found = false;
-    for (final candidate in candidates) {
-      final duration = (candidate.durationMs ?? 0) / 60000;
-      if (duration <= 0) continue;
-      final pace =
-          displayDistance(exerciseSet.unit, candidate.distanceMetres) /
-          duration;
-      if (!found || pace > bestPace) {
-        bestPace = pace;
-        found = true;
-      }
-    }
-    return found && exerciseSet.distance / exerciseSet.duration > bestPace;
+    final best =
+        await (previous
+              ..where((set) => set.durationMs.isBiggerThanValue(0))
+              ..orderBy([
+                (set) => OrderingTerm.desc(
+                  ifNull(set.distanceMetres, const Constant(0.0)) /
+                      set.durationMs.cast<double>(),
+                ),
+              ])
+              ..limit(1))
+            .getSingleOrNull();
+    return best != null &&
+        exerciseSet.distance / exerciseSet.duration >
+            displayDistance(exerciseSet.unit, best.distanceMetres) /
+                (best.durationMs! / 60000);
   }
 
   final best =
