@@ -32,7 +32,7 @@ class ExerciseSetView {
   final double duration;
   final int id;
   final String? image;
-  final int? incline;
+  final double? incline;
   final String name;
   final String? notes;
   final int? planId;
@@ -50,7 +50,7 @@ class ExerciseSetView {
     double? duration,
     int? id,
     Value<String?> image = const Value.absent(),
-    Value<int?> incline = const Value.absent(),
+    Value<double?> incline = const Value.absent(),
     String? name,
     Value<String?> notes = const Value.absent(),
     Value<int?> planId = const Value.absent(),

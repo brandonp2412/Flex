@@ -320,14 +320,13 @@ class _StartPlanPageState extends State<StartPlanPage>
 
   List<Widget> strengthFields() {
     return [
-      WorkoutNumberField(
-        controller: _input.reps,
-        focusNode: _repsFocus,
-        decoration: InputDecoration(labelText: context.l10n.repsLabel),
+      _input.field(
+        context,
+        WorkoutMetric.reps,
+        focus: _repsFocus,
         step: 1,
-        textInputAction: TextInputAction.next,
-        onFieldSubmitted: (_) => _focusAndSelect(_weightFocus, _input.weight),
-        validator: requiredNumberValidator(context),
+        action: TextInputAction.next,
+        onSubmitted: (_) => _focusAndSelect(_weightFocus, _input.weight),
       ),
       const SizedBox(height: 8.0),
       _weightField(),
@@ -359,36 +358,29 @@ class _StartPlanPageState extends State<StartPlanPage>
             Expanded(child: _weightField())
           else
             Expanded(
-              child: WorkoutNumberField(
-                textInputAction: TextInputAction.next,
-                controller: _input.distance,
-                focusNode: _distanceFocus,
-                decoration: InputDecoration(
-                  labelText: context.l10n.distanceLabel,
-                ),
-                onFieldSubmitted: (_) =>
+              child: _input.field(
+                context,
+                WorkoutMetric.distance,
+                action: TextInputAction.next,
+                focus: _distanceFocus,
+                onSubmitted: (_) =>
                     _focusAndSelect(_inclineFocus, _input.incline),
               ),
             ),
           const SizedBox(width: 8.0),
           Expanded(
-            child: WorkoutNumberField(
-              controller: _input.incline,
-              focusNode: _inclineFocus,
-              decoration: InputDecoration(
-                labelText: context.l10n.inclinePercent,
-              ),
-              textInputAction: showNotes
-                  ? TextInputAction.next
-                  : TextInputAction.done,
-              onFieldSubmitted: (_) async {
+            child: _input.field(
+              context,
+              WorkoutMetric.incline,
+              focus: _inclineFocus,
+              action: showNotes ? TextInputAction.next : TextInputAction.done,
+              onSubmitted: (_) async {
                 if (showNotes) {
                   _focusAndSelect(_notesFocus, _notes);
                 } else {
                   await _save();
                 }
               },
-              validator: rawDecimalValidator(context),
             ),
           ),
         ],
@@ -401,12 +393,11 @@ class _StartPlanPageState extends State<StartPlanPage>
     final showNotes = context.read<Setting>().showNotes;
     final hasNextField = _cardio || showNotes;
 
-    return WorkoutNumberField(
-      controller: _input.weight,
-      focusNode: _weightFocus,
-      decoration: InputDecoration(
-        labelText: context.l10n.weightWithUnit(_unit),
-      ),
+    return _input.field(
+      context,
+      WorkoutMetric.weight,
+      focus: _weightFocus,
+      label: context.l10n.weightWithUnit(_unit),
       step: weightStep(exerciseName, _unit),
       suffixIcon: Selector<Setting, bool>(
         selector: (context, settings) => settings.showBodyWeight,
@@ -419,10 +410,8 @@ class _StartPlanPageState extends State<StartPlanPage>
           ),
         ),
       ),
-      textInputAction: hasNextField
-          ? TextInputAction.next
-          : TextInputAction.done,
-      onFieldSubmitted: (_) async {
+      action: hasNextField ? TextInputAction.next : TextInputAction.done,
+      onSubmitted: (_) async {
         if (_cardio) {
           _focusAndSelect(_inclineFocus, _input.incline);
         } else if (showNotes) {
@@ -431,7 +420,6 @@ class _StartPlanPageState extends State<StartPlanPage>
           await _save();
         }
       },
-      validator: requiredNumberValidator(context),
     );
   }
 

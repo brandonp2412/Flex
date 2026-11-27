@@ -73,7 +73,7 @@ ExerciseSetView exerciseSetView(
     distance: displayDistance(unit, set.distanceMetres),
     duration: (set.durationMs ?? 0) / 60000,
     image: exercise.image,
-    incline: set.incline?.round(),
+    incline: set.incline,
     name: exercise.name,
     notes: set.notes,
     planId: planId,
@@ -290,7 +290,7 @@ ExerciseSetsCompanion _setValues(
   loadKg: Value(storedExerciseLoad(set)),
   durationMs: Value((set.duration * 60000).round()),
   distanceMetres: Value(distanceMetres(set.unit, set.distance)),
-  incline: Value(set.incline?.toDouble()),
+  incline: Value(set.incline),
   bodyWeightKg: Value(bodyWeightKg),
   notes: Value(set.notes),
 );

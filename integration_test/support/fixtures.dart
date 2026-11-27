@@ -81,7 +81,7 @@ Future<ExerciseSetView> insertExerciseSetFixture(
   int? planId,
   int? workoutId,
   double bodyWeight = 0,
-  int? incline,
+  double? incline,
 }) async {
   final timestamp = created ?? testNow;
   final exercise = await ensureExerciseFixture(

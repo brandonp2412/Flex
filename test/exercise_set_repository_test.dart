@@ -73,7 +73,7 @@ void main() {
     double distance = 0,
     double duration = 0,
     double bodyWeight = 0,
-    int? incline,
+    double? incline,
     String? notes,
   }) {
     return ExerciseSetView(

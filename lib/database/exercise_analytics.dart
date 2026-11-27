@@ -330,7 +330,7 @@ Future<List<StrengthData>> getStrengthData({
 double _averageIncline(List<ExerciseSetView> sets) {
   final values = sets
       .where((set) => set.incline != null)
-      .map((set) => set.incline!.toDouble())
+      .map((set) => set.incline!)
       .toList();
   if (values.isEmpty) return 0;
   return values.reduce((a, b) => a + b) / values.length;

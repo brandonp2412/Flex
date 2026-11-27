@@ -91,6 +91,31 @@ void main() {
     expect(again.sets, 0);
   });
 
+  test(
+    'weight aliases are canonical and notes remain distinct during deduplication',
+    () async {
+      const header =
+          'SessionId,Timestamp,Exercise,Weight,WeightUnit,Reps,Notes\n';
+      const row = 'session,2026-10-06T12:34:32,Squat,100,lbs,5,';
+      await importExternalWorkoutCsv(database, '$header$row\n');
+      final second = await importExternalWorkoutCsv(
+        database,
+        '$header${row}null\n',
+      );
+      expect(second.sets, 1);
+      final exercises = await database.exercises.select().get();
+      expect(exercises.single.displayUnit, 'lb');
+      final sets = await database.exerciseSets.select().get();
+      expect(sets.map((set) => set.notes), [null, 'null']);
+      expect(sets.first.loadKg, closeTo(45.359237, 0.00001));
+      final again = await importExternalWorkoutCsv(
+        database,
+        '$header$row\n${row}null\n',
+      );
+      expect(again.sets, 0);
+    },
+  );
+
   test('invalid CSV is rejected atomically', () async {
     const csv =
         'SessionId,Timestamp,Exercise,Weight,WeightUnit,Reps,TargetReps,Notes\n'

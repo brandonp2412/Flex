@@ -183,7 +183,7 @@ void main() {
         unit: 'km',
         distance: 1,
         duration: 5,
-        incline: 2,
+        incline: 2.25,
         created: testNow,
       );
       await insertExerciseSetFixture(
@@ -193,7 +193,7 @@ void main() {
         unit: 'mi',
         distance: 0.621371192,
         duration: 5,
-        incline: 4,
+        incline: 4.25,
         created: testNow.add(const Duration(minutes: 1)),
       );
 
@@ -212,7 +212,7 @@ void main() {
       expect(await runMetric(CardioMetric.distance), closeTo(2, 0.01));
       expect(await runMetric(CardioMetric.duration), 10);
       expect(await runMetric(CardioMetric.pace), closeTo(0.2, 0.01));
-      expect(await runMetric(CardioMetric.incline), 3);
+      expect(await runMetric(CardioMetric.incline), 3.25);
       expect(await runMetric(CardioMetric.inclineAdjustedPace), 0.27);
 
       await insertExerciseSetFixture(

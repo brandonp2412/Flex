@@ -244,41 +244,33 @@ class _EditSetPageState extends State<EditSetPage>
     ];
   }
 
-  Widget buildRepsField() {
-    return WorkoutNumberField(
-      controller: _input.reps,
-      focusNode: _repsNode,
-      decoration: InputDecoration(labelText: context.l10n.repsLabel),
-      step: 1,
-      onChanged: (value) {
-        markDirty();
-        setORM();
-      },
-      textInputAction: TextInputAction.next,
-      onFieldSubmitted: (_) => selectAll(_input.weight),
-      validator: requiredNumberValidator(context),
-    );
+  void _performanceChanged(String value) {
+    markDirty();
+    setORM();
   }
 
-  Widget buildWeightField() {
-    return WorkoutNumberField(
-      controller: _input.weight,
-      decoration: InputDecoration(
-        labelText: switch (_unit) {
-          _ when isWeightUnit(_unit) => context.l10n.weightWithUnit(_unit),
-          'kcal' => context.l10n.amountWithUnit(_unit),
-          _ => context.l10n.distanceWithUnit(_unit),
-        },
-      ),
-      step: weightStep(_name, _unit),
-      onFieldSubmitted: (value) => save(),
-      onChanged: (value) {
-        markDirty();
-        setORM();
-      },
-      validator: requiredNumberValidator(context),
-    );
-  }
+  Widget buildRepsField() => _input.field(
+    context,
+    WorkoutMetric.reps,
+    focus: _repsNode,
+    step: 1,
+    onChanged: _performanceChanged,
+    action: TextInputAction.next,
+    onSubmitted: (_) => selectAll(_input.weight),
+  );
+
+  Widget buildWeightField() => _input.field(
+    context,
+    WorkoutMetric.weight,
+    label: switch (_unit) {
+      _ when isWeightUnit(_unit) => context.l10n.weightWithUnit(_unit),
+      'kcal' => context.l10n.amountWithUnit(_unit),
+      _ => context.l10n.distanceWithUnit(_unit),
+    },
+    step: weightStep(_name, _unit),
+    onSubmitted: (_) => save(),
+    onChanged: _performanceChanged,
+  );
 
   Widget buildORMField() {
     return TextField(
@@ -301,25 +293,23 @@ class _EditSetPageState extends State<EditSetPage>
 
   Widget buildDistanceField() {
     if (isWeightUnit(_unit)) return buildWeightField();
-    return WorkoutNumberField(
-      controller: _input.distance,
-      focusNode: _distNode,
-      decoration: InputDecoration(
-        labelText: _unit == 'kcal'
-            ? context.l10n.amountWithUnit(_unit)
-            : context.l10n.distanceWithUnit(_unit),
-      ),
+    return _input.field(
+      context,
+      WorkoutMetric.distance,
+      focus: _distNode,
+      label: _unit == 'kcal'
+          ? context.l10n.amountWithUnit(_unit)
+          : context.l10n.distanceWithUnit(_unit),
       onChanged: (_) => markDirty(),
-      onFieldSubmitted: (_) => selectAll(_input.minutes),
-      textInputAction: TextInputAction.next,
+      onSubmitted: (_) => selectAll(_input.minutes),
+      action: TextInputAction.next,
     );
   }
 
-  Widget buildInclineField() => WorkoutNumberField(
-    controller: _input.incline,
-    decoration: InputDecoration(labelText: context.l10n.inclinePercent),
+  Widget buildInclineField() => _input.field(
+    context,
+    WorkoutMetric.incline,
     onChanged: (_) => markDirty(),
-    validator: wholeNumberValidator(context),
   );
 
   Widget bodyFields(bool showBodyWeight) {

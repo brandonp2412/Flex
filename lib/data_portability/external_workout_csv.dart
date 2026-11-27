@@ -1,3 +1,4 @@
+import 'package:flex/measurement_units.dart';
 import 'package:csv/csv.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/data_portability/csv_record.dart';
@@ -16,33 +17,42 @@ String? _note(String a, String b) {
   return parts.isEmpty ? null : parts.join(' · ');
 }
 
+String _weightUnit(String unit) => switch (unit.toLowerCase()) {
+  'kg' || 'kgs' || '' => 'kg',
+  'lb' || 'lbs' => 'lb',
+  'st' || 'stone' => 'stone',
+  _ => unit,
+};
+
 double? _kg(double? weight, String unit, int line) {
   if (weight == null) return null;
-  return switch (unit.toLowerCase()) {
-    'kg' || 'kgs' || '' => weight,
-    'lb' || 'lbs' => weight * 0.45359237,
-    'st' || 'stone' => weight * 6.35029318,
-    _ => throw ExternalWorkoutImportException(
-      'Row $line: unsupported weight unit "$unit".',
-    ),
-  };
+  return loadKg(_weightUnit(unit), weight) ??
+      (throw ExternalWorkoutImportException(
+        'Row $line: unsupported weight unit "$unit".',
+      ));
 }
 
-List<ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
-  final rows = CsvDecoder().convert(csv.replaceFirst(RegExp(r'^\uFEFF'), ''));
+List<List<dynamic>> _decode(String csv) =>
+    CsvDecoder().convert(csv.replaceFirst(RegExp(r'^﻿'), ''));
+
+List<String> _header(List<dynamic> row) =>
+    row.map((v) => v.toString().trim().toLowerCase()).toList();
+
+List<ImportedSet> _parse(
+  List<List<dynamic>> rows,
+  ExternalWorkoutFormat format,
+) {
   if (rows.length < 2) {
     throw const ExternalWorkoutImportException('CSV needs a header and data.');
   }
-  final header = rows.first
-      .map((v) => v.toString().trim().toLowerCase())
-      .toList();
+  final header = _header(rows.first);
   if (header.toSet().length != header.length) {
     throw const ExternalWorkoutImportException('Duplicate CSV columns.');
   }
   final records = [
     for (var i = 1; i < rows.length; i++)
       if (rows[i].any((value) => value.toString().trim().isNotEmpty))
-        CsvRecord(i + 1, '', header, rows[i]),
+        CsvRecord(i + 1, header, rows[i]),
   ];
   final result = <ImportedSet>[];
 
@@ -65,7 +75,7 @@ List<ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
             kind: distance != null || duration != null && reps == null
                 ? 'cardio'
                 : 'strength',
-            unit: row.get('unit').isEmpty ? 'kg' : row.get('unit'),
+            unit: _weightUnit(row.get('unit')),
             reps: reps,
             load: _kg(row.number('weight'), row.get('unit'), row.line),
             durationMs: duration == null ? null : (duration * 1000).round(),
@@ -82,7 +92,7 @@ List<ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
             timestamp: timestamp,
             name: row.require('exercise'),
             kind: 'strength',
-            unit: row.get('weightunit').isEmpty ? 'kg' : row.get('weightunit'),
+            unit: _weightUnit(row.get('weightunit')),
             reps: row.number('reps'),
             load: _kg(row.number('weight'), row.get('weightunit'), row.line),
             notes: _note(row.get('notes'), ''),
@@ -119,9 +129,7 @@ List<ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
               timestamp: timestamp,
               name: row.require('exercise'),
               kind: kind,
-              unit: row.get('weight_unit').isEmpty
-                  ? 'kg'
-                  : row.get('weight_unit'),
+              unit: _weightUnit(row.get('weight_unit')),
               reps: kind == 'cardio' ? null : row.number('reps'),
               load: _kg(row.number('weight'), row.get('weight_unit'), row.line),
               durationMs: seconds == null ? null : (seconds * 1000).round(),
@@ -144,14 +152,14 @@ List<ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
   return result;
 }
 
-ExternalWorkoutFormat detectExternalWorkoutFormat(String csv) {
-  final rows = CsvDecoder().convert(csv.replaceFirst(RegExp(r'^\uFEFF'), ''));
+ExternalWorkoutFormat detectExternalWorkoutFormat(String csv) =>
+    _detectFormat(_decode(csv));
+
+ExternalWorkoutFormat _detectFormat(List<List<dynamic>> rows) {
   if (rows.isEmpty) {
     throw const ExternalWorkoutImportException('CSV file is empty.');
   }
-  final header = rows.first
-      .map((v) => v.toString().trim().toLowerCase())
-      .toSet();
+  final header = _header(rows.first).toSet();
   if (header.containsAll(['date', 'start_time', 'exercise', 'set', 'unit'])) {
     return ExternalWorkoutFormat.openGym;
   }
@@ -180,25 +188,16 @@ ExternalWorkoutFormat detectExternalWorkoutFormat(String csv) {
   );
 }
 
-String _setSignature(
-  int exerciseId,
-  DateTime timestamp,
-  double? reps,
-  double? load,
-  int? durationMs,
-  double? distanceMetres,
-  double? incline,
-  String? notes,
-) => [
-  exerciseId,
-  timestamp.millisecondsSinceEpoch ~/ 1000,
-  reps,
-  load?.toStringAsFixed(5),
-  durationMs,
-  distanceMetres,
-  incline,
-  notes,
-].join('|');
+Object _setSignature(ExerciseSetsCompanion set) => (
+  set.exerciseId.value,
+  set.timestamp.value.millisecondsSinceEpoch ~/ 1000,
+  set.reps.value,
+  set.loadKg.value?.toStringAsFixed(5),
+  set.durationMs.value,
+  set.distanceMetres.value,
+  set.incline.value,
+  set.notes.value,
+);
 
 /// Appends workouts and exercises without clearing Flex history. Re-importing
 /// the same file does not duplicate its sets (including identical set rows).
@@ -206,8 +205,9 @@ Future<ExternalWorkoutImportResult> importExternalWorkoutCsv(
   AppDatabase database,
   String csv,
 ) async {
-  final format = detectExternalWorkoutFormat(csv);
-  final imported = _parse(csv, format);
+  final rows = _decode(csv);
+  final format = _detectFormat(rows);
+  final imported = _parse(rows, format);
   final groups = <String, List<ImportedSet>>{};
   for (final set in imported) {
     groups.putIfAbsent(set.group, () => []).add(set);
@@ -241,66 +241,36 @@ Future<ExternalWorkoutImportResult> importExternalWorkoutCsv(
           await (database.exerciseSets.select()
                 ..where((set) => set.workoutId.equals(workoutId)))
               .get();
-      final existingCounts = <String, int>{};
+      final existingCounts = <Object, int>{};
       for (final set in existing) {
-        final signature = _setSignature(
-          set.exerciseId,
-          set.timestamp,
-          set.reps,
-          set.loadKg,
-          set.durationMs,
-          set.distanceMetres,
-          set.incline,
-          set.notes,
-        );
+        final signature = _setSignature(set.toCompanion(false));
         existingCounts[signature] = (existingCounts[signature] ?? 0) + 1;
       }
-      final seen = <String, int>{};
+      final seen = <Object, int>{};
 
       for (final entry in entries) {
         final name = entry.name.trim();
         var exercise = exercises[name.toLowerCase()];
         if (exercise == null) {
-          final id = await database.exercises.insertOne(
+          exercise = await database.exercises.insertReturning(
             ExercisesCompanion.insert(
               name: name,
               kind: entry.kind,
               displayUnit: entry.unit,
             ),
           );
-          exercise =
-              await (database.exercises.select()
-                    ..where((row) => row.id.equals(id)))
-                  .getSingle();
           exercises[name.toLowerCase()] = exercise;
           exerciseCount++;
         }
-        final signature = _setSignature(
-          exercise.id,
-          entry.timestamp,
-          entry.reps,
-          entry.load,
-          entry.durationMs,
-          entry.distanceMetres,
-          entry.incline,
-          entry.notes,
+        final values = entry.values.copyWith(
+          exerciseId: Value(exercise.id),
+          workoutId: Value(workoutId),
         );
+        final signature = _setSignature(values);
         seen[signature] = (seen[signature] ?? 0) + 1;
         if (seen[signature]! <= (existingCounts[signature] ?? 0)) continue;
 
-        await database.exerciseSets.insertOne(
-          ExerciseSetsCompanion.insert(
-            exerciseId: exercise.id,
-            workoutId: Value(workoutId),
-            timestamp: entry.timestamp,
-            reps: Value(entry.reps),
-            loadKg: Value(entry.load),
-            durationMs: Value(entry.durationMs),
-            distanceMetres: Value(entry.distanceMetres),
-            incline: Value(entry.incline),
-            notes: Value(entry.notes),
-          ),
-        );
+        await database.exerciseSets.insertOne(values);
         setCount++;
       }
     }

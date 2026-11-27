@@ -1,15 +1,13 @@
-import 'package:flex/data_portability/external_workout_csv.dart';
 import 'package:flex/data_portability/external_workout_import_exception.dart';
 
 final class CsvRecord {
-  CsvRecord(this.line, this.columns, List<String> header, List<dynamic> values)
+  CsvRecord(this.line, List<String> header, List<dynamic> values)
     : fields = {
         for (var i = 0; i < header.length; i++)
           header[i]: i < values.length ? values[i].toString().trim() : '',
       };
 
   final int line;
-  final String columns;
   final Map<String, String> fields;
 
   String get(String name) => fields[name.toLowerCase()] ?? '';

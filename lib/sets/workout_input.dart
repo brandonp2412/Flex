@@ -5,6 +5,8 @@ import 'package:flex/sets/workout_number_field.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 
+enum WorkoutMetric { reps, weight, distance, minutes, seconds, incline }
+
 class WorkoutInput {
   WorkoutInput({bool session = false})
     : reps = TextEditingController(text: session ? '0.0' : ''),
@@ -47,7 +49,7 @@ class WorkoutInput {
       seconds.text = ((set.duration * 60) % 60).floor().toString();
     }
     if (!preserveZeroFields || (set.incline != null && set.incline != 0)) {
-      incline.text = set.incline?.toString() ?? '0';
+      incline.text = set.incline == null ? '0' : toString(set.incline!);
     }
   }
 
@@ -70,14 +72,52 @@ class WorkoutInput {
         ? null
         : duration;
     final parsedIncline = partial && incline.text.isEmpty
-        ? const Value<int?>.absent()
-        : Value(int.tryParse(incline.text));
+        ? const Value<double?>.absent()
+        : Value(parseDisplayNumber(context, incline.text));
     return (original) => original.copyWith(
       reps: parsedReps,
       weight: parsedWeight,
       distance: parsedDistance,
       duration: parsedDuration,
       incline: parsedIncline,
+    );
+  }
+
+  WorkoutNumberField field(
+    BuildContext context,
+    WorkoutMetric metric, {
+    String? label,
+    String? hint,
+    FocusNode? focus,
+    double? step,
+    Widget? suffixIcon,
+    ValueChanged<String>? onChanged,
+    ValueChanged<String>? onSubmitted,
+    TextInputAction? action,
+  }) {
+    final (controller, defaultLabel) = switch (metric) {
+      WorkoutMetric.reps => (reps, context.l10n.repsLabel),
+      WorkoutMetric.weight => (weight, context.l10n.weightLabel),
+      WorkoutMetric.distance => (distance, context.l10n.distanceLabel),
+      WorkoutMetric.minutes => (minutes, context.l10n.minutesLabel),
+      WorkoutMetric.seconds => (seconds, context.l10n.secondsLabel),
+      WorkoutMetric.incline => (incline, context.l10n.inclinePercent),
+    };
+    return WorkoutNumberField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label ?? defaultLabel,
+        hintText: hint,
+      ),
+      focusNode: focus,
+      step: step,
+      integer:
+          metric == WorkoutMetric.minutes || metric == WorkoutMetric.seconds,
+      suffixIcon: suffixIcon,
+      onChanged: onChanged,
+      onFieldSubmitted: onSubmitted,
+      textInputAction: action,
+      validator: step == null ? null : requiredNumberValidator(context),
     );
   }
 
@@ -93,32 +133,26 @@ class WorkoutInput {
   }) => Row(
     children: [
       Expanded(
-        child: WorkoutNumberField(
-          controller: minutes,
-          focusNode: minutesFocus,
-          decoration: InputDecoration(
-            labelText: context.l10n.minutesLabel,
-            hintText: minutesHint,
-          ),
-          integer: true,
+        child: field(
+          context,
+          WorkoutMetric.minutes,
+          hint: minutesHint,
+          focus: minutesFocus,
           onChanged: onChanged,
-          textInputAction: TextInputAction.next,
-          onFieldSubmitted: onMinutesSubmitted,
+          onSubmitted: onMinutesSubmitted,
+          action: TextInputAction.next,
         ),
       ),
       const SizedBox(width: 8),
       Expanded(
-        child: WorkoutNumberField(
-          controller: seconds,
-          focusNode: secondsFocus,
-          decoration: InputDecoration(
-            labelText: context.l10n.secondsLabel,
-            hintText: secondsHint,
-          ),
-          integer: true,
+        child: field(
+          context,
+          WorkoutMetric.seconds,
+          hint: secondsHint,
+          focus: secondsFocus,
           onChanged: onChanged,
-          textInputAction: TextInputAction.next,
-          onFieldSubmitted: onSecondsSubmitted,
+          onSubmitted: onSecondsSubmitted,
+          action: TextInputAction.next,
         ),
       ),
     ],

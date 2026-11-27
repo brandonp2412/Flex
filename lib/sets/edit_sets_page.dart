@@ -101,28 +101,18 @@ class _EditSetsPageState extends State<EditSetsPage>
             const SizedBox(height: 12),
             if (_cardio == true) ...[
               if (isWeightUnit(_unit))
-                WorkoutNumberField(
-                  controller: _input.weight,
-                  decoration: InputDecoration(
-                    labelText: l10n.weightLabel,
-                    hintText: _oldWeights,
-                  ),
+                _input.field(
+                  context,
+                  WorkoutMetric.weight,
+                  hint: _oldWeights,
                   onChanged: (_) => markDirty(),
                 )
               else
-                WorkoutNumberField(
-                  controller: _input.distance,
-                  decoration: InputDecoration(
-                    labelText: l10n.distanceLabel,
-                    hintText: _oldDist,
-                  ),
+                _input.field(
+                  context,
+                  WorkoutMetric.distance,
+                  hint: _oldDist,
                   onChanged: (_) => markDirty(),
-                  validator: (value) {
-                    if (value == null) return null;
-                    if (parseDisplayNumber(context, value) == null)
-                      return l10n.invalidNumber;
-                    return null;
-                  },
                 ),
               const SizedBox(height: 12),
               _input.durationFields(
@@ -132,41 +122,31 @@ class _EditSetsPageState extends State<EditSetsPage>
                 onChanged: (_) => markDirty(),
               ),
               const SizedBox(height: 12),
-              WorkoutNumberField(
-                controller: _input.incline,
-                decoration: InputDecoration(
-                  labelText: l10n.inclinePercent,
-                  hintText: _oldInc,
-                ),
+              _input.field(
+                context,
+                WorkoutMetric.incline,
+                hint: _oldInc,
                 onChanged: (_) => markDirty(),
-                validator: (value) {
-                  if (value == null) return null;
-                  if (double.tryParse(value) == null) return l10n.invalidNumber;
-                  return null;
-                },
               ),
             ],
             if (_cardio == false || _cardio == null) ...[
-              WorkoutNumberField(
-                controller: _input.reps,
-                decoration: InputDecoration(
-                  labelText: l10n.repsLabel,
-                  hintText: _oldReps,
-                ),
+              _input.field(
+                context,
+                WorkoutMetric.reps,
+                hint: _oldReps,
                 onChanged: (_) => markDirty(),
               ),
               const SizedBox(height: 12),
-              WorkoutNumberField(
-                controller: _input.weight,
-                decoration: InputDecoration(
-                  labelText: switch (_unit) {
-                    null => l10n.weightLabel,
-                    _ when isWeightUnit(_unit) => l10n.weightLabel,
-                    'kcal' => l10n.amountWithUnit(_unit!),
-                    _ => l10n.distanceWithUnit(_unit!),
-                  },
-                  hintText: _oldWeights,
-                ),
+              _input.field(
+                context,
+                WorkoutMetric.weight,
+                label: switch (_unit) {
+                  null => l10n.weightLabel,
+                  _ when isWeightUnit(_unit) => l10n.weightLabel,
+                  'kcal' => l10n.amountWithUnit(_unit!),
+                  _ => l10n.distanceWithUnit(_unit!),
+                },
+                hint: _oldWeights,
                 onChanged: (_) => markDirty(),
               ),
             ],

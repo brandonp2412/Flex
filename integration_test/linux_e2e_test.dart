@@ -212,7 +212,7 @@ Future<ExerciseSetView> _insertE2ESet({
   bool cardio = false,
   double duration = 0,
   double distance = 0,
-  int? incline,
+  double? incline,
   String? category,
   int? planId,
   double bodyWeight = 0,

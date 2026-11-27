@@ -1,27 +1,30 @@
+import 'package:drift/drift.dart';
+import 'package:flex/database/database.dart';
+
 final class ImportedSet {
-  const ImportedSet({
+  ImportedSet({
     required this.group,
-    required this.timestamp,
+    required DateTime timestamp,
     required this.name,
     required this.kind,
     required this.unit,
-    this.reps,
-    this.load,
-    this.durationMs,
-    this.distanceMetres,
-    this.incline,
-    this.notes,
-  });
+    double? reps,
+    double? load,
+    int? durationMs,
+    double? distanceMetres,
+    double? incline,
+    String? notes,
+  }) : values = ExerciseSetsCompanion(
+         timestamp: Value(timestamp),
+         reps: Value(reps),
+         loadKg: Value(load),
+         durationMs: Value(durationMs),
+         distanceMetres: Value(distanceMetres),
+         incline: Value(incline),
+         notes: Value(notes),
+       );
 
-  final String group;
-  final DateTime timestamp;
-  final String name;
-  final String kind;
-  final String unit;
-  final double? reps;
-  final double? load;
-  final int? durationMs;
-  final double? distanceMetres;
-  final double? incline;
-  final String? notes;
+  final String group, name, kind, unit;
+  final ExerciseSetsCompanion values;
+  DateTime get timestamp => values.timestamp.value;
 }

@@ -14,11 +14,6 @@ FormFieldValidator<String> wholeNumberValidator(BuildContext context) =>
     ? null
     : context.l10n.invalidNumber;
 
-FormFieldValidator<String> rawDecimalValidator(BuildContext context) =>
-    (value) => value == null || value.isEmpty || double.tryParse(value) != null
-    ? null
-    : context.l10n.invalidNumber;
-
 class WorkoutNumberField extends StatelessWidget {
   const WorkoutNumberField({
     super.key,

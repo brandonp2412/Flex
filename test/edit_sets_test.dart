@@ -1,5 +1,6 @@
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/sets/edit_sets_page.dart';
+import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -138,5 +139,62 @@ void main() {
         )
         .toList();
     expect(exerciseSets.length, equals(3));
+  });
+
+  testWidgets(
+    'bulk cardio edit preserves blank fields and fractional incline',
+    (tester) async {
+      final harness = await FlexTestHarness.create();
+      final ids = [
+        for (final distance in [2.0, 3.0])
+          (await insertExerciseSetFixture(
+            harness.database,
+            'Treadmill',
+            cardio: true,
+            unit: 'km',
+            distance: distance,
+            duration: 20,
+            incline: 2.5,
+          )).id,
+      ];
+      await harness.pump(tester, EditSetsPage(ids: ids));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.bySemanticsLabel('Name'), 'Run');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      final saved = await ExerciseSetQuery(harness.database, ids: ids).get();
+      expect(saved.map((set) => set.name).toSet(), {'Run'});
+      expect(saved.map((set) => set.distance).toSet(), {2.0, 3.0});
+      expect(saved.map((set) => set.duration).toSet(), {20.0});
+      expect(saved.map((set) => set.incline).toSet(), {2.5});
+    },
+  );
+  testWidgets('bulk cardio edit accepts localized fractional incline', (
+    tester,
+  ) async {
+    const locale = Locale('de');
+    final l10n = lookupAppLocalizations(locale);
+    final harness = await FlexTestHarness.create();
+    final set = await insertExerciseSetFixture(
+      harness.database,
+      'Run',
+      cardio: true,
+      unit: 'km',
+      distance: 3,
+      duration: 20,
+      incline: 2.5,
+    );
+    await harness.pump(tester, EditSetsPage(ids: [set.id]), locale: locale);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.bySemanticsLabel(l10n.inclinePercent), '3,75');
+    await tester.tap(find.text(l10n.actionSave));
+    await tester.pumpAndSettle();
+    final saved = await ExerciseSetQuery(
+      harness.database,
+      ids: [set.id],
+    ).firstOrNull();
+    expect(saved!.incline, 3.75);
+    expect(saved.distance, 3);
+    expect(saved.duration, 20);
   });
 }

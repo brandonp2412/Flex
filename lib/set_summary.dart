@@ -11,7 +11,7 @@ String formatSetSummary(
   required double reps,
   required double distance,
   required double duration,
-  int? incline,
+  double? incline,
   bool bodyWeight = false,
 }) {
   final unit = displayMeasurementUnit(context.l10n, unitCode);

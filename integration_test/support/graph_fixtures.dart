@@ -98,7 +98,7 @@ Future<ExerciseSetView> insertGraphSet(
   String unit = 'kg',
   double duration = 0,
   double distance = 0,
-  int? incline,
+  double? incline,
   String category = 'Arms',
 }) {
   return insertExerciseSetFixture(
