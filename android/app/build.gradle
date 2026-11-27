@@ -221,6 +221,48 @@ android.applicationVariants.all { variant ->
     }
 }
 
+def verifySqliteLibraries = { File archive, String prefix ->
+    new java.util.zip.ZipFile(archive).withCloseable { zip ->
+        def entries = zip.entries().collect { it.name } as Set
+        def flutterLibraries = entries.findAll {
+            it.startsWith(prefix) && it.endsWith('/libflutter.so')
+        }
+        if (flutterLibraries.isEmpty()) {
+            throw new GradleException("No Flutter native libraries in " + archive.name)
+        }
+        flutterLibraries.each { library ->
+            def sqliteLibrary = library.replace('libflutter.so', 'libsqlite3.so')
+            if (!entries.contains(sqliteLibrary) || zip.getEntry(sqliteLibrary).size <= 0) {
+                throw new GradleException("Missing " + sqliteLibrary + " in " + archive.name)
+            }
+        }
+    }
+}
+
+androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+    def suffix = variant.name.capitalize()
+    def apkDirectory = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK.INSTANCE)
+    def apkLoader = variant.artifacts.getBuiltArtifactsLoader()
+    def bundleFile = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.BUNDLE.INSTANCE)
+
+    tasks.matching { it.name == "assemble" + suffix }.configureEach {
+        doFirst {
+            def artifacts = apkLoader.load(apkDirectory.get())
+            if (artifacts == null || artifacts.elements.isEmpty()) {
+                throw new GradleException("No APKs found for " + variant.name)
+            }
+            artifacts.elements.each { artifact ->
+                verifySqliteLibraries(new File(artifact.outputFile), 'lib/')
+            }
+        }
+    }
+    tasks.matching { it.name == "bundle" + suffix }.configureEach {
+        doLast {
+            verifySqliteLibraries(bundleFile.get().asFile, 'base/lib/')
+        }
+    }
+}
+
 flutter {
     source '../..'
 }

@@ -27,6 +27,26 @@ plugins {
     id "org.jetbrains.kotlin.android" version "2.4.20" apply false
 }
 
+def buildLockFile = new File(settingsDir, '.gradle/flex-build.lock')
+buildLockFile.parentFile.mkdirs()
+def buildLockChannel = java.nio.channels.FileChannel.open(
+    buildLockFile.toPath(),
+    java.nio.file.StandardOpenOption.CREATE,
+    java.nio.file.StandardOpenOption.WRITE
+)
+def buildLock = buildLockChannel.tryLock()
+if (buildLock == null) {
+    logger.lifecycle("Waiting for another Flex Android build to finish")
+    buildLock = buildLockChannel.lock()
+}
+gradle.buildFinished {
+    try {
+        buildLock.release()
+    } finally {
+        buildLockChannel.close()
+    }
+}
+
 gradle.beforeProject { target ->
     target.buildscript.configurations.configureEach {
         resolutionStrategy.eachDependency { details ->
