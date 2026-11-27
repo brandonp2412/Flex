@@ -26,5 +26,6 @@ Future<T?> showDesktopContextMenu<T>(
       Offset.zero & overlay.size,
     ),
     items: items,
+    popUpAnimationStyle: AnimationStyle.noAnimation,
   );
 }

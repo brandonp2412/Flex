@@ -58,10 +58,13 @@ void main() {
 
       final pointer = tester.getCenter(find.byKey(const Key('context-target')));
       await tester.tapAt(pointer, buttons: kSecondaryMouseButton);
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       final item = find.text('Right-click action');
       expect(item, findsOneWidget);
+      final route = ModalRoute.of(tester.element(item))!;
+      expect(route.animation!.value, 1);
+      expect(route.animation!.status, AnimationStatus.completed);
       final rect = tester.getRect(find.byType(PopupMenuItem<void>));
       final leftDistance = (rect.left - pointer.dx).abs();
       final rightDistance = (rect.right - pointer.dx).abs();
