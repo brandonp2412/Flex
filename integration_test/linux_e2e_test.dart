@@ -4,6 +4,8 @@ import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/home_page.dart';
+import 'package:flex/editor_content.dart';
+import 'package:flex/responsive.dart';
 import 'package:flex/main.dart' as app;
 import 'package:flex/plan/plan_tile.dart';
 import 'package:flex/settings/settings_page.dart';
@@ -16,14 +18,22 @@ import 'support/fixtures.dart';
 
 const _allTabs = 'HistoryPage,PlansPage,GraphsPage,TimerPage,SettingsPage';
 
+Future<void> _setViewport(WidgetTester tester, Size size) async {
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = size;
+  await tester.binding.setSurfaceSize(size);
+}
+
 Future<Setting> _pumpIsolatedApp(
   WidgetTester tester, {
   Size? surfaceSize,
 }) async {
-  if (surfaceSize != null) {
-    await tester.binding.setSurfaceSize(surfaceSize);
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-  }
+  if (surfaceSize != null) await _setViewport(tester, surfaceSize);
+  addTearDown(() async {
+    await tester.binding.setSurfaceSize(null);
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
 
   final database = AppDatabase(
     DatabaseConnection(
@@ -74,15 +84,37 @@ Future<void> _tapAddAction(WidgetTester tester) async {
   fail('No responsive add action found');
 }
 
+Future<void> _waitForWidget(WidgetTester tester, Finder finder) async {
+  for (var i = 0; i < 30 && finder.evaluate().isEmpty; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  expect(finder, findsOneWidget);
+}
+
 Future<void> _tapSaveAction(WidgetTester tester) async {
+  final editor = find.byType(EditorContent);
+  if (editor.evaluate().isNotEmpty &&
+      isDesktopLayout(tester.element(editor.last))) {
+    final save = find.byKey(const Key('desktop-editor-save'));
+    await tester.scrollUntilVisible(
+      save,
+      300,
+      scrollable: find
+          .descendant(of: editor.last, matching: find.byType(Scrollable))
+          .first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(save);
+    return;
+  }
   for (final target in [
     find.text('Save set'),
     find.text('Save'),
     find.byIcon(Icons.save_rounded),
     find.byIcon(Icons.save),
   ]) {
-    if (target.evaluate().isNotEmpty) {
-      await tester.tap(target.last);
+    if (target.hitTestable().evaluate().isNotEmpty) {
+      await tester.tap(target.hitTestable().last);
       return;
     }
   }
@@ -287,7 +319,6 @@ void main() {
     tester,
   ) async {
     await _pumpIsolatedApp(tester);
-    addTearDown(() => tester.binding.setSurfaceSize(null));
 
     for (final size in const [
       Size(640, 480),
@@ -295,7 +326,7 @@ void main() {
       Size(480, 360),
       Size(800, 500),
     ]) {
-      await tester.binding.setSurfaceSize(size);
+      await _setViewport(tester, size);
       await tester.pumpAndSettle();
       for (final tab in const [
         'HistoryPage',
@@ -474,7 +505,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Global progress'), findsOneWidget);
 
-    await _secondaryTap(tester, find.text('Global progress'));
+    await tester.longPress(find.text('Global progress'));
+    await tester.pumpAndSettle();
     expect(find.text('Hide global progress'), findsOneWidget);
     await tester.tap(find.text('Hide global progress'));
     await tester.pumpAndSettle();
@@ -537,7 +569,7 @@ void main() {
 
     await tester.tap(find.byTooltip('Delete set'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
     expect(await _maybeSet('Linux E2E press'), isNull);
     expect(tester.takeException(), isNull);
@@ -575,8 +607,8 @@ void main() {
     expect(find.text('Linux E2E grouped (2)'), findsOneWidget);
     await tester.tap(find.text('Linux E2E grouped (2)'));
     await tester.pumpAndSettle();
-    expect(find.text('5 x 50 kg'), findsOneWidget);
-    expect(find.text('6 x 52 kg'), findsOneWidget);
+    expect(find.text('5 × 50 kg'), findsOneWidget);
+    expect(find.text('6 × 52 kg'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Filter'));
     await tester.pumpAndSettle();
@@ -595,11 +627,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Linux E2E old (1)'), findsOneWidget);
 
-    if (find.text('5 x 50 kg').evaluate().isEmpty) {
+    if (find.text('5 × 50 kg').evaluate().isEmpty) {
       await tester.tap(find.text('Linux E2E grouped (2)'));
       await tester.pumpAndSettle();
     }
-    await tester.tap(find.text('5 x 50 kg'));
+    await tester.tap(find.text('5 × 50 kg'));
     await tester.pumpAndSettle();
     expect(_textFieldWithLabel('Name'), findsOneWidget);
     expect(
@@ -631,7 +663,7 @@ void main() {
     expect(rows, hasLength(1));
     expect(rows.single.reps, 6);
     expect(rows.single.weight, 83);
-    expect(find.text('Set 1'), findsOneWidget);
+    await _waitForWidget(tester, find.text('Set 1'));
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
@@ -667,7 +699,15 @@ void main() {
       of: find.byKey(Key(originalFirst)),
       matching: find.byIcon(Icons.drag_handle),
     );
-    await tester.drag(firstHandle, const Offset(0, 150));
+    final drag = await tester.startGesture(
+      tester.getCenter(firstHandle),
+      kind: PointerDeviceKind.mouse,
+    );
+    for (var i = 0; i < 10; i++) {
+      await drag.moveBy(const Offset(0, 16));
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    await drag.up();
     await tester.pumpAndSettle();
 
     exercises =
@@ -684,7 +724,7 @@ void main() {
   testWidgets('Timer stopwatch and countdown controls work on Linux', (
     tester,
   ) async {
-    await _pumpIsolatedApp(tester, surfaceSize: const Size(899, 700));
+    await _pumpIsolatedApp(tester, surfaceSize: const Size(1000, 700));
     await _tapTab(tester, 'TimerPage');
 
     expect(find.text('Start stopwatch'), findsOneWidget);
@@ -718,17 +758,53 @@ void main() {
     expect(find.text('Share database'), findsNothing);
     await tester.tap(find.text('Export data'));
     await tester.pumpAndSettle();
-    expect(find.text('Graphs'), findsOneWidget);
-    expect(find.text('Plans'), findsOneWidget);
-    expect(find.text('Backup'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Graphs'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Plans'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Backup'),
+      ),
+      findsOneWidget,
+    );
     await tester.tapAt(const Offset(8, 8));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Import data'));
     await tester.pumpAndSettle();
-    expect(find.text('Graphs'), findsOneWidget);
-    expect(find.text('Plans'), findsOneWidget);
-    expect(find.text('Backup'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Graphs'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Plans'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Backup'),
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -798,9 +874,7 @@ void main() {
     expect(baseline.bodyWeight, 0);
     await tester.pumpAndSettle();
     await _tapTab(tester, 'HistoryPage');
-    await tester.tap(find.byTooltip('Show menu'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ListTile, 'Weight'));
+    await tester.tap(find.byKey(const Key('desktop-weight')));
     await tester.pumpAndSettle();
     expect(find.text('Enter Weight'), findsOneWidget);
 
@@ -838,7 +912,7 @@ void main() {
     (tester) async {
       await _pumpIsolatedApp(tester, surfaceSize: const Size(899, 900));
       await _tapTab(tester, 'PlansPage');
-      await tester.tap(find.text('New plan'));
+      await _tapAddAction(tester);
       await tester.pumpAndSettle();
       await tester.enterText(
         _textFieldWithLabel('Title (optional)'),
@@ -850,9 +924,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Add “Linux E2E plan exercise”').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save'));
+      await _tapSaveAction(tester);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save'));
+      await _tapSaveAction(tester);
       await tester.pumpAndSettle();
 
       var plan =
@@ -881,7 +955,8 @@ void main() {
       await tester.enterText(planSearch, 'Linux E2E custom plan');
       await tester.pumpAndSettle();
 
-      await _secondaryTap(tester, customPlanTile);
+      await tester.longPress(customPlanTile);
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Show menu'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ListTile, 'Edit'));
@@ -892,7 +967,7 @@ void main() {
       );
       await tester.tap(find.text('Tue'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Save'));
+      await _tapSaveAction(tester);
       await tester.pumpAndSettle();
 
       plan =
@@ -923,7 +998,7 @@ void main() {
       );
       await tester.tap(find.byTooltip('Delete selected'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
       await tester.pumpAndSettle();
       expect(
         await (app.db.plans.select()..where((tbl) => tbl.id.equals(plan.id)))
@@ -945,11 +1020,9 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byKey(const Key('Barbell bench press')),
-        matching: find.byIcon(Icons.more_horiz_rounded),
+        matching: find.text('Settings'),
       ),
     );
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ListTile, 'Settings'));
     await tester.pumpAndSettle();
     await tester.enterText(_textFieldWithLabel('Warmup sets'), '1');
     await tester.enterText(_textFieldWithLabel('Working sets (max: 20)'), '2');
@@ -971,11 +1044,9 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byKey(const Key('Squat')),
-        matching: find.byIcon(Icons.more_horiz_rounded),
+        matching: find.text('Swap'),
       ),
     );
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ListTile, 'Swap'));
     await tester.pumpAndSettle();
     expect(find.text('Swap exercise'), findsOneWidget);
     await tester.enterText(
@@ -994,7 +1065,7 @@ void main() {
     await tester.enterText(find.bySemanticsLabel('Weight (kg)'), '50');
     await _tapSaveAction(tester);
     await tester.pumpAndSettle();
-    expect(find.text('Set 1'), findsOneWidget);
+    await _waitForWidget(tester, find.text('Set 1'));
 
     var logged = await _setsForPlan(1);
     expect(logged, hasLength(1));
@@ -1008,16 +1079,14 @@ void main() {
     logged = await _setsForPlan(1);
     expect(logged.single.reps, 7);
 
-    await tester.tap(
-      find.descendant(
-        of: find.byKey(Key(loggedName)),
-        matching: find.byIcon(Icons.more_horiz_rounded),
-      ),
+    final loggedRow = find.byKey(Key(loggedName));
+    final undo = find.descendant(of: loggedRow, matching: find.text('Undo'));
+    expect(undo, findsOneWidget);
+    expect(
+      find.descendant(of: loggedRow, matching: find.text('Edit')),
+      findsOneWidget,
     );
-    await tester.pumpAndSettle();
-    expect(find.text('Undo'), findsOneWidget);
-    expect(find.text('Edit'), findsOneWidget);
-    await tester.tap(find.widgetWithText(ListTile, 'Undo'));
+    await tester.tap(undo);
     await tester.pumpAndSettle();
     logged = await _setsForPlan(1);
     expect(logged, isEmpty);
