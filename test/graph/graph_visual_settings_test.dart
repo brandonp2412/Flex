@@ -98,16 +98,14 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('compact desktop graph options reuse visual switches', (
-    tester,
-  ) async {
+  testWidgets('desktop graph options reuse visual switches', (tester) async {
     final harness = await FlexTestHarness.create();
     await harness.pump(
       tester,
       const Scaffold(
         body: Align(
           alignment: Alignment.topLeft,
-          child: SizedBox(width: 680, child: GraphCurveSettings(compact: true)),
+          child: SizedBox(width: 680, child: GraphCurveSettings()),
         ),
       ),
       surfaceSize: const Size(900, 600),

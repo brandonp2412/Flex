@@ -1204,14 +1204,6 @@ void main() {
     final plan =
         await (database.plans.select()..where((p) => p.id.equals(planId)))
             .getSingle();
-    final initialPrefill = await getStartPlanPrefillById(
-      database,
-      exerciseId: originalExerciseId,
-      planId: planId,
-    );
-    expect(initialPrefill?.reps, 10);
-    expect(initialPrefill?.weight, 50);
-
     await harness.pump(tester, StartPlanPage(plan: plan));
     await tester.pumpAndSettle();
 

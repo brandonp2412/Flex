@@ -1,3 +1,4 @@
+import 'package:flex/plan/start_plan_data.dart';
 import 'dart:async';
 
 import 'package:drift/drift.dart' hide isNull, isNotNull;
@@ -432,11 +433,11 @@ void main() {
       exerciseId: squatId,
     );
 
-    final previous = await watchPreviousExerciseDays(
+    final previous = await watchStartPlanData(
       database,
       planId,
       now: DateTime(2026, 10, 10, 12),
-    ).first;
+    ).map((data) => data.previous).first;
 
     expect(previous.keys.toSet(), {benchId, squatId});
     expect(previous[benchId]!.day, DateTime(2026, 10, 7));
@@ -465,11 +466,11 @@ void main() {
       exerciseId: exerciseId,
     );
 
-    final previous = await watchPreviousExerciseDays(
+    final previous = await watchStartPlanData(
       database,
       planId,
       now: DateTime(2026, 10, 10, 12),
-    ).first;
+    ).map((data) => data.previous).first;
 
     expect(previous, isEmpty);
   });
@@ -494,7 +495,11 @@ void main() {
     );
 
     final iterator = StreamIterator(
-      watchPreviousExerciseDays(database, planId, now: DateTime(2026, 10, 10)),
+      watchStartPlanData(
+        database,
+        planId,
+        now: DateTime(2026, 10, 10),
+      ).map((data) => data.previous),
     );
     addTearDown(iterator.cancel);
     expect(await iterator.moveNext(), isTrue);

@@ -1,10 +1,8 @@
 import 'package:flex/exercise_avatar.dart';
 
-import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
-import 'package:flex/graph/cardio_page.dart';
-import 'package:flex/graph/strength_page.dart';
+import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
@@ -20,7 +18,6 @@ class GraphTile extends StatelessWidget {
   final Set<String> selected;
   final Function(String) onSelect;
   final TabController tabCtrl;
-  final bool timeBasedXAxis; // new flag to control x-axis behaviour
   final VoidCallback? onEdit;
   final Future<void> Function()? onDelete;
 
@@ -30,7 +27,6 @@ class GraphTile extends StatelessWidget {
     required this.onSelect,
     required this.exerciseSet,
     required this.tabCtrl,
-    this.timeBasedXAxis = false,
     this.onEdit,
     this.onDelete,
   });
@@ -116,72 +112,17 @@ class GraphTile extends StatelessWidget {
             return;
           }
 
-          if (exerciseSet.bodyWeight) {
-            final data = await getBodyWeightData(
-              target: exerciseSet.unit,
-              period: Period.day,
-              start: null,
-              end: null,
-              limit: 20,
-            );
-            if (!context.mounted) return;
-            Navigator.of(context).push(
-              FlexPageRoute(
-                builder: (context) => StrengthPage(
-                  initialName: exerciseSet.name,
-                  initialUnit: exerciseSet.unit,
-                  initialData: data,
-                  tabCtrl: tabCtrl,
-                  bodyWeight: true,
-                ),
-              ),
-            );
-            return;
-          }
-
-          if (exerciseSet.cardio) {
-            final data = await getCardioData(
-              target: exerciseSet.unit,
-              name: exerciseSet.name,
-              metric: isWeightUnit(exerciseSet.unit)
-                  ? CardioMetric.weight
-                  : CardioMetric.pace,
-              period: Period.day,
-              start: null,
-              end: null,
-            );
-            if (!context.mounted) return;
-            Navigator.of(context).push(
-              FlexPageRoute(
-                builder: (context) => CardioPage(
-                  tabCtrl: tabCtrl,
-                  initialName: exerciseSet.name,
-                  initialUnit: exerciseSet.unit,
-                  initialData: data,
-                ),
-              ),
-            );
-            return;
-          }
-
-          final data = await getStrengthData(
-            target: exerciseSet.unit,
-            name: exerciseSet.name,
-            metric: StrengthMetric.bestWeight,
-            period: Period.day,
-            start: null,
-            end: null,
-            limit: 20,
-          );
+          final data = await getInitialGraphData(exerciseSet);
           if (!context.mounted) return;
-
           Navigator.of(context).push(
             FlexPageRoute(
-              builder: (context) => StrengthPage(
+              builder: (context) => ExerciseGraphPage(
                 initialName: exerciseSet.name,
                 initialUnit: exerciseSet.unit,
                 initialData: data,
                 tabCtrl: tabCtrl,
+                cardio: exerciseSet.cardio && !exerciseSet.bodyWeight,
+                bodyWeight: exerciseSet.bodyWeight,
               ),
             ),
           );

@@ -53,11 +53,6 @@ List<Exercise> filterExerciseCatalog(
   ];
 }
 
-Stream<List<String>> watchExerciseNames(AppDatabase database) =>
-    watchExerciseCatalog(
-      database,
-    ).map((rows) => rows.map((row) => row.name).toList());
-
 Future<String?> getExerciseCategoryName(
   AppDatabase database,
   Exercise exercise,

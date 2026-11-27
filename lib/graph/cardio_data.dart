@@ -1,7 +1,9 @@
-class CardioData {
-  final DateTime created;
-  final double value;
-  final String unit;
+import 'package:flex/graph/graph_data.dart';
 
-  CardioData({required this.created, required this.value, required this.unit});
+class CardioData extends GraphData {
+  CardioData({
+    required super.created,
+    required super.value,
+    required super.unit,
+  });
 }

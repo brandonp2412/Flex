@@ -1,3 +1,4 @@
+import 'package:flex/plan/start_plan_data.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/main.dart';
@@ -32,12 +33,12 @@ void main() {
         ),
       );
 
-      final counts = await watchGymCounts(planId, workout.id).first;
+      final data = await watchStartPlanData(db, planId).first;
 
-      expect(counts, hasLength(1));
-      expect(counts.single.exerciseId, exercise.id);
-      expect(counts.single.name, 'Bench press');
-      expect(counts.single.count, 1);
+      expect(data.exercises, hasLength(1));
+      expect(data.exercises.single.exercise.id, exercise.id);
+      expect(data.exercises.single.exercise.name, 'Bench press');
+      expect(data.sets[exercise.id], hasLength(1));
     },
   );
 
@@ -70,9 +71,10 @@ void main() {
       ),
     ]);
 
-    final counts = await watchGymCounts(planId, active.id).first;
+    final data = await watchStartPlanData(db, planId, now: testNow).first;
 
-    expect(counts.single.count, 1);
+    expect(data.workout.id, active.id);
+    expect(data.sets[exercise.id], hasLength(1));
   });
 
   test(

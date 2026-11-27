@@ -6,7 +6,6 @@ import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/exercise_modal.dart';
-import 'package:flex/plan/plan_queries.dart';
 import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/sets/edit_set_page.dart';
@@ -19,8 +18,7 @@ class StartList extends StatefulWidget {
   final List<PlanExerciseEntry> exercises;
   final int selected;
   final Future<void> Function(int) onSelect;
-  final List<GymCount> counts;
-  final Plan plan;
+  final Map<int, List<ExerciseSetView>> sets;
   final int? workoutId;
 
   const StartList({
@@ -28,8 +26,7 @@ class StartList extends StatefulWidget {
     required this.exercises,
     required this.selected,
     required this.onSelect,
-    required this.counts,
-    required this.plan,
+    required this.sets,
     required this.workoutId,
   });
 
@@ -47,10 +44,10 @@ class _StartListState extends State<StartList> {
 
   Tapped lastTap = (index: 0, dateTime: DateTime(0));
 
-  void tap(int index, List<GymCount> counts) async {
+  void tap(int index) async {
     widget.onSelect(index);
-    final count = counts.elementAtOrNull(index);
-    if (count == null || count.count == 0) return;
+    if (widget.sets[widget.exercises[index].exercise.id]?.isNotEmpty != true)
+      return;
 
     if (DateTime.now().difference(lastTap.dateTime) >=
             const Duration(milliseconds: 300) ||
@@ -84,7 +81,6 @@ class _StartListState extends State<StartList> {
         settings.planTrailing.replaceFirst('PlanTrailing.', ''),
       ),
     );
-    final counts = widget.counts;
     final desktop = isDesktopLayout(context);
 
     if (trailing == PlanTrailing.reorder)
@@ -94,7 +90,7 @@ class _StartListState extends State<StartList> {
         buildDefaultDragHandles: !desktop,
         padding: EdgeInsets.only(bottom: desktop ? 8 : _bottomPadding),
         itemBuilder: (context, index) =>
-            itemBuilder(context, index, max, trailing, counts),
+            itemBuilder(context, index, max, trailing),
         onReorderItem: (oldIndex, newIndex) async {
           final item = widget.exercises.removeAt(oldIndex);
           widget.exercises.insert(newIndex, item);
@@ -117,7 +113,7 @@ class _StartListState extends State<StartList> {
         shrinkWrap: desktop,
         itemCount: widget.exercises.length,
         itemBuilder: (context, index) =>
-            itemBuilder(context, index, max, trailing, counts),
+            itemBuilder(context, index, max, trailing),
       );
   }
 
@@ -126,19 +122,10 @@ class _StartListState extends State<StartList> {
     int index,
     int maxSets,
     PlanTrailing trailing,
-    List<GymCount> counts,
   ) {
     final exercise = widget.exercises[index];
-    final idx = counts.indexWhere(
-      (element) => element.exerciseId == exercise.exercise.id,
-    );
-    var count = 0;
-    int max = maxSets;
-
-    if (idx > -1) {
-      count = counts[idx].count;
-      max = counts[idx].maxSets ?? maxSets;
-    }
+    final count = widget.sets[exercise.exercise.id]?.length ?? 0;
+    final max = exercise.planExercise.maxSets ?? maxSets;
 
     final desktop = isDesktopLayout(context);
     Widget trail = const SizedBox();
@@ -206,7 +193,7 @@ class _StartListState extends State<StartList> {
               clipBehavior: Clip.none,
               child: InkWell(
                 borderRadius: BorderRadius.circular(14),
-                onTap: () => tap(index, counts),
+                onTap: () => tap(index),
                 onLongPress: null,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -298,7 +285,7 @@ class _StartListState extends State<StartList> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ListTile(
-                onTap: () => tap(index, counts),
+                onTap: () => tap(index),
                 trailing: trail,
                 title: Row(
                   children: [

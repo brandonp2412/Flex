@@ -3,7 +3,7 @@ import 'package:flex/app_search.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/graph/strength_data.dart';
-import 'package:flex/graph/strength_page.dart';
+import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/session_sets.dart';
@@ -167,7 +167,7 @@ void main() {
 
     await harness.pump(
       tester,
-      StrengthPage(
+      ExerciseGraphPage(
         initialName: exercise,
         initialUnit: 'kg',
         initialData: [

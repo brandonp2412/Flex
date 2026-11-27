@@ -1,6 +1,6 @@
 import 'package:flex/constants.dart';
 import 'package:flex/database/exercise_analytics.dart';
-import 'package:flex/graph/cardio_page.dart';
+import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -30,7 +30,8 @@ Future<void> pumpCardioPage(
     tester,
     DefaultTabController(
       length: 1,
-      child: CardioPage(
+      child: ExerciseGraphPage(
+        cardio: true,
         tabCtrl: MockTabController(),
         initialName: 'Run',
         initialUnit: 'km',

@@ -11,6 +11,8 @@ import 'package:flex/empty_state.dart';
 import 'package:flex/error_state.dart';
 import 'package:flex/graph/add_exercise_page.dart';
 import 'package:flex/graph/cardio_data.dart';
+import 'package:flex/graph/graph_data.dart';
+import 'package:flex/graph/strength_data.dart';
 import 'package:flex/graph/edit_graph_page.dart';
 import 'package:flex/graph/flex_line_chart.dart';
 import 'package:flex/graph/global_progress_page.dart';
@@ -77,36 +79,12 @@ class GraphsPageState extends State<GraphsPage>
   late final Stream<List<GraphExerciseSummary>> _stream = watchGraphs();
 
   GraphExerciseSummary? _peekSummary;
-  Future<List<dynamic>>? _peekFuture;
+  Future<List<GraphData>>? _peekFuture;
 
-  Future<List<dynamic>> _peekData(GraphExerciseSummary summary) {
+  Future<List<GraphData>> _peekData(GraphExerciseSummary summary) {
     if (!identical(_peekSummary, summary)) {
       _peekSummary = summary;
-      _peekFuture = switch (summary) {
-        _ when summary.bodyWeight => getBodyWeightData(
-          target: summary.unit,
-          period: Period.day,
-          start: null,
-          end: null,
-          limit: 20,
-        ),
-        _ when summary.cardio => getCardioData(
-          name: summary.name,
-          target: summary.unit,
-          metric: isWeightUnit(summary.unit)
-              ? CardioMetric.weight
-              : CardioMetric.pace,
-        ),
-        _ => getStrengthData(
-          target: summary.unit,
-          name: summary.name,
-          metric: StrengthMetric.bestWeight,
-          period: Period.day,
-          start: null,
-          end: null,
-          limit: 20,
-        ),
-      };
+      _peekFuture = getInitialGraphData(summary);
     }
     return _peekFuture!;
   }
@@ -243,7 +221,7 @@ class GraphsPageState extends State<GraphsPage>
   }
 
   String tooltipText(
-    List<dynamic> data,
+    List<GraphData> data,
     String unit,
     String format,
     int index,
@@ -255,12 +233,12 @@ class GraphsPageState extends State<GraphsPage>
       return "${formatDisplayNumber(context, row.value)} ${displayMeasurementUnit(context.l10n, row.unit)} / ${context.l10n.minutesShort}";
     }
 
-    return "${formatDisplayNumber(context, row.reps, maxDigits: 0)} × ${formatDisplayNumber(context, row.value, minDigits: 2)}${displayMeasurementUnit(context.l10n, unit)} $created";
+    return "${formatDisplayNumber(context, (row as StrengthData).reps, maxDigits: 0)} × ${formatDisplayNumber(context, row.value, minDigits: 2)}${displayMeasurementUnit(context.l10n, unit)} $created";
   }
 
   Widget getPeek(
     GraphExerciseSummary exerciseSet,
-    List<dynamic> data,
+    List<GraphData> data,
     String format,
   ) {
     final points = [
@@ -287,7 +265,7 @@ class GraphsPageState extends State<GraphsPage>
   }
 
   Widget _peekPreview(GraphExerciseSummary summary, String dateFormat) {
-    return FutureBuilder<List<dynamic>>(
+    return FutureBuilder<List<GraphData>>(
       future: _peekData(summary),
       builder: (context, snapshot) {
         final data = snapshot.data;
@@ -544,237 +522,123 @@ class GraphsPageState extends State<GraphsPage>
     );
   }
 
-  Widget _desktopGraphList(
-    List<GraphExerciseSummary> exerciseSets,
-    bool showProgress,
-  ) {
+  Widget graphList(List<GraphExerciseSummary> exerciseSets, bool showProgress) {
+    final desktop = isDesktopLayout(context);
     final progressTerms =
         '${context.l10n.globalProgress} ${context.l10n.navGraphs}'
             .toLowerCase();
     final showGlobal =
-        progressTerms.contains(_search.toLowerCase()) &&
+        showProgress &&
         _category == null &&
-        showProgress;
-    final settings = context.read<Setting>();
+        progressTerms.contains(_search.toLowerCase());
     final preview = exerciseSets
         .where((summary) => summary.hasData)
         .firstOrNull;
-    final showPeekGraph = settings.peekGraph && preview != null;
+    final showPeek = context.read<Setting>().peekGraph && preview != null;
 
-    Widget graphTile(GraphExerciseSummary exerciseSet) => GraphTile(
-      selected: _selection,
-      exerciseSet: exerciseSet,
-      onSelect: (key) async {
-        setState(() {
-          if (!_selection.remove(key)) _selection.add(key);
-        });
-        final total = await _countSelectedGraphRecords();
-        if (!mounted) return;
-        setState(() {
-          _total = total;
-        });
-      },
-      tabCtrl: widget.tabController,
-      onEdit: exerciseSet.bodyWeight
-          ? null
-          : () => _editGraphSummary(exerciseSet),
-      onDelete: () => _deleteGraphSummary(exerciseSet),
-    );
+    Widget tile(BuildContext context, int index) {
+      final summary = exerciseSets[index];
+      final tile = GraphTile(
+        selected: _selection,
+        exerciseSet: summary,
+        onSelect: (key) async {
+          setState(() {
+            if (!_selection.remove(key)) _selection.add(key);
+          });
+          final total = await _countSelectedGraphRecords();
+          if (mounted) setState(() => _total = total);
+        },
+        tabCtrl: widget.tabController,
+        onEdit: summary.bodyWeight ? null : () => _editGraphSummary(summary),
+        onDelete: () => _deleteGraphSummary(summary),
+      );
+      return desktop ? tile : ResponsiveContent(child: tile);
+    }
 
     return CustomScrollView(
       controller: _scroll,
       slivers: [
         const SliverToBoxAdapter(child: SizedBox(height: appSearchHeight + 8)),
-        if (showGlobal)
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            sliver: SliverToBoxAdapter(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onSecondaryTapDown: (details) =>
-                    _hideGlobalProgressAt(details.globalPosition),
-                child: Material(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(16),
-                  clipBehavior: Clip.antiAlias,
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 9,
-                    ),
-                    leading: const Icon(Icons.language),
-                    title: Text(
-                      context.l10n.globalProgress,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: Text(context.l10n.chartGroupedByCategory),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => Navigator.of(context).push(
-                      FlexPageRoute(
-                        builder: (context) => GlobalProgressPage(
-                          tabController: widget.tabController,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        if (showPeekGraph)
+        if (showGlobal) SliverToBoxAdapter(child: _globalProgressTile(desktop)),
+        if (showPeek)
           SliverToBoxAdapter(
             child: Consumer<Setting>(
-              builder: (BuildContext context, Setting settings, Widget? child) {
-                if (!settings.peekGraph) {
-                  return const SizedBox();
-                }
-                return _peekPreview(preview, settings.shortDateFormat);
-              },
+              builder: (context, settings, _) => settings.peekGraph
+                  ? _peekPreview(preview, settings.shortDateFormat)
+                  : const SizedBox(),
             ),
           ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(0, 4, 0, 32),
-          sliver: SliverGrid.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 620,
-              mainAxisExtent: 94,
-              crossAxisSpacing: 4,
-              mainAxisSpacing: 2,
-            ),
-            itemCount: exerciseSets.length,
-            itemBuilder: (context, index) => graphTile(exerciseSets[index]),
+          padding: EdgeInsets.only(
+            top: desktop ? 4 : 0,
+            bottom: desktop ? 32 : fabListPadding,
           ),
+          sliver: desktop
+              ? SliverGrid.builder(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 620,
+                    mainAxisExtent: 94,
+                    crossAxisSpacing: 4,
+                    mainAxisSpacing: 2,
+                  ),
+                  itemCount: exerciseSets.length,
+                  itemBuilder: tile,
+                )
+              : SliverList.builder(
+                  itemCount: exerciseSets.length,
+                  itemBuilder: tile,
+                ),
         ),
       ],
     );
   }
 
-  Widget graphList(List<GraphExerciseSummary> exerciseSets, bool showProgress) {
-    if (isDesktopLayout(context)) {
-      return _desktopGraphList(exerciseSets, showProgress);
-    }
-    var itemCount = exerciseSets.length;
-    final progressTerms =
-        '${context.l10n.globalProgress} ${context.l10n.navGraphs}'
-            .toLowerCase();
-    final showGlobal =
-        progressTerms.contains(_search.toLowerCase()) &&
-        _category == null &&
-        showProgress;
-    if (showGlobal) itemCount++;
-
-    final settings = context.read<Setting>();
-    final preview = exerciseSets
-        .where((summary) => summary.hasData)
-        .firstOrNull;
-    final showPeekGraph = settings.peekGraph && preview != null;
-    if (showPeekGraph) itemCount++;
-
-    return ListView.builder(
-      itemCount: itemCount,
-      controller: _scroll,
-      padding: EdgeInsets.only(
-        bottom: isDesktopLayout(context) ? 32 : fabListPadding,
-        top: appSearchHeight + 8,
-      ),
-      itemBuilder: (context, index) {
-        int currentIdx = index;
-
-        if (showGlobal) {
-          if (index == 0) {
-            return ResponsiveContent(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 5,
-                ),
-                child: Material(
-                  color: isDesktopLayout(context)
-                      ? Theme.of(context).colorScheme.surfaceContainerLow
-                      : Colors.transparent,
-                  borderRadius: isDesktopLayout(context)
-                      ? BorderRadius.circular(16)
-                      : null,
-                  clipBehavior: isDesktopLayout(context)
-                      ? Clip.antiAlias
-                      : Clip.none,
-                  child: ListTile(
-                    contentPadding: isDesktopLayout(context)
-                        ? const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 9,
-                          )
-                        : null,
-                    leading: const Icon(Icons.language),
-                    title: Text(
-                      context.l10n.globalProgress,
-                      style: isDesktopLayout(context)
-                          ? Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            )
-                          : null,
-                    ),
-                    subtitle: Text(context.l10n.chartGroupedByCategory),
-                    trailing: isDesktopLayout(context)
-                        ? const Icon(Icons.chevron_right_rounded)
-                        : null,
-                    onTap: () => Navigator.of(context).push(
-                      FlexPageRoute(
-                        builder: (context) => GlobalProgressPage(
-                          tabController: widget.tabController,
-                        ),
-                      ),
-                    ),
-                    onLongPress: longPressGlobal,
-                  ),
-                ),
-              ),
-            );
-          }
-          currentIdx--;
-        }
-
-        if (showPeekGraph && currentIdx == 0) {
-          return Consumer<Setting>(
-            builder: (BuildContext context, Setting settings, Widget? child) {
-              if (!settings.peekGraph) return const SizedBox();
-
-              return _peekPreview(preview, settings.shortDateFormat);
-            },
-          );
-        }
-
-        if (showPeekGraph && currentIdx > 0) {
-          currentIdx--;
-        }
-
-        final exerciseSet = exerciseSets.elementAtOrNull(currentIdx);
-        if (exerciseSet == null) return const SizedBox();
-
-        return ResponsiveContent(
-          child: GraphTile(
-            selected: _selection,
-            exerciseSet: exerciseSet,
-            onSelect: (key) async {
-              setState(() {
-                if (!_selection.remove(key)) _selection.add(key);
-              });
-              final total = await _countSelectedGraphRecords();
-              if (!mounted) return;
-              setState(() {
-                _total = total;
-              });
-            },
-            tabCtrl: widget.tabController,
-            onEdit: exerciseSet.bodyWeight
-                ? null
-                : () => _editGraphSummary(exerciseSet),
-            onDelete: () => _deleteGraphSummary(exerciseSet),
+  Widget _globalProgressTile(bool desktop) {
+    final tile = Material(
+      color: desktop
+          ? Theme.of(context).colorScheme.surfaceContainerLow
+          : Colors.transparent,
+      borderRadius: desktop ? BorderRadius.circular(16) : null,
+      clipBehavior: desktop ? Clip.antiAlias : Clip.none,
+      child: ListTile(
+        contentPadding: desktop
+            ? const EdgeInsets.symmetric(horizontal: 20, vertical: 9)
+            : null,
+        leading: const Icon(Icons.language),
+        title: Text(
+          context.l10n.globalProgress,
+          style: desktop
+              ? Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)
+              : null,
+        ),
+        subtitle: Text(context.l10n.chartGroupedByCategory),
+        trailing: desktop ? const Icon(Icons.chevron_right_rounded) : null,
+        onTap: () => Navigator.of(context).push(
+          FlexPageRoute(
+            builder: (context) =>
+                GlobalProgressPage(tabController: widget.tabController),
           ),
-        );
-      },
+        ),
+        onLongPress: desktop ? null : longPressGlobal,
+      ),
     );
+    return desktop
+        ? Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onSecondaryTapDown: (details) =>
+                  _hideGlobalProgressAt(details.globalPosition),
+              child: tile,
+            ),
+          )
+        : ResponsiveContent(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+              child: tile,
+            ),
+          );
   }
 }

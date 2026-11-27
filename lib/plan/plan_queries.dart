@@ -64,16 +64,6 @@ List<PlanExerciseDraft> filterPlanExerciseDrafts(
   ];
 }
 
-typedef GymCount = ({
-  int exerciseId,
-  int count,
-  String name,
-  int? maxSets,
-  int? restMs,
-  int? warmupSets,
-  bool timers,
-});
-
 Stream<List<Plan>> watchPlans() {
   return (db.select(
     db.plans,
@@ -127,59 +117,6 @@ Stream<List<PlanCount>> watchPlanCounts() {
                 maxSets: row.read<int>('max_sets'),
                 planId: row.read<int>('id'),
                 total: row.read<int>('session_count'),
-              ),
-            )
-            .toList(),
-      );
-}
-
-Stream<Plan?> watchPlan(int planId) =>
-    (db.plans.select()..where((plan) => plan.id.equals(planId)))
-        .watchSingleOrNull();
-
-Stream<List<GymCount>> watchGymCounts(int planId, int workoutId) {
-  return db
-      .customSelect(
-        '''
-          SELECT
-            exercises.id AS exercise_id,
-            exercises.name AS name,
-            COUNT(exercise_sets.id) AS session_count,
-            plan_exercises.max_sets AS max_sets,
-            exercises.default_rest_duration_ms AS rest_ms,
-            plan_exercises.warmup_sets AS warmup_sets,
-            plan_exercises.timers AS timers
-          FROM plan_exercises
-          INNER JOIN exercises
-            ON exercises.id = plan_exercises.exercise_id
-          LEFT JOIN exercise_sets
-            ON exercise_sets.exercise_id = exercises.id
-            AND exercise_sets.workout_id = ?
-          WHERE plan_exercises.plan_id = ?
-            AND plan_exercises.enabled = 1
-          GROUP BY plan_exercises.id, exercises.id
-          ORDER BY plan_exercises.sequence, plan_exercises.id
-        ''',
-        variables: [Variable(workoutId), Variable(planId)],
-        readsFrom: {
-          db.planExercises,
-          db.exercises,
-          db.exerciseSets,
-          db.workouts,
-        },
-      )
-      .watch()
-      .map(
-        (rows) => rows
-            .map(
-              (row) => (
-                exerciseId: row.read<int>('exercise_id'),
-                count: row.read<int>('session_count'),
-                name: row.read<String>('name'),
-                maxSets: row.readNullable<int>('max_sets'),
-                restMs: row.readNullable<int>('rest_ms'),
-                warmupSets: row.readNullable<int>('warmup_sets'),
-                timers: row.read<int>('timers') != 0,
               ),
             )
             .toList(),

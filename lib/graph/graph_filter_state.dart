@@ -59,7 +59,6 @@ abstract class GraphFilterState<T extends StatefulWidget> extends State<T> {
                 16 + MediaQuery.of(sheetContext).viewInsets.bottom,
               ),
               child: GraphOptionsControls(
-                compact: false,
                 shortDateFormat: context.read<Setting>().shortDateFormat,
                 unitValue: units.isEmpty ? null : targetUnit,
                 unitItems: units,

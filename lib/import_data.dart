@@ -1,3 +1,4 @@
+import 'package:flex/app_message.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -155,34 +156,7 @@ class ImportData extends StatelessWidget {
     } catch (e, stackTrace) {
       talker.handle(e, stackTrace, 'Failed to import Flex database');
       if (!ctx.mounted) return;
-      final packageInfo = await PackageInfo.fromPlatform();
-      final version = packageInfo.version;
-
-      final url = buildImportReportEmail(
-        kind: 'database',
-        error: e,
-        stackTrace: stackTrace,
-        version: version,
-      );
-
-      final displayError = _localizedImportError(e, l10n);
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(l10n.failedToImportDatabase(displayError)),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          action: SnackBarAction(
-            label: l10n.emailDeveloper,
-            onPressed: () async {
-              await launchUrl(url, mode: LaunchMode.externalApplication);
-            },
-          ),
-          duration: Duration(seconds: 10),
-          persist: false,
-        ),
-      );
+      await _showImportError(l10n, e, stackTrace, kind: 'database');
     }
   }
 
@@ -294,179 +268,126 @@ class ImportData extends StatelessWidget {
     throw ImportValidationException(l10n.databaseImportWebUnsupported);
   }
 
-  Future<void> importOtherAppCsv(BuildContext context) async {
+  Future<void> importOtherAppCsv(BuildContext context) =>
+      _importCsv(context, _CsvKind.external);
+
+  Future<void> importGraphs(BuildContext context) =>
+      _importCsv(context, _CsvKind.graphs);
+
+  Future<void> importPlans(BuildContext context) =>
+      _importCsv(context, _CsvKind.plans);
+
+  Future<void> _importCsv(BuildContext context, _CsvKind kind) async {
     final l10n = ctx.l10n;
     Navigator.pop(context);
-
+    final external = kind == _CsvKind.external;
+    final plans = kind == _CsvKind.plans;
     try {
       final files = await FilePicker.pickFiles();
       if (files.isEmpty) return;
       final bytes = await files.single.readAsBytes();
-      final csvContent = utf8.decode(bytes, allowMalformed: false);
-      final result = await importExternalWorkoutCsv(db, csvContent);
-      talker.info(
-        'Imported ${result.format.name} CSV: ${result.workouts} workouts, '
-        '${result.exercises} exercises, ${result.sets} sets',
-      );
-
-      dbVersion.value++;
-      if (!ctx.mounted) return;
-      messengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(l10n.graphDataImported),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 5),
-        ),
-      );
-    } catch (e, stackTrace) {
-      talker.handle(e, stackTrace, 'Failed to import third-party workout CSV');
-      if (!ctx.mounted) return;
-      messengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.failedToImportGraphs(_localizedImportError(e, l10n)),
-          ),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 10),
-        ),
-      );
-    }
-  }
-
-  Future<void> importGraphs(BuildContext context) async {
-    final l10n = ctx.l10n;
-    Navigator.pop(context);
-
-    try {
-      final result = await FilePicker.pickFiles();
-      if (result.isEmpty) return;
-
-      final fileBytes = await result.single.readAsBytes();
-      String csvContent;
-      if (kIsWeb) {
-        csvContent = String.fromCharCodes(fileBytes);
+      String content;
+      if (external) {
+        content = utf8.decode(bytes, allowMalformed: false);
+      } else if (kIsWeb) {
+        content = String.fromCharCodes(bytes);
       } else {
         try {
-          csvContent = utf8.decode(fileBytes, allowMalformed: false);
-        } catch (_) {
-          csvContent = latin1.decode(fileBytes);
+          content = utf8.decode(bytes, allowMalformed: false);
+        } on FormatException {
+          content = latin1.decode(bytes);
         }
       }
 
-      final imported = await importGraphCsv(db, csvContent);
-      final exercises = imported.exercises;
-      final workouts = imported.workouts;
-      final sets = imported.exerciseSets;
-      final bodyWeights = imported.bodyWeights;
-      talker.info(
-        'Imported graph/history CSV: exercises=$exercises, '
-        'workouts=$workouts, sets=$sets, bodyWeights=$bodyWeights',
-      );
+      switch (kind) {
+        case _CsvKind.external:
+          final result = await importExternalWorkoutCsv(db, content);
+          talker.info(
+            'Imported ${result.format.name} CSV: ${result.workouts} workouts, ${result.exercises} exercises, ${result.sets} sets',
+          );
+          dbVersion.value++;
+        case _CsvKind.graphs:
+          final result = await importGraphCsv(db, content);
+          talker.info(
+            'Imported graph/history CSV: exercises=${result.exercises}, workouts=${result.workouts}, sets=${result.exerciseSets}, bodyWeights=${result.bodyWeights}',
+          );
+        case _CsvKind.plans:
+          final result = await replacePlansFromCsv(db, content, l10n);
+          talker.info(
+            'Imported ${result.plans} plans and ${result.links} exercises',
+          );
+      }
 
       if (!ctx.mounted) return;
-      Navigator.pop(ctx);
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(l10n.graphDataImported),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+      if (external) {
+        messengerKey.currentState?.showSnackBar(
+          SnackBar(
+            content: Text(l10n.graphDataImported),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
           ),
-          duration: const Duration(seconds: 4),
-          persist: false,
-        ),
-      );
-    } catch (e, stackTrace) {
-      talker.handle(e, stackTrace, 'Failed to import graph data');
+        );
+      } else {
+        Navigator.pop(ctx);
+        showAppMessage(plans ? l10n.plansImported : l10n.graphDataImported);
+      }
+    } catch (error, stackTrace) {
+      talker.handle(error, stackTrace, 'Failed to import ${kind.name} CSV');
       if (!ctx.mounted) return;
-
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.failedToImportGraphs(_localizedImportError(e, l10n)),
+      if (external) {
+        messengerKey.currentState?.showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.failedToImportGraphs(_localizedImportError(error, l10n)),
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 10),
           ),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          duration: Duration(seconds: 10),
-          persist: false,
-        ),
-      );
+        );
+      } else {
+        await _showImportError(l10n, error, stackTrace, kind: kind.name);
+      }
     }
   }
 
-  Future<void> importPlans(BuildContext context) async {
-    final l10n = ctx.l10n;
-    Navigator.pop(context);
-
-    try {
-      final result = await FilePicker.pickFiles();
-      if (result.isEmpty) return;
-
-      String csvContent;
-      final fileBytes = await result.single.readAsBytes();
-      if (kIsWeb) {
-        csvContent = String.fromCharCodes(fileBytes);
-      } else {
-        try {
-          csvContent = utf8.decode(fileBytes, allowMalformed: false);
-        } catch (e) {
-          csvContent = latin1.decode(fileBytes);
-        }
-      }
-
-      final imported = await replacePlansFromCsv(db, csvContent, l10n);
-      talker.info(
-        'Imported ${imported.plans} plans and ${imported.links} exercises',
-      );
-
-      if (!ctx.mounted) return;
-      Navigator.pop(ctx);
-
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(l10n.plansImported),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          duration: const Duration(seconds: 4),
-          persist: false,
-        ),
-      );
-    } catch (e, stackTrace) {
-      talker.handle(e, stackTrace, 'Failed to import plan data');
-      if (!ctx.mounted) return;
-      final packageInfo = await PackageInfo.fromPlatform();
-      final version = packageInfo.version;
-
-      final url = buildImportReportEmail(
-        kind: 'plans',
-        error: e,
-        stackTrace: stackTrace,
-        version: version,
-      );
-
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.failedToImportPlans(_localizedImportError(e, l10n)),
-          ),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          action: SnackBarAction(
-            label: l10n.emailDeveloper,
-            onPressed: () async {
-              await launchUrl(url, mode: LaunchMode.externalApplication);
-            },
-          ),
-          duration: Duration(seconds: 10),
-          persist: false,
-        ),
-      );
-    }
+  Future<void> _showImportError(
+    AppLocalizations l10n,
+    Object error,
+    StackTrace stackTrace, {
+    required String kind,
+  }) async {
+    final displayError = _localizedImportError(error, l10n);
+    final message = switch (kind) {
+      'database' => l10n.failedToImportDatabase(displayError),
+      'plans' => l10n.failedToImportPlans(displayError),
+      _ => l10n.failedToImportGraphs(displayError),
+    };
+    final url = kind == 'graphs'
+        ? null
+        : buildImportReportEmail(
+            kind: kind,
+            error: error,
+            stackTrace: stackTrace,
+            version: (await PackageInfo.fromPlatform()).version,
+          );
+    messengerKey.currentState!.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        action: url == null
+            ? null
+            : SnackBarAction(
+                label: l10n.emailDeveloper,
+                onPressed: () async {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                },
+              ),
+        duration: const Duration(seconds: 10),
+        persist: false,
+      ),
+    );
   }
 }
+
+enum _CsvKind { graphs, plans, external }

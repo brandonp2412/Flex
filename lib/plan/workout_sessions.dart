@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/database/exercise_set_repository.dart';
 
 class PlanExerciseEntry {
   final PlanExercise planExercise;
@@ -25,59 +24,37 @@ Map<int, List<PlanExerciseEntry>> groupEnabledPlanExercisesByPlan(
 Stream<List<PlanExerciseEntry>> watchPlanExerciseEntries(
   AppDatabase database,
   int planId,
-) {
-  final query =
-      database.select(database.planExercises).join([
-          innerJoin(
-            database.exercises,
-            database.exercises.id.equalsExp(database.planExercises.exerciseId),
-          ),
-        ])
-        ..where(
-          database.planExercises.planId.equals(planId) &
-              database.planExercises.enabled.equals(true),
-        )
-        ..orderBy([
-          OrderingTerm.asc(database.planExercises.sequence),
-          OrderingTerm.asc(database.planExercises.id),
-        ]);
-
-  return query.watch().map(
-    (rows) => rows
-        .map(
-          (row) => PlanExerciseEntry(
-            planExercise: row.readTable(database.planExercises),
-            exercise: row.readTable(database.exercises),
-          ),
-        )
-        .toList(),
-  );
-}
+) => watchAllPlanExerciseEntries(database, planId: planId);
 
 Stream<List<PlanExerciseEntry>> watchAllPlanExerciseEntries(
-  AppDatabase database,
-) {
-  final query =
-      database.select(database.planExercises).join([
-        innerJoin(
-          database.exercises,
-          database.exercises.id.equalsExp(database.planExercises.exerciseId),
-        ),
-      ])..orderBy([
-        OrderingTerm.asc(database.planExercises.planId),
-        OrderingTerm.asc(database.planExercises.sequence),
-        OrderingTerm.asc(database.planExercises.id),
-      ]);
-
+  AppDatabase database, {
+  int? planId,
+}) {
+  final query = database.select(database.planExercises).join([
+    innerJoin(
+      database.exercises,
+      database.exercises.id.equalsExp(database.planExercises.exerciseId),
+    ),
+  ]);
+  if (planId != null) {
+    query.where(
+      database.planExercises.planId.equals(planId) &
+          database.planExercises.enabled.equals(true),
+    );
+  }
+  query.orderBy([
+    OrderingTerm.asc(database.planExercises.planId),
+    OrderingTerm.asc(database.planExercises.sequence),
+    OrderingTerm.asc(database.planExercises.id),
+  ]);
   return query.watch().map(
-    (rows) => rows
-        .map(
-          (row) => PlanExerciseEntry(
-            planExercise: row.readTable(database.planExercises),
-            exercise: row.readTable(database.exercises),
-          ),
-        )
-        .toList(),
+    (rows) => [
+      for (final row in rows)
+        PlanExerciseEntry(
+          planExercise: row.readTable(database.planExercises),
+          exercise: row.readTable(database.exercises),
+        ),
+    ],
   );
 }
 
@@ -131,108 +108,4 @@ Future<void> finishWorkout(
         (workout) => workout.id.equals(workoutId) & workout.endedAt.isNull(),
       ))
       .write(WorkoutsCompanion(endedAt: Value(now ?? DateTime.now())));
-}
-
-Future<Workout?> getLatestWorkoutForExercise(
-  AppDatabase database, {
-  required int planId,
-  required int exerciseId,
-}) async {
-  final workoutId = await database
-      .customSelect(
-        '''
-          SELECT workouts.id AS id
-          FROM workouts
-          WHERE workouts.plan_id = ?
-            AND EXISTS (
-              SELECT 1
-              FROM exercise_sets
-              WHERE exercise_sets.workout_id = workouts.id
-                AND exercise_sets.exercise_id = ?
-            )
-          ORDER BY workouts.started_at DESC, workouts.id DESC
-          LIMIT 1
-        ''',
-        variables: [Variable(planId), Variable(exerciseId)],
-        readsFrom: {database.workouts, database.exerciseSets},
-      )
-      .map((row) => row.read<int>('id'))
-      .getSingleOrNull();
-  if (workoutId == null) return null;
-  return (database.workouts.select()
-        ..where((workout) => workout.id.equals(workoutId)))
-      .getSingle();
-}
-
-Future<ExerciseSet?> getFirstExerciseSetInWorkout(
-  AppDatabase database, {
-  required int workoutId,
-  required int exerciseId,
-}) {
-  return (database.exerciseSets.select()
-        ..where(
-          (set) =>
-              set.workoutId.equals(workoutId) &
-              set.exerciseId.equals(exerciseId),
-        )
-        ..orderBy([
-          (set) => OrderingTerm.asc(set.timestamp),
-          (set) => OrderingTerm.asc(set.id),
-        ])
-        ..limit(1))
-      .getSingleOrNull();
-}
-
-Future<ExerciseSet?> getLatestManualExerciseSet(
-  AppDatabase database,
-  int exerciseId,
-) {
-  return (database.exerciseSets.select()
-        ..where(
-          (set) => set.exerciseId.equals(exerciseId) & set.workoutId.isNull(),
-        )
-        ..orderBy([
-          (set) => OrderingTerm.desc(set.timestamp),
-          (set) => OrderingTerm.desc(set.id),
-        ])
-        ..limit(1))
-      .getSingleOrNull();
-}
-
-Future<ExerciseSetView?> getFirstOfLastPlanWorkout(
-  AppDatabase database, {
-  required int exerciseId,
-  required int planId,
-}) async {
-  final workout = await getLatestWorkoutForExercise(
-    database,
-    planId: planId,
-    exerciseId: exerciseId,
-  );
-  if (workout == null) return null;
-
-  final exerciseSet = await getFirstExerciseSetInWorkout(
-    database,
-    workoutId: workout.id,
-    exerciseId: exerciseId,
-  );
-  if (exerciseSet == null) return null;
-  return getExerciseSetById(database, exerciseSet.id);
-}
-
-Future<ExerciseSetView?> getStartPlanPrefillById(
-  AppDatabase database, {
-  required int exerciseId,
-  required int planId,
-}) async {
-  final planned = await getFirstOfLastPlanWorkout(
-    database,
-    exerciseId: exerciseId,
-    planId: planId,
-  );
-  if (planned != null) return planned;
-
-  final manual = await getLatestManualExerciseSet(database, exerciseId);
-  if (manual == null) return null;
-  return getExerciseSetById(database, manual.id);
 }

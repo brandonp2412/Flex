@@ -7,6 +7,7 @@ import 'package:flex/database/database.dart';
 import 'package:flex/database/defaults.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/graph/cardio_data.dart';
+import 'package:flex/graph/graph_data.dart';
 import 'package:flex/graph/strength_data.dart';
 import 'package:flex/main.dart';
 
@@ -636,3 +637,30 @@ Future<ExerciseSetView?> getGraphPointSet(
 Future<int> countGraphSets(Iterable<String> exerciseNames) {
   return countExerciseSetsForExercises(db, exerciseNames);
 }
+
+Future<List<GraphData>> getInitialGraphData(GraphExerciseSummary summary) =>
+    switch (summary) {
+      _ when summary.bodyWeight => getBodyWeightData(
+        target: summary.unit,
+        period: Period.day,
+        start: null,
+        end: null,
+        limit: 20,
+      ),
+      _ when summary.cardio => getCardioData(
+        name: summary.name,
+        target: summary.unit,
+        metric: isWeightUnit(summary.unit)
+            ? CardioMetric.weight
+            : CardioMetric.pace,
+      ),
+      _ => getStrengthData(
+        target: summary.unit,
+        name: summary.name,
+        metric: StrengthMetric.bestWeight,
+        period: Period.day,
+        start: null,
+        end: null,
+        limit: 20,
+      ),
+    };

@@ -3,7 +3,7 @@ import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/graph/graphs_page.dart';
-import 'package:flex/graph/strength_page.dart';
+import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flex/main.dart' as app;
 import 'package:flex/main.dart';
 import 'package:flex/plan/edit_plan_page.dart';
@@ -310,7 +310,7 @@ void main() {
             if (!context.mounted) return;
             navigateTo(
               context: context,
-              page: StrengthPage(
+              page: ExerciseGraphPage(
                 tabCtrl: MockTabController(),
                 initialName: 'Shoulder press',
                 initialUnit: 'kg',

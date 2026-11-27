@@ -5,14 +5,12 @@ class LimitControl extends StatelessWidget {
   final int limit;
   final int maxLimit;
   final ValueChanged<int> onChanged;
-  final bool compact;
 
   const LimitControl({
     super.key,
     required this.limit,
     required this.maxLimit,
     required this.onChanged,
-    this.compact = false,
   });
 
   @override
@@ -60,35 +58,6 @@ class LimitControl extends StatelessWidget {
       onChanged: (value) => onChanged(value.toInt()),
     );
 
-    if (!compact) {
-      return Column(mainAxisSize: MainAxisSize.min, children: [label, slider]);
-    }
-
-    return Container(
-      height: 58,
-      padding: const EdgeInsets.fromLTRB(12, 6, 8, 4),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          label,
-          SizedBox(
-            height: 24,
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-              ),
-              child: slider,
-            ),
-          ),
-        ],
-      ),
-    );
+    return Column(mainAxisSize: MainAxisSize.min, children: [label, slider]);
   }
 }

@@ -54,137 +54,59 @@ Future<String> exportGraphCsv(AppDatabase database) async {
   final bodyWeights = await database.bodyWeights.select().get();
 
   final rows = <List<Object?>>[_header];
+  void add(String type, Map<String, Object?> fields) => rows.add([
+    _format,
+    type,
+    for (final column in _header.skip(2)) fields[column],
+  ]);
 
   for (final exercise in exercises) {
-    rows.add([
-      _format,
-      'exercise',
-      exercise.id,
-      null,
-      null,
-      exercise.name,
-      exercise.kind,
-      exercise.displayUnit,
-      exercise.categoryId == null ? null : categories[exercise.categoryId],
-      exercise.image,
-      exercise.defaultRestDurationMs,
-      exercise.notes,
-      exercise.graphMetric,
-      exercise.graphPeriod,
-      exercise.graphLimit,
-      exercise.graphTimeBasedXAxis,
-      exercise.archived,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-    ]);
+    add('exercise', {
+      'id': exercise.id,
+      'name': exercise.name,
+      'kind': exercise.kind,
+      'displayUnit': exercise.displayUnit,
+      'category': categories[exercise.categoryId],
+      'image': exercise.image,
+      'defaultRestDurationMs': exercise.defaultRestDurationMs,
+      'notes': exercise.notes,
+      'graphMetric': exercise.graphMetric,
+      'graphPeriod': exercise.graphPeriod,
+      'graphLimit': exercise.graphLimit,
+      'graphTimeBasedXAxis': exercise.graphTimeBasedXAxis,
+      'archived': exercise.archived,
+    });
   }
-
   for (final workout in workouts) {
-    rows.add([
-      _format,
-      'workout',
-      workout.id,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      workout.planId,
-      workout.startedAt.toIso8601String(),
-      workout.endedAt?.toIso8601String(),
-    ]);
+    add('workout', {
+      'id': workout.id,
+      'planId': workout.planId,
+      'startedAt': workout.startedAt.toIso8601String(),
+      'endedAt': workout.endedAt?.toIso8601String(),
+    });
   }
-
   for (final set in exerciseSets) {
-    rows.add([
-      _format,
-      'exerciseSet',
-      set.id,
-      set.exerciseId,
-      set.workoutId,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      set.notes,
-      null,
-      null,
-      null,
-      null,
-      null,
-      set.timestamp.toIso8601String(),
-      set.reps,
-      set.loadKg,
-      set.durationMs,
-      set.distanceMetres,
-      set.incline,
-      set.bodyWeightKg,
-      null,
-      null,
-      null,
-      null,
-    ]);
+    add('exerciseSet', {
+      'id': set.id,
+      'exerciseId': set.exerciseId,
+      'workoutId': set.workoutId,
+      'notes': set.notes,
+      'timestamp': set.timestamp.toIso8601String(),
+      'reps': set.reps,
+      'loadKg': set.loadKg,
+      'durationMs': set.durationMs,
+      'distanceMetres': set.distanceMetres,
+      'incline': set.incline,
+      'bodyWeightKg': set.bodyWeightKg,
+    });
   }
-
   for (final weight in bodyWeights) {
-    rows.add([
-      _format,
-      'bodyWeight',
-      weight.id,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      weight.timestamp.toIso8601String(),
-      null,
-      null,
-      null,
-      null,
-      null,
-      weight.weightKg,
-      weight.photo,
-      null,
-      null,
-      null,
-    ]);
+    add('bodyWeight', {
+      'id': weight.id,
+      'timestamp': weight.timestamp.toIso8601String(),
+      'bodyWeightKg': weight.weightKg,
+      'photo': weight.photo,
+    });
   }
 
   return CsvEncoder(lineDelimiter: "\n").convert(rows);

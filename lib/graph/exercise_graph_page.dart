@@ -4,6 +4,9 @@ import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/graph/flex_line_chart.dart';
+import 'package:flex/graph/graph_data.dart';
+import 'package:flex/graph/edit_graph_page.dart';
+import 'package:flex/utils.dart';
 import 'package:flex/graph/graph_metric_chips.dart';
 import 'package:flex/graph/graph_period_picker.dart';
 import 'package:flex/l10n/l10n.dart';
@@ -21,11 +24,33 @@ import 'package:flex/sets/edit_set_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-abstract class ExerciseGraphState<T extends StatefulWidget, M extends Enum>
-    extends GraphFilterState<T> {
+class ExerciseGraphPage extends StatefulWidget {
+  const ExerciseGraphPage({
+    super.key,
+    required this.initialName,
+    required this.initialUnit,
+    required this.initialData,
+    required this.tabCtrl,
+    this.cardio = false,
+    this.bodyWeight = false,
+  });
+
+  final String initialName;
+  final String initialUnit;
+  final List<GraphData> initialData;
+  final TabController tabCtrl;
+  final bool cardio;
+  final bool bodyWeight;
+
+  @override
+  State<ExerciseGraphPage> createState() => _ExerciseGraphPageState();
+}
+
+class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
   late String exerciseName;
   late bool timeAxis;
-  late M metric;
+  late Enum metric;
+  late List<GraphData> data;
   int dataRequest = 0;
   late Period period;
   DateTime lastTap = DateTime(0);
@@ -33,26 +58,101 @@ abstract class ExerciseGraphState<T extends StatefulWidget, M extends Enum>
   Timer? _notesDebounce;
   final notesCtrl = TextEditingController();
 
-  TabController get tabController;
-  bool get bodyWeight => false;
-  List<({DateTime created, double value})> get chartRows;
-  List<(M, String)> get metricOptions;
-  M defaultMetric(Setting settings);
-  M storedMetric(List<String> stored);
-  bool get showNotes => true;
-  bool get cardio => false;
-  String tooltip(int index, String format);
-  Future<void> editGraph();
+  TabController get tabController => widget.tabCtrl;
+  bool get bodyWeight => widget.bodyWeight;
+  bool get cardio => widget.cardio;
+  bool get weightedCardio => isWeightUnit(targetUnit);
 
-  DateTime? pointDate(int index);
+  Enum get fallbackMetric => !cardio
+      ? StrengthMetric.bestWeight
+      : weightedCardio
+      ? CardioMetric.weight
+      : CardioMetric.pace;
 
-  void initialize(String name, String unit) {
-    exerciseName = name;
-    targetUnit = unit;
+  List<CardioMetric> get allowedCardioMetrics => weightedCardio
+      ? [CardioMetric.weight, CardioMetric.duration, CardioMetric.incline]
+      : [
+          CardioMetric.pace,
+          CardioMetric.inclineAdjustedPace,
+          CardioMetric.duration,
+          CardioMetric.distance,
+          CardioMetric.incline,
+        ];
+
+  Enum selectMetric(
+    List<String> names,
+    Setting settings, {
+    bool initial = false,
+  }) {
+    if (cardio) {
+      if (initial && weightedCardio) return CardioMetric.weight;
+      return CardioMetric.values.firstWhere(
+        (value) =>
+            names.contains(value.name) &&
+            (initial || allowedCardioMetrics.contains(value)),
+        orElse: () => fallbackMetric as CardioMetric,
+      );
+    }
+    return StrengthMetric.values.firstWhere(
+      (value) =>
+          names.contains(value.name) &&
+          (settings.showBodyWeight || value != StrengthMetric.relativeStrength),
+      orElse: () => StrengthMetric.bestWeight,
+    );
+  }
+
+  List<(Enum, String)> get metricOptions {
+    final l10n = context.l10n;
+    if (cardio) {
+      return [
+        for (final value in allowedCardioMetrics)
+          (
+            value,
+            switch (value) {
+              CardioMetric.weight => l10n.weightLabel,
+              CardioMetric.duration => l10n.durationLabel,
+              CardioMetric.incline => l10n.inclineLabel,
+              CardioMetric.pace => l10n.paceDistanceTime,
+              CardioMetric.inclineAdjustedPace => l10n.adjustedPace,
+              CardioMetric.distance => l10n.distanceLabel,
+            },
+          ),
+      ];
+    }
+    return [
+      (StrengthMetric.bestWeight, l10n.bestWeight),
+      (StrengthMetric.bestReps, l10n.bestReps),
+      (StrengthMetric.oneRepMax, l10n.oneRepMax),
+      (StrengthMetric.volume, l10n.volume),
+      if (context.select<Setting, bool>((settings) => settings.showBodyWeight))
+        (StrengthMetric.relativeStrength, l10n.relativeStrength),
+    ];
+  }
+
+  @override
+  List<DropdownMenuItem<String>> get optionsUnits {
+    if (!context.read<Setting>().showUnits) return const [];
+    if (!cardio || metric == CardioMetric.weight)
+      return strengthUnitMenuItems(context.l10n);
+    if (metric == CardioMetric.distance)
+      return cardioDistanceUnitMenuItems(context.l10n);
+    return const [];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    exerciseName = widget.initialName;
+    targetUnit = widget.initialUnit;
+    data = widget.initialData;
     final settings = context.read<Setting>();
     timeAxis = settings.defaultGraphTimeBasedXAxis;
     limit = settings.defaultGraphLimit;
-    metric = defaultMetric(settings);
+    metric = selectMetric(
+      [settings.defaultGraphMetric],
+      settings,
+      initial: true,
+    );
     period = Period.values.firstWhere(
       (p) => p.name == settings.defaultGraphPeriod,
       orElse: () => Period.day,
@@ -61,11 +161,89 @@ abstract class ExerciseGraphState<T extends StatefulWidget, M extends Enum>
     if (!bodyWeight) loadPreferences();
   }
 
+  @override
+  Future<void> setData() async {
+    if (!mounted) return;
+    final request = ++dataRequest;
+    final rows = bodyWeight
+        ? await getBodyWeightData(
+            target: targetUnit,
+            period: period,
+            start: start,
+            end: end,
+            limit: limit,
+          )
+        : cardio
+        ? await getCardioData(
+            name: exerciseName,
+            target: targetUnit,
+            metric: metric as CardioMetric,
+            period: period,
+            start: start,
+            end: end,
+            limit: limit,
+          )
+        : await getStrengthData(
+            name: exerciseName,
+            target: targetUnit,
+            metric: metric as StrengthMetric,
+            period: period,
+            start: start,
+            end: end,
+            limit: limit,
+          );
+    if (mounted && request == dataRequest) setState(() => data = rows);
+  }
+
+  Future<void> editGraph() async {
+    final name = await Navigator.of(context).push<String>(
+      FlexPageRoute(builder: (context) => EditGraphPage(name: exerciseName)),
+    );
+    if (!mounted || name == null) return;
+    final updated = cardio ? await getExerciseByName(db, name) : null;
+    if (!mounted) return;
+    setState(() {
+      exerciseName = name;
+      if (cardio) {
+        if (updated != null) targetUnit = updated.displayUnit;
+        if (!allowedCardioMetrics.contains(metric)) metric = fallbackMetric;
+      }
+    });
+    if (cardio) setData();
+  }
+
+  String tooltip(int index, String format) {
+    final row = data[index];
+    final created = formatDisplayDate(context, row.created, format);
+    final value = formatDisplayNumber(context, row.value, minDigits: 2);
+    if (!cardio) {
+      final unit = displayMeasurementUnit(context.l10n, targetUnit);
+      return metric == StrengthMetric.bestReps ||
+              metric == StrengthMetric.relativeStrength
+          ? '$value $created'
+          : '$value$unit $created';
+    }
+    final unit = displayMeasurementUnit(context.l10n, row.unit);
+    final text = switch (metric) {
+      CardioMetric.pace =>
+        '${formatDisplayNumber(context, row.value)} $unit / ${context.l10n.minutesShort}',
+      CardioMetric.duration =>
+        '${row.value.floor()}:${((row.value * 60) % 60).floor().toString().padLeft(2, '0')}',
+      CardioMetric.distance || CardioMetric.weight => '$value $unit',
+      CardioMetric.incline => formatDisplayPercent(context, row.value / 100),
+      _ => value,
+    };
+    return '$text\n$created';
+  }
+
   Future<void> loadPreferences() async {
     final pref = await getExerciseByName(db, exerciseName);
     if (pref == null || !mounted) return;
     setState(() {
-      metric = storedMetric(pref.graphMetric.split(','));
+      metric = selectMetric(
+        pref.graphMetric.split(','),
+        context.read<Setting>(),
+      );
       period = Period.values.firstWhere(
         (p) => p.name == pref.graphPeriod,
         orElse: () => period,
@@ -84,8 +262,10 @@ abstract class ExerciseGraphState<T extends StatefulWidget, M extends Enum>
     );
     final options = metricOptions;
     final palette = GraphMetricChips.palette(Theme.of(context).colorScheme);
-    final rows = chartRows;
-    final notesVisible = showNotes;
+    final rows = data;
+    final notesVisible =
+        cardio ||
+        context.select<Setting, bool>((settings) => settings.showNotes);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -120,7 +300,7 @@ abstract class ExerciseGraphState<T extends StatefulWidget, M extends Enum>
               ),
               if (!bodyWeight) ...[
                 const SizedBox(height: 8),
-                GraphMetricChips<M>(
+                GraphMetricChips<Enum>(
                   options: options,
                   selected: metric,
                   onChanged: (value) {
@@ -159,7 +339,11 @@ abstract class ExerciseGraphState<T extends StatefulWidget, M extends Enum>
                                     ? rows[i].created.millisecondsSinceEpoch
                                           .toDouble()
                                     : i.toDouble(),
-                                rows[i].value,
+                                cardio
+                                    ? double.parse(
+                                        rows[i].value.toStringAsFixed(1),
+                                      )
+                                    : rows[i].value,
                                 column: i,
                               ),
                           ],
@@ -299,8 +483,8 @@ abstract class ExerciseGraphState<T extends StatefulWidget, M extends Enum>
     }
 
     if (bodyWeight) return;
-    final created = pointDate(index);
-    if (created == null) return;
+    if (index < 0 || index >= data.length) return;
+    final created = data[index].created;
     final desktop = isDesktopLayout(context);
     final exerciseSet = await getGraphPointSet(exerciseName, created);
     if (!mounted || exerciseSet == null) return;

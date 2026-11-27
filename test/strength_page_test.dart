@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/exercise_analytics.dart';
-import 'package:flex/graph/strength_page.dart';
+import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -24,7 +24,7 @@ Future<void> pumpStrengthPage(
     tester,
     DefaultTabController(
       length: 1,
-      child: StrengthPage(
+      child: ExerciseGraphPage(
         tabCtrl: MockTabController(),
         initialName: screenshotExercise,
         initialUnit: 'kg',

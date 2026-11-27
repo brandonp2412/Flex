@@ -174,19 +174,12 @@ void main() {
     );
 
     await resumeOrStartWorkout(db, planA, now: DateTime(2026, 1, 4, 8));
-    final prefill = await getStartPlanPrefillById(
-      db,
-      exerciseId: exercise.id,
-      planId: planA,
-    );
-
+    await insertPlanExerciseFixture(db, planId: planA, exercise: exercise.name);
+    final page = await watchStartPlanData(db, planA).first;
+    final prefill = page.defaults[exercise.id];
     expect(prefill, isNotNull);
     expect(prefill!.planId, planA);
     expect(prefill.weight, 40);
-
-    await insertPlanExerciseFixture(db, planId: planA, exercise: exercise.name);
-    final page = await watchStartPlanData(db, planA).first;
-    expect(page.defaults[exercise.id]?.id, prefill.id);
     expect(page.sets[exercise.id], isNull);
     expect(page.previous[exercise.id]?.sets.map((set) => set.weight), [45, 90]);
     final saved = await addMirroredSet(
@@ -219,12 +212,6 @@ void main() {
       final stable = await db.exerciseSets.select().getSingle();
       expect(stable.workoutId, isNull);
 
-      final prefill = await getStartPlanPrefillById(
-        db,
-        exerciseId: exercise.id,
-        planId: planId,
-      );
-      expect(prefill?.id, manual.id);
       await insertPlanExerciseFixture(
         db,
         planId: planId,

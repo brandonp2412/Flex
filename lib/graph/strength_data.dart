@@ -1,15 +1,14 @@
-class StrengthData {
-  final DateTime created;
+import 'package:flex/graph/graph_data.dart';
+
+class StrengthData extends GraphData {
   final double reps;
-  final String unit;
-  final double value;
   final String? category;
 
   StrengthData({
-    required this.created,
+    required super.created,
+    required super.unit,
+    required super.value,
     required this.reps,
-    required this.unit,
-    required this.value,
     this.category,
   });
 }

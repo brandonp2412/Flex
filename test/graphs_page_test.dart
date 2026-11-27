@@ -1,3 +1,4 @@
+import 'package:flex/graph/graph_data.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
@@ -80,8 +81,14 @@ void main() {
 
     expect(find.text('Search graphs...'), findsOne);
     expect(find.text('Global progress'), findsOne);
-    final list = tester.widget<ListView>(find.byType(ListView));
-    expect((list.padding! as EdgeInsets).bottom, fabListPadding);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is SliverPadding &&
+            widget.padding.resolve(TextDirection.ltr).bottom == fabListPadding,
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('GraphsPage shows empty state when global progress is disabled', (
@@ -306,8 +313,8 @@ void main() {
     await pumpGraphsPage(tester, harness, surfaceSize: const Size(1400, 900));
 
     Future<List<dynamic>> peekFuture() => tester
-        .widget<FutureBuilder<List<dynamic>>>(
-          find.byType(FutureBuilder<List<dynamic>>),
+        .widget<FutureBuilder<List<GraphData>>>(
+          find.byType(FutureBuilder<List<GraphData>>),
         )
         .future!;
 

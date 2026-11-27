@@ -1,4 +1,3 @@
-import 'package:flex/graph/compact_switch.dart';
 import 'package:flex/graph/graph_curve_settings.dart';
 import 'package:flex/graph/graph_date_field.dart';
 import 'package:flex/graph/limit_control.dart';
@@ -9,7 +8,6 @@ export 'package:flex/graph/graph_options_button.dart';
 export 'package:flex/graph/graph_action_buttons.dart';
 
 class GraphOptionsControls extends StatelessWidget {
-  final bool compact;
   final String shortDateFormat;
   final String? unitValue;
   final List<DropdownMenuItem<String>> unitItems;
@@ -28,7 +26,6 @@ class GraphOptionsControls extends StatelessWidget {
 
   const GraphOptionsControls({
     super.key,
-    required this.compact,
     required this.shortDateFormat,
     this.unitValue,
     this.unitItems = const [],
@@ -48,101 +45,6 @@ class GraphOptionsControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!compact) return _mobileLayout(context);
-
-    final colorScheme = Theme.of(context).colorScheme;
-    final topControls = <Widget>[
-      if (unitValue != null && unitItems.isNotEmpty)
-        DropdownButtonFormField<String>(
-          key: ValueKey(unitValue),
-          initialValue: unitValue,
-          isExpanded: true,
-          decoration: InputDecoration(
-            labelText: context.l10n.unitLabel,
-            isDense: true,
-          ),
-          items: unitItems,
-          onChanged: (value) {
-            if (value != null) onUnitChanged?.call(value);
-          },
-        ),
-      GraphDateField(
-        label: context.l10n.startDate,
-        value: startDate,
-        hint: shortDateFormat,
-        onTap: onSelectStart,
-        onClear: onClearStart,
-        showClearButton: true,
-        compact: true,
-      ),
-      GraphDateField(
-        label: context.l10n.stopDate,
-        value: endDate,
-        hint: shortDateFormat,
-        onTap: onSelectEnd,
-        onClear: onClearEnd,
-        showClearButton: true,
-        compact: true,
-      ),
-      LimitControl(
-        limit: limit,
-        maxLimit: maxLimit,
-        onChanged: onLimitChanged,
-        compact: true,
-      ),
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: .45),
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              for (var index = 0; index < topControls.length; index++) ...[
-                if (index > 0) const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(height: 58, child: topControls[index]),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (timeBasedXAxis != null && onTimeAxisChange != null) ...[
-                Expanded(
-                  flex: 2,
-                  child: CompactSwitch(
-                    label: context.l10n.useTimeBasedXAxis,
-                    value: timeBasedXAxis!,
-                    onChanged: onTimeAxisChange!,
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                flex: timeBasedXAxis != null && onTimeAxisChange != null
-                    ? 5
-                    : 1,
-                child: const GraphCurveSettings(compact: true),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _mobileLayout(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 

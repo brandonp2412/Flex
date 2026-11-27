@@ -25,9 +25,20 @@ class StartPlanData {
 
 Stream<StartPlanData> watchStartPlanData(
   AppDatabase database,
-  int planId,
-) async* {
-  final workout = await resumeOrStartWorkout(database, planId);
+  int planId, {
+  DateTime? now,
+}) async* {
+  final workout = await resumeOrStartWorkout(database, planId, now: now);
+  final localNow = now?.toLocal();
+  final cutoff = localNow == null
+      ? "CAST(strftime('%s', date('now', 'localtime'), 'utc') AS INTEGER)"
+      : (DateTime(
+                  localNow.year,
+                  localNow.month,
+                  localNow.day,
+                ).millisecondsSinceEpoch ~/
+                1000)
+            .toString();
   const defaultId = CustomExpression<int>('''COALESCE(
     (SELECT s.id FROM exercise_sets s
       JOIN workouts w ON w.id = s.workout_id
@@ -37,10 +48,10 @@ Stream<StartPlanData> watchStartPlanData(
       WHERE s.exercise_id = exercises.id AND s.workout_id IS NULL
       ORDER BY s.timestamp DESC, s.id DESC LIMIT 1)
   )''');
-  const previousDay = CustomExpression<String>('''(
+  final previousDay = CustomExpression<String>('''(
     SELECT date(MAX(s.timestamp), 'unixepoch', 'localtime')
     FROM exercise_sets s WHERE s.exercise_id = exercises.id
-      AND s.timestamp < CAST(strftime('%s', date('now', 'localtime'), 'utc') AS INTEGER)
+      AND s.timestamp < $cutoff
   )''');
   final query =
       database.select(database.plans).join([

@@ -14,8 +14,6 @@ class GraphDateField extends StatelessWidget {
   final String hint;
   final VoidCallback onTap;
   final VoidCallback onClear;
-  final bool showClearButton;
-  final bool compact;
 
   const GraphDateField({
     super.key,
@@ -24,8 +22,6 @@ class GraphDateField extends StatelessWidget {
     required this.hint,
     required this.onTap,
     required this.onClear,
-    this.showClearButton = false,
-    this.compact = false,
   });
 
   @override
@@ -40,10 +36,7 @@ class GraphDateField extends StatelessWidget {
       onTap: onTap,
       onLongPress: desktop ? null : onClear,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 10 : 12,
-          vertical: compact ? 7 : 10,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
@@ -56,7 +49,7 @@ class GraphDateField extends StatelessWidget {
               size: 18,
               color: colorScheme.onSurfaceVariant,
             ),
-            SizedBox(width: compact ? 8 : 10),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +77,7 @@ class GraphDateField extends StatelessWidget {
                 ],
               ),
             ),
-            if ((showClearButton || desktop) && hasValue) ...[
+            if (desktop && hasValue) ...[
               const SizedBox(width: 4),
               IconButton(
                 visualDensity: VisualDensity.compact,

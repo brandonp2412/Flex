@@ -14,7 +14,6 @@ import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/permissions_page.dart';
 import 'package:flex/plan/edit_plan_page.dart';
-import 'package:flex/plan/plan_queries.dart';
 import 'package:flex/plan/session_sets.dart';
 import 'package:flex/plan/start_list.dart';
 import 'package:flex/plan/start_plan_data.dart';
@@ -117,18 +116,6 @@ class _StartPlanPageState extends State<StartPlanPage>
           );
         }
 
-        final counts = <GymCount>[
-          for (final entry in exercises)
-            (
-              exerciseId: entry.exercise.id,
-              count: data?.sets[entry.exercise.id]?.length ?? 0,
-              name: entry.exercise.name,
-              maxSets: entry.planExercise.maxSets,
-              restMs: entry.exercise.defaultRestDurationMs,
-              warmupSets: entry.planExercise.warmupSets,
-              timers: entry.planExercise.timers,
-            ),
-        ];
         final desktop = isDesktopLayout(context);
         final colors = Theme.of(context).colorScheme;
 
@@ -156,8 +143,7 @@ class _StartPlanPageState extends State<StartPlanPage>
                 exercises: exercises,
                 selected: _selected,
                 onSelect: (index) async => _select(index),
-                counts: counts,
-                plan: widget.plan,
+                sets: data?.sets ?? const {},
                 workoutId: workout?.id,
               );
 
