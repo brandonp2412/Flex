@@ -173,18 +173,13 @@ class _SessionSetsState extends State<SessionSets> {
     ];
   }
 
-  Widget _buildChips(List<ExerciseSetView> sets) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      if (!widget.compact) const SizedBox(height: 16),
-      _scrollingChips(
-        key: const Key('session-set-scroll'),
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        children: _chips(sets, widget.previous ?? const []),
-      ),
-    ],
+  Widget _buildChips(List<ExerciseSetView> sets) => _scrollingChips(
+    key: const Key('session-set-scroll'),
+    controller: _scrollController,
+    padding: widget.compact
+        ? const EdgeInsets.symmetric(vertical: 6)
+        : EdgeInsets.zero,
+    children: _chips(sets, widget.previous ?? const []),
   );
 
   /// Id of the top set this session, using the measurement shown to the user.

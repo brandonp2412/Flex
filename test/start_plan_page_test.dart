@@ -225,6 +225,112 @@ void main() {
     expect(find.byIcon(Icons.check_circle_outline), findsNothing);
   });
 
+  for (final trailing in ['reorder', 'none']) {
+    testWidgets('single desktop exercise has no outer spacing ($trailing)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1400, 800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final harness = await FlexTestHarness.create();
+      final database = harness.database;
+      final id = await database.plans.insertOne(planFixture());
+      await insertPlanExerciseFixture(
+        database,
+        planId: id,
+        exercise: 'Stairmaster',
+        cardio: true,
+      );
+      await database.settings.update().write(
+        SettingsCompanion(planTrailing: Value(trailing)),
+      );
+      final plan =
+          await (database.plans.select()..where((row) => row.id.equals(id)))
+              .getSingle();
+      await harness.pump(
+        tester,
+        StartPlanPage(plan: plan),
+        surfaceSize: const Size(1400, 800),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(StartList), findsOneWidget);
+      expect(find.byKey(const Key('Stairmaster')), findsOneWidget);
+      final card = find
+          .descendant(
+            of: find.byKey(const Key('Stairmaster')),
+            matching: find.byType(Material),
+          )
+          .first;
+      expect(tester.getRect(card), tester.getRect(find.byType(StartList)));
+    });
+  }
+
+  for (final cardio in [false, true]) {
+    testWidgets(
+      'desktop set preview stays in place after save and undo ($cardio)',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(1400, 800);
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final harness = await FlexTestHarness.create();
+        final database = harness.database;
+        final exercise = cardio ? 'Recumbent bike' : 'Bench press';
+        final yesterday = DateTime.now().subtract(const Duration(days: 1));
+        await insertExerciseSetFixture(
+          database,
+          exercise,
+          cardio: cardio,
+          created: yesterday,
+          reps: 8,
+          weight: 90,
+        );
+        final id = await database.plans.insertOne(planFixture());
+        await insertPlanExerciseFixture(
+          database,
+          planId: id,
+          exercise: exercise,
+          cardio: cardio,
+        );
+        await database.settings.update().write(
+          testSettings(
+            explainedPermissions: true,
+            notificationPermissionRequested: true,
+          ),
+        );
+        final plan =
+            await (database.plans.select()..where((row) => row.id.equals(id)))
+                .getSingle();
+        await harness.pump(
+          tester,
+          StartPlanPage(plan: plan),
+          surfaceSize: const Size(1400, 800),
+        );
+        await tester.pumpAndSettle();
+
+        Rect previewRect(String key) => tester.getRect(
+          find
+              .descendant(of: find.byKey(Key(key)), matching: find.byType(Card))
+              .first,
+        );
+        final before = previewRect('previous-set-scroll');
+        await tester.tap(find.byKey(const Key('desktop-editor-save')));
+        await tester.pumpAndSettle();
+        final after = previewRect('session-set-scroll');
+        expect(after.top, before.top);
+        expect(after.bottom, before.bottom);
+
+        await tester.tap(find.text('Undo'));
+        await tester.pumpAndSettle();
+        final undone = previewRect('previous-set-scroll');
+        expect(undone.top, before.top);
+        expect(undone.bottom, before.bottom);
+      },
+    );
+  }
+
   testWidgets('desktop StartPlan hydrates previous sets without a spinner', (
     tester,
   ) async {

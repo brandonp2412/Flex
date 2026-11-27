@@ -3,11 +3,11 @@ import 'package:flex/sets/workout_category_field.dart';
 import 'package:flex/sets/workout_editor_fields.dart';
 import 'package:flex/sets/workout_unit_field.dart';
 import 'package:flex/sets/workout_number_field.dart';
-import 'package:drift/drift.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/database/exercise_catalog.dart';
+import 'package:flex/database/bulk_edit_exercise_sets.dart';
+import 'package:flex/logging.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/editor_content.dart';
 import 'package:flex/l10n/l10n.dart';
@@ -36,7 +36,9 @@ class _EditSetsPageState extends State<EditSetsPage>
   String? _unit;
   DateTime? _created;
   bool? _cardio;
-  int? _restMs;
+  bool _kindChanged = false;
+  bool _unitChanged = false;
+  bool _saving = false;
   String? _category;
   String? _oldNames;
   String? _oldReps;
@@ -55,33 +57,30 @@ class _EditSetsPageState extends State<EditSetsPage>
     return guardUnsavedChanges(
       child: editorScaffold(
         context,
-        appBar: AppBar(
-          title: Text(l10n.editSets(widget.ids.length)),
-          actions: [
-            IconButton(
-              tooltip: l10n.deleteSelected,
-              icon: const Icon(Icons.delete),
-              onPressed: () async {
-                final confirmed = await showAppConfirmation(
-                  context,
-                  title: l10n.confirmDelete,
-                  message: l10n.deleteEntriesConfirmation(widget.ids.length),
-                  actionLabel: l10n.actionDelete,
-                  destructive: true,
-                );
-                if (!confirmed || !context.mounted) return;
-                await deleteExerciseSets(db, widget.ids);
-                if (!context.mounted) return;
-                allowPop = true;
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
+        title: Text(l10n.editSets(widget.ids.length)),
+        actions: [
+          IconButton(
+            tooltip: l10n.deleteSelected,
+            icon: const Icon(Icons.delete),
+            onPressed: () async {
+              final confirmed = await showAppConfirmation(
+                context,
+                title: l10n.confirmDelete,
+                message: l10n.deleteEntriesConfirmation(widget.ids.length),
+                actionLabel: l10n.actionDelete,
+                destructive: true,
+              );
+              if (!confirmed || !context.mounted) return;
+              await deleteExerciseSets(db, widget.ids);
+              if (!context.mounted) return;
+              allowPop = true;
+              Navigator.pop(context);
+            },
+          ),
+        ],
         onSave: save,
         body: editorFields(
           context,
-          onSave: save,
           formKey: _key,
           children: [
             TextField(
@@ -96,7 +95,10 @@ class _EditSetsPageState extends State<EditSetsPage>
             const SizedBox(height: 12),
             exerciseKindSelector(context, _cardio, (value) {
               markDirty();
-              setState(() => _cardio = value);
+              setState(() {
+                _kindChanged = true;
+                _cardio = value;
+              });
             }, allowEmpty: true),
             const SizedBox(height: 12),
             if (_cardio == true) ...[
@@ -170,7 +172,10 @@ class _EditSetsPageState extends State<EditSetsPage>
               unit: _unit,
               onChanged: (value) {
                 markDirty();
-                setState(() => _unit = value);
+                setState(() {
+                  _unitChanged = true;
+                  _unit = value;
+                });
               },
             ),
             const SizedBox(height: 12),
@@ -204,15 +209,14 @@ class _EditSetsPageState extends State<EditSetsPage>
     super.initState();
     final settings = context.read<Setting>();
 
-    ExerciseSetQuery(db, ids: widget.ids).get().then((allSets) {
-      final exerciseSets = allSets.take(3).toList();
+    ExerciseSetQuery(db, ids: widget.ids, limit: 3).get().then((exerciseSets) {
       if (!mounted || exerciseSets.isEmpty) return;
       setState(() {
-        _cardio = exerciseSets.first.cardio;
+        if (!_kindChanged) _cardio = exerciseSets.first.cardio;
         final units = exerciseSets
             .map((exerciseSet) => exerciseSet.unit)
             .toSet();
-        _unit = units.length == 1 ? units.single : null;
+        if (!_unitChanged) _unit = units.length == 1 ? units.single : null;
         String? hint(Object? Function(ExerciseSetView) value) {
           final text = exerciseSets.map(value).nonNulls.join(', ');
           return text.isEmpty ? null : text;
@@ -236,69 +240,61 @@ class _EditSetsPageState extends State<EditSetsPage>
   }
 
   Future<void> save() async {
-    if (!_key.currentState!.validate()) return;
-
-    _category = _category?.trim();
-    if (_category?.isEmpty ?? false) _category = null;
-    final bodyWeight = _body.text.isEmpty
-        ? null
-        : parseDisplayNumber(context, _body.text);
-    final applyInput = _input.snapshot(context, partial: true);
-    final preferredStrengthUnit = context.read<Setting>().strengthUnit;
-    final selected = await ExerciseSetQuery(db, ids: widget.ids).get();
-
-    final changesExercise =
-        _name.text.isNotEmpty ||
-        _unit != null ||
-        _cardio != null ||
-        _restMs != null ||
-        _category != null;
-
-    for (final original in selected) {
-      final name = _name.text.isNotEmpty ? _name.text : original.name;
-      final unit = _unit ?? original.unit;
-      final cardio = _cardio ?? original.cardio;
-      final restMs = _restMs ?? original.restMs;
-      final category = _category ?? original.category;
-
-      final originalBodyWeightKg = original.bodyWeight == 0
-          ? null
-          : loadKg(original.unit, original.bodyWeight) ?? original.bodyWeight;
-      final bodyUnit = switch (preferredStrengthUnit) {
-        _ when isWeightUnit(unit) => unit,
-        'last-entry' => 'kg',
-        _ => preferredStrengthUnit,
-      };
-      final bodyWeightKg = bodyWeight == null
-          ? originalBodyWeightKg
-          : loadKg(bodyUnit, bodyWeight);
-      final updated = applyInput(original).copyWith(
-        name: name,
-        unit: unit,
-        created: _created ?? original.created,
-        cardio: cardio,
-        restMs: Value(restMs),
-        bodyWeight: bodyWeight ?? original.bodyWeight,
-        category: Value(category),
-      );
-
-      final exercise = changesExercise
-          ? await syncExerciseDefinition(db, updated)
-          : await getExerciseByName(db, original.name);
-      if (exercise == null) continue;
-
-      await updateExerciseSet(
+    if (_saving || !_key.currentState!.validate()) return;
+    _saving = true;
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final route = DialogRoute<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const PopScope(
+        canPop: false,
+        child: AlertDialog(content: LinearProgressIndicator()),
+      ),
+    );
+    navigator.push(route);
+    try {
+      final name = _name.text.trim();
+      final category = _category?.trim();
+      final preferredStrengthUnit = context.read<Setting>().strengthUnit;
+      final cardio = _cardio == true;
+      await bulkEditExerciseSets(
         db,
-        id: original.id,
-        exerciseSet: updated,
-        exerciseId: exercise.id,
-        bodyWeightKg: bodyWeightKg,
+        widget.ids,
+        name: name.isEmpty ? null : name,
+        unit: _unitChanged ? _unit : null,
+        cardio: _kindChanged ? _cardio : null,
+        category: category == null || category.isEmpty ? null : category,
+        timestamp: _created,
+        reps: cardio ? null : parseDisplayNumber(context, _input.reps.text),
+        weight: !cardio || isWeightUnit(_unit)
+            ? parseDisplayNumber(context, _input.weight.text)
+            : null,
+        distance: cardio && !isWeightUnit(_unit)
+            ? parseDisplayNumber(context, _input.distance.text)
+            : null,
+        durationMs: cardio && !_input.durationInput.isEmpty
+            ? _input.durationInput.value.inMilliseconds
+            : null,
+        incline: cardio
+            ? parseDisplayNumber(context, _input.incline.text)
+            : null,
+        bodyWeight: parseDisplayNumber(context, _body.text),
+        preferredStrengthUnit: preferredStrengthUnit,
       );
+      if (route.isActive) navigator.removeRoute(route);
+      if (!mounted) return;
+      allowPop = true;
+      Navigator.pop(context);
+    } catch (error, stackTrace) {
+      talker.handle(error, stackTrace, 'Bulk edit failed');
+      if (route.isActive) navigator.removeRoute(route);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.unexpectedError)));
+    } finally {
+      _saving = false;
     }
-
-    if (!mounted) return;
-    allowPop = true;
-    Navigator.pop(context);
   }
 
   Future<void> _selectDate() async {

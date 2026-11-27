@@ -33,13 +33,20 @@ EdgeInsets editorListPadding(BuildContext context, {bool hasFab = true}) =>
 
 Widget editorScaffold(
   BuildContext context, {
-  required PreferredSizeWidget appBar,
+  required Widget title,
+  List<Widget> actions = const [],
   required Widget body,
   required VoidCallback onSave,
 }) => Scaffold(
   floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
   resizeToAvoidBottomInset: true,
-  appBar: appBar,
+  appBar: AppBar(
+    title: title,
+    actions: [
+      ...actions,
+      if (isDesktopLayout(context)) DesktopEditorSaveButton(onPressed: onSave),
+    ],
+  ),
   body: body,
   floatingActionButton: isDesktopLayout(context)
       ? null
@@ -53,7 +60,6 @@ Widget editorScaffold(
 Widget editorFields(
   BuildContext context, {
   required List<Widget> children,
-  required VoidCallback onSave,
   GlobalKey<FormState>? formKey,
   double maxWidth = 720,
   bool formOutside = false,
@@ -61,13 +67,7 @@ Widget editorFields(
   final desktop = isDesktopLayout(context);
   final list = ListView(
     padding: editorListPadding(context, hasFab: !desktop),
-    children: [
-      ...children,
-      if (desktop) ...[
-        const SizedBox(height: 24),
-        DesktopEditorSaveButton(onPressed: onSave),
-      ],
-    ],
+    children: children,
   );
   final content = EditorContent(
     maxWidth: maxWidth,

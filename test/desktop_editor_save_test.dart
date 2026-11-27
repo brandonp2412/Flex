@@ -5,6 +5,7 @@ import 'package:flex/editor_content.dart';
 
 import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/plan/edit_plan_page.dart';
+import 'package:flex/plan/start_plan_page.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/sets/edit_sets_page.dart';
 import 'package:flex/weight_page.dart';
@@ -33,35 +34,32 @@ void main() {
   };
 
   for (final entry in editors.entries) {
-    testWidgets(
-      '${entry.key} has a large Save action after desktop form fields',
-      (tester) async {
-        setViewport(tester, const Size(1200, 900));
-        final harness = await FlexTestHarness.create();
-        await harness.pump(tester, entry.value());
-        await tester.pumpAndSettle();
+    testWidgets('${entry.key} has a fixed top-right desktop Save action', (
+      tester,
+    ) async {
+      setViewport(tester, const Size(1200, 900));
+      final harness = await FlexTestHarness.create();
+      await harness.pump(tester, entry.value());
+      await tester.pumpAndSettle();
 
-        final save = find.byType(DesktopEditorSaveButton);
-        await tester.scrollUntilVisible(
-          find.byKey(const Key('desktop-editor-save')),
-          300,
-          scrollable: find.byType(Scrollable).first,
-        );
-        expect(save, findsOneWidget);
-        expect(find.byType(AppFab), findsNothing);
-        expect(
-          find.ancestor(of: save, matching: find.byType(ListView)),
-          findsOneWidget,
-        );
-        await tester.ensureVisible(save);
-        await tester.pumpAndSettle();
-        final size = tester.getSize(save);
-        expect(size.height, greaterThanOrEqualTo(56));
-        expect(size.width, greaterThan(400));
-        expect(find.byKey(const Key('desktop-editor-save')), findsOneWidget);
-        expect(tester.takeException(), isNull);
-      },
-    );
+      final save = find.byType(DesktopEditorSaveButton);
+      expect(save, findsOneWidget);
+      expect(find.byType(AppFab), findsNothing);
+      expect(
+        find.ancestor(of: save, matching: find.byType(AppBar)),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('desktop-editor-save')), findsOneWidget);
+      final button = find.byKey(const Key('desktop-editor-save'));
+      final bar = tester.getRect(find.byType(AppBar));
+      final rect = tester.getRect(button);
+      expect(bar.right - rect.right, closeTo(16, 1));
+      expect(rect.center.dy, closeTo(bar.center.dy, 1));
+      await tester.drag(find.byType(ListView).first, const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(tester.getRect(button), rect);
+      expect(tester.takeException(), isNull);
+    });
 
     testWidgets('${entry.key} retains the mobile floating Save action', (
       tester,
@@ -77,6 +75,27 @@ void main() {
     });
   }
 
+  testWidgets('desktop workout uses the same top-right Save action', (
+    tester,
+  ) async {
+    setViewport(tester, const Size(1200, 900));
+    final harness = await FlexTestHarness.create();
+    final db = harness.database;
+    final id = await db.plans.insertOne(planFixture());
+    await insertPlanExerciseFixture(db, planId: id, exercise: 'Stairmaster');
+    final plan = await (db.plans.select()..where((p) => p.id.equals(id)))
+        .getSingle();
+    await harness.pump(tester, StartPlanPage(plan: plan));
+    await tester.pumpAndSettle();
+    final button = find.byKey(const Key('desktop-editor-save'));
+    expect(button, findsOneWidget);
+    expect(find.text('Save set'), findsOneWidget);
+    final bar = tester.getRect(find.byType(AppBar));
+    final rect = tester.getRect(button);
+    expect(bar.right - rect.right, closeTo(16, 1));
+    expect(rect.center.dy, closeTo(bar.center.dy, 1));
+  });
+
   testWidgets('desktop exercise Save submits the entered name', (tester) async {
     setViewport(tester, const Size(1200, 900));
     final harness = await FlexTestHarness.create();
@@ -84,11 +103,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.bySemanticsLabel('Name'), 'Desktop press');
     final save = find.byKey(const Key('desktop-editor-save'));
-    await tester.scrollUntilVisible(
-      save,
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
     await tester.tap(save);
     await tester.pumpAndSettle();
 

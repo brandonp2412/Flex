@@ -55,21 +55,18 @@ class _WeightPageState extends State<WeightPage>
     return guardUnsavedChanges(
       child: editorScaffold(
         context,
-        appBar: AppBar(
-          title: Text(context.l10n.enterWeight),
-          actions: [
-            if (widget.initial != null)
-              IconButton(
-                tooltip: context.l10n.actionDelete,
-                icon: const Icon(Icons.delete),
-                onPressed: _delete,
-              ),
-          ],
-        ),
+        title: Text(context.l10n.enterWeight),
+        actions: [
+          if (widget.initial != null)
+            IconButton(
+              tooltip: context.l10n.actionDelete,
+              icon: const Icon(Icons.delete),
+              onPressed: _delete,
+            ),
+        ],
         onSave: _save,
         body: editorFields(
           context,
-          onSave: _save,
           formKey: _key,
           formOutside: true,
           children: [

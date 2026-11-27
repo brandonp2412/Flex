@@ -86,11 +86,10 @@ class _EditPlanPageState extends State<EditPlanPage>
     return guardUnsavedChanges(
       child: editorScaffold(
         context,
-        appBar: AppBar(title: Text(title)),
+        title: Text(title),
         onSave: save,
         body: editorFields(
           context,
-          onSave: save,
           maxWidth: 1040,
           children: [
             if (desktop)

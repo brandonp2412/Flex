@@ -82,13 +82,16 @@ class _StartListState extends State<StartList> {
       ),
     );
     final desktop = isDesktopLayout(context);
+    final padding = EdgeInsets.only(
+      bottom: desktop ? (widget.exercises.length == 1 ? 0 : 8) : _bottomPadding,
+    );
 
     if (trailing == PlanTrailing.reorder)
       return ReorderableListView.builder(
         shrinkWrap: desktop,
         itemCount: widget.exercises.length,
         buildDefaultDragHandles: !desktop,
-        padding: EdgeInsets.only(bottom: desktop ? 8 : _bottomPadding),
+        padding: padding,
         itemBuilder: (context, index) =>
             itemBuilder(context, index, max, trailing),
         onReorderItem: (oldIndex, newIndex) async {
@@ -109,7 +112,7 @@ class _StartListState extends State<StartList> {
       );
     else
       return ListView.builder(
-        padding: EdgeInsets.only(bottom: desktop ? 8 : _bottomPadding),
+        padding: padding,
         shrinkWrap: desktop,
         itemCount: widget.exercises.length,
         itemBuilder: (context, index) =>
@@ -163,7 +166,9 @@ class _StartListState extends State<StartList> {
     final content = desktop
         ? Padding(
             key: Key(exercise.exercise.name),
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: widget.exercises.length == 1
+                ? EdgeInsets.zero
+                : const EdgeInsets.symmetric(vertical: 4),
             child: Material(
               color: selected
                   ? colors.primary.withValues(alpha: .12)

@@ -1,3 +1,4 @@
+import 'package:flex/desktop_editor_save_button.dart';
 import 'package:flex/sets/workout_input.dart';
 import 'package:flex/app_message.dart';
 import 'package:flex/sets/workout_unit_field.dart';
@@ -159,13 +160,9 @@ class _StartPlanPageState extends State<StartPlanPage>
                 icon: const Icon(Icons.edit),
               ),
               if (desktop && exercises.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: FilledButton.icon(
-                    onPressed: () async => await _save(),
-                    icon: const Icon(Icons.save_rounded),
-                    label: Text(context.l10n.saveSet),
-                  ),
+                DesktopEditorSaveButton(
+                  onPressed: _save,
+                  label: context.l10n.saveSet,
                 ),
             ],
           ),

@@ -50,17 +50,14 @@ class _ExerciseEditorPageState extends State<ExerciseEditorPage>
     return guardUnsavedChanges(
       child: editorScaffold(
         context,
-        appBar: AppBar(
-          title: Text(
-            editing
-                ? l10n.updateAllNamed(widget.name!.toLowerCase())
-                : l10n.addExercise,
-          ),
+        title: Text(
+          editing
+              ? l10n.updateAllNamed(widget.name!.toLowerCase())
+              : l10n.addExercise,
         ),
         onSave: save,
         body: editorFields(
           context,
-          onSave: save,
           formKey: key,
           children: [
             TextFormField(

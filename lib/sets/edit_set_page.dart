@@ -139,20 +139,14 @@ class _EditSetPageState extends State<EditSetPage>
       child: editorScaffold(
         context,
         onSave: save,
-        appBar: buildAppBar(),
+        title: Text(
+          widget.exerciseSet.id > 0
+              ? widget.exerciseSet.name
+              : context.l10n.addSet,
+        ),
+        actions: [if (widget.exerciseSet.id > 0) buildDeleteButton()],
         body: buildBody(showBodyWeight),
       ),
-    );
-  }
-
-  AppBar buildAppBar() {
-    return AppBar(
-      title: Text(
-        widget.exerciseSet.id > 0
-            ? widget.exerciseSet.name
-            : context.l10n.addSet,
-      ),
-      actions: [if (widget.exerciseSet.id > 0) buildDeleteButton()],
     );
   }
 
@@ -216,10 +210,6 @@ class _EditSetPageState extends State<EditSetPage>
                   setState(() => _cardio = value!);
                 }),
                 if (showImages) ...[const SizedBox(height: 12), imageField()],
-                if (isDesktopLayout(context)) ...[
-                  const SizedBox(height: 24),
-                  DesktopEditorSaveButton(onPressed: save),
-                ],
               ],
             );
           },

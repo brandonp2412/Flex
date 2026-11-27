@@ -96,14 +96,6 @@ Future<void> _tapSaveAction(WidgetTester tester) async {
   if (editor.evaluate().isNotEmpty &&
       isDesktopLayout(tester.element(editor.last))) {
     final save = find.byKey(const Key('desktop-editor-save'));
-    await tester.scrollUntilVisible(
-      save,
-      300,
-      scrollable: find
-          .descendant(of: editor.last, matching: find.byType(Scrollable))
-          .first,
-    );
-    await tester.pumpAndSettle();
     await tester.tap(save);
     return;
   }
