@@ -30,93 +30,48 @@ List<Widget> getTimerSettings(
       values.join(' ').toLowerCase().contains(normalizedTerm);
   return [
     if (matches([l10n.restTimers, l10n.restTimersDescription]))
-      Tooltip(
-        message: l10n.restTimersDescription,
-        child: ListTile(
-          title: Text(l10n.restTimers, textAlign: TextAlign.start),
-          leading: settings.restTimers
-              ? const Icon(Icons.timer)
-              : const Icon(Icons.timer_outlined),
-          onTap: () async {
-            final newValue = !settings.restTimers;
+      SettingToggle(
+        title: Text(l10n.restTimers, textAlign: TextAlign.start),
+        description: l10n.restTimersDescription,
+        value: settings.restTimers,
+        icon: Icons.timer,
+        outlinedIcon: Icons.timer_outlined,
+        onChanged: (value) async {
+          if (value &&
+              !kIsWeb &&
+              defaultTargetPlatform == TargetPlatform.android) {
+            await androidChannel.invokeMethod('requestTimerPermissions', {
+              'batteryOptimizationRequestUnavailable':
+                  l10n.batteryOptimizationRequestUnavailable,
+            });
+          }
 
-            if (newValue &&
-                !kIsWeb &&
-                defaultTargetPlatform == TargetPlatform.android) {
-              await androidChannel.invokeMethod('requestTimerPermissions', {
-                'batteryOptimizationRequestUnavailable':
-                    l10n.batteryOptimizationRequestUnavailable,
-              });
-            }
-
-            db.settings.update().write(
-              SettingsCompanion(restTimers: Value(newValue)),
-            );
-          },
-          trailing: Switch(
-            value: settings.restTimers,
-            onChanged: (value) async {
-              if (value &&
-                  !kIsWeb &&
-                  defaultTargetPlatform == TargetPlatform.android) {
-                await androidChannel.invokeMethod('requestTimerPermissions', {
-                  'batteryOptimizationRequestUnavailable':
-                      l10n.batteryOptimizationRequestUnavailable,
-                });
-              }
-
-              db.settings.update().write(
-                SettingsCompanion(restTimers: Value(value)),
-              );
-            },
-          ),
-        ),
+          db.settings.update().write(
+            SettingsCompanion(restTimers: Value(value)),
+          );
+        },
       ),
     if (matches([l10n.vibrate, l10n.vibrateDescription]))
-      Tooltip(
-        message: l10n.vibrateDescription,
-        child: ListTile(
-          title: Text(l10n.vibrate, textAlign: TextAlign.start),
-          leading: settings.vibrate
-              ? const Icon(Icons.vibration)
-              : const Icon(Icons.vibration_outlined),
-          onTap: () async {
-            final newValue = !settings.vibrate;
-            await db.settings.update().write(
-              SettingsCompanion(vibrate: Value(newValue)),
-            );
-            if (newValue &&
-                !kIsWeb &&
-                defaultTargetPlatform == TargetPlatform.android) {
-              try {
-                await androidChannel.invokeMethod('previewVibration');
-              } catch (error, stackTrace) {
-                talker.handle(error, stackTrace, 'Failed to preview vibration');
-              }
+      SettingToggle(
+        title: Text(l10n.vibrate, textAlign: TextAlign.start),
+        description: l10n.vibrateDescription,
+        value: settings.vibrate,
+        icon: Icons.vibration,
+        outlinedIcon: Icons.vibration_outlined,
+        onChanged: (value) async {
+          await db.settings.update().write(
+            SettingsCompanion(vibrate: Value(value)),
+          );
+          if (value &&
+              !kIsWeb &&
+              defaultTargetPlatform == TargetPlatform.android) {
+            try {
+              await androidChannel.invokeMethod('previewVibration');
+            } catch (error, stackTrace) {
+              talker.handle(error, stackTrace, 'Failed to preview vibration');
             }
-          },
-          trailing: Switch(
-            value: settings.vibrate,
-            onChanged: (value) async {
-              await db.settings.update().write(
-                SettingsCompanion(vibrate: Value(value)),
-              );
-              if (value &&
-                  !kIsWeb &&
-                  defaultTargetPlatform == TargetPlatform.android) {
-                try {
-                  await androidChannel.invokeMethod('previewVibration');
-                } catch (error, stackTrace) {
-                  talker.handle(
-                    error,
-                    stackTrace,
-                    'Failed to preview vibration',
-                  );
-                }
-              }
-            },
-          ),
-        ),
+          }
+        },
       ),
     if (matches([l10n.enableSound, l10n.enableSoundDescription]))
       SettingToggle(
@@ -137,30 +92,18 @@ List<Widget> getTimerSettings(
         update: (value) => SettingsCompanion(keepRinging: Value(value)),
       ),
     if (matches([l10n.keepScreenOn, l10n.keepScreenOnDescription]))
-      Tooltip(
-        message: l10n.keepScreenOnDescription,
-        child: ListTile(
-          title: Text(l10n.keepScreenOn, textAlign: TextAlign.start),
-          leading: settings.keepScreenOn
-              ? const Icon(Icons.light_mode)
-              : const Icon(Icons.light_mode_outlined),
-          onTap: () {
-            final newValue = !settings.keepScreenOn;
-            db.settings.update().write(
-              SettingsCompanion(keepScreenOn: Value(newValue)),
-            );
-            context.read<TimerState>().setKeepScreenOn(newValue);
-          },
-          trailing: Switch(
-            value: settings.keepScreenOn,
-            onChanged: (value) {
-              db.settings.update().write(
-                SettingsCompanion(keepScreenOn: Value(value)),
-              );
-              context.read<TimerState>().setKeepScreenOn(value);
-            },
-          ),
-        ),
+      SettingToggle(
+        title: Text(l10n.keepScreenOn, textAlign: TextAlign.start),
+        description: l10n.keepScreenOnDescription,
+        value: settings.keepScreenOn,
+        icon: Icons.light_mode,
+        outlinedIcon: Icons.light_mode_outlined,
+        onChanged: (value) {
+          db.settings.update().write(
+            SettingsCompanion(keepScreenOn: Value(value)),
+          );
+          context.read<TimerState>().setKeepScreenOn(value);
+        },
       ),
     if (matches([
       l10n.restMinutes,

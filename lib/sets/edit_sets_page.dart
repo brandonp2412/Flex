@@ -1,3 +1,6 @@
+import 'package:flex/sets/workout_category_field.dart';
+import 'package:flex/sets/workout_editor_fields.dart';
+import 'package:flex/sets/workout_unit_field.dart';
 import 'package:flex/sets/workout_number_field.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/app_confirmation.dart';
@@ -11,8 +14,6 @@ import 'package:flex/editor_content.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
-import 'package:flex/platform_page_route.dart';
-import 'package:flex/settings/category_management_page.dart';
 import 'package:flex/unsaved_changes.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
@@ -243,75 +244,22 @@ class _EditSetsPageState extends State<EditSetsPage>
                   selector: (context, settings) => settings.showBodyWeight,
                 ),
                 const SizedBox(height: 12),
-                Selector<Setting, bool>(
-                  builder: (context, showUnits, child) => Visibility(
-                    visible: showUnits,
-                    child: DropdownButtonFormField<String>(
-                      decoration: InputDecoration(labelText: l10n.unitLabel),
-                      initialValue: _unit,
-                      items: _getUnitItems(context),
-                      onChanged: (String? newValue) {
-                        markDirty();
-                        setState(() {
-                          _unit = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                  selector: (context, settings) => settings.showUnits,
+                WorkoutUnitField(
+                  unit: _unit,
+                  onChanged: (value) {
+                    markDirty();
+                    setState(() => _unit = value);
+                  },
                 ),
                 const SizedBox(height: 12),
-                Selector<Setting, bool>(
-                  selector: (context, settings) => settings.showCategories,
-                  builder: (context, showCategories, child) => Visibility(
-                    visible: showCategories,
-                    child: StreamBuilder<List<String>>(
-                      stream: getCategoriesStream(),
-                      builder: (context, snapshot) => Autocomplete<String>(
-                        initialValue: TextEditingValue(text: _category ?? ''),
-                        optionsBuilder: (value) =>
-                            snapshot.data
-                                ?.where(
-                                  (category) => category.toLowerCase().contains(
-                                    value.text.toLowerCase(),
-                                  ),
-                                )
-                                .toList() ??
-                            [],
-                        onSelected: (category) {
-                          markDirty();
-                          setState(() => _category = category);
-                        },
-                        fieldViewBuilder: (context, controller, focusNode, _) =>
-                            TextFormField(
-                              controller: controller,
-                              focusNode: focusNode,
-                              decoration: InputDecoration(
-                                labelText: l10n.categoryLabel,
-                                hintText: _oldCat,
-                                helperText: l10n.categoryHelper,
-                                suffixIcon: IconButton(
-                                  tooltip: l10n.manageCategories,
-                                  icon: const Icon(Icons.settings),
-                                  onPressed: () => Navigator.of(context).push(
-                                    FlexPageRoute(
-                                      builder: (_) =>
-                                          const CategoryManagementPage(),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              onChanged: (value) {
-                                markDirty();
-                                setState(
-                                  () =>
-                                      _category = value.isEmpty ? null : value,
-                                );
-                              },
-                            ),
-                      ),
-                    ),
-                  ),
+                WorkoutCategoryField(
+                  initial: _category,
+                  hint: _oldCat,
+                  keepHidden: true,
+                  onChanged: (value) {
+                    markDirty();
+                    setState(() => _category = value);
+                  },
                 ),
                 Selector<Setting, String>(
                   builder: (context, longDateFormat, child) {
@@ -352,13 +300,6 @@ class _EditSetsPageState extends State<EditSetsPage>
               ),
       ),
     );
-  }
-
-  List<DropdownMenuItem<String>> _getUnitItems(BuildContext context) {
-    return [
-      ...strengthUnitMenuItems(context.l10n),
-      ...cardioUnitMenuItems(context.l10n),
-    ];
   }
 
   void _setCardio(bool value) {
@@ -446,26 +387,6 @@ class _EditSetsPageState extends State<EditSetsPage>
         _oldCat = cats.isEmpty ? null : cats;
       });
     });
-  }
-
-  Future<void> selectTime(DateTime pickedDate) async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(_created ?? DateTime.now()),
-    );
-
-    if (pickedTime != null && mounted) {
-      markDirty();
-      setState(() {
-        _created = DateTime(
-          pickedDate.year,
-          pickedDate.month,
-          pickedDate.day,
-          pickedTime.hour,
-          pickedTime.minute,
-        );
-      });
-    }
   }
 
   Future<void> save() async {
@@ -562,15 +483,9 @@ class _EditSetsPageState extends State<EditSetsPage>
   }
 
   Future<void> _selectDate() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _created,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      selectTime(pickedDate);
-    }
+    final picked = await pickWorkoutDateTime(context, _created);
+    if (picked == null || !mounted) return;
+    markDirty();
+    setState(() => _created = picked);
   }
 }

@@ -11,7 +11,8 @@ class SettingToggle extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.outlinedIcon,
-    required this.update,
+    this.update,
+    this.onChanged,
     this.subtitle,
   });
 
@@ -20,12 +21,20 @@ class SettingToggle extends StatelessWidget {
   final bool value;
   final IconData icon;
   final IconData outlinedIcon;
-  final SettingsCompanion Function(bool) update;
+  final SettingsCompanion Function(bool)? update;
+  final ValueChanged<bool>? onChanged;
   final Widget? subtitle;
 
   @override
   Widget build(BuildContext context) {
-    void change(bool next) => db.settings.update().write(update(next));
+    void change(bool next) {
+      if (onChanged != null) {
+        onChanged!(next);
+      } else {
+        db.settings.update().write(update!(next));
+      }
+    }
+
     return Tooltip(
       message: description,
       child: ListTile(

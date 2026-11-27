@@ -99,30 +99,14 @@ List<Widget> getAppearanceSettings(
         ),
       ),
     if (matches([l10n.pureBlackAmoled, l10n.pureBlackAmoledDescription]))
-      Tooltip(
-        message: l10n.pureBlackAmoledDescription,
-        child: ListTile(
-          leading: settings.themeMode == 'ThemeMode.amoled'
-              ? const Icon(Icons.contrast)
-              : const Icon(Icons.contrast_outlined),
-          title: Text(l10n.pureBlackAmoled, textAlign: TextAlign.start),
-          onTap: () => db.settings.update().write(
-            SettingsCompanion(
-              themeMode: Value(
-                settings.themeMode == 'ThemeMode.amoled'
-                    ? 'ThemeMode.dark'
-                    : 'ThemeMode.amoled',
-              ),
-            ),
-          ),
-          trailing: Switch(
-            value: settings.themeMode == 'ThemeMode.amoled',
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(
-                themeMode: Value(value ? 'ThemeMode.amoled' : 'ThemeMode.dark'),
-              ),
-            ),
-          ),
+      SettingToggle(
+        title: Text(l10n.pureBlackAmoled, textAlign: TextAlign.start),
+        description: l10n.pureBlackAmoledDescription,
+        value: settings.themeMode == 'ThemeMode.amoled',
+        icon: Icons.contrast,
+        outlinedIcon: Icons.contrast_outlined,
+        update: (value) => SettingsCompanion(
+          themeMode: Value(value ? 'ThemeMode.amoled' : 'ThemeMode.dark'),
         ),
       ),
     if (matches([l10n.systemColorScheme, l10n.systemColorSchemeDescription]))

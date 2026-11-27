@@ -1,16 +1,7 @@
-import 'dart:math' as math;
-
-import 'package:flex/database/database.dart';
-import 'package:flex/l10n/l10n.dart';
-import 'package:flex/timer/time_with_milliseconds.dart';
-import 'package:flex/timer/timer_progress_style.dart';
-import 'package:flex/timer/timer_ring.dart';
+import 'package:flex/timer/timer_face.dart';
 import 'package:flex/timer/timer_state.dart';
-import 'package:flex/utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:provider/provider.dart';
 
 class StopwatchProgressIndicator extends StatefulWidget {
   final DateTime? startedAt;
@@ -87,88 +78,16 @@ class _StopwatchProgressIndicatorState extends State<StopwatchProgressIndicator>
   }
 
   @override
-  Widget build(BuildContext context) {
-    const double maxCircleSize = 280;
-    final controlsHeight = widget.trailingControl == null ? 56.0 : 112.0;
-
-    final onSurface = Theme.of(context).colorScheme.onSurface;
-    final started = _elapsed > Duration.zero;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final availableHeight = constraints.maxHeight.isFinite
-            ? math.max(0.0, constraints.maxHeight - controlsHeight)
-            : maxCircleSize;
-        final availableWidth = constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : maxCircleSize;
-        final circleSize = math.min(
-          maxCircleSize,
-          math.min(availableHeight, availableWidth),
-        );
-        const timeFontSize = timerFaceFontSize;
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: circleSize,
-              height: circleSize,
-              child: RepaintBoundary(
-                key: const ValueKey('stopwatch-ring'),
-                child: TimerRing(
-                  value:
-                      (_elapsed.inMilliseconds /
-                              const Duration(minutes: 5).inMilliseconds)
-                          .clamp(0.0, 1.0),
-                  circleSize: circleSize,
-                  child: TimeWithMilliseconds(
-                    time: _formatElapsed(_elapsed),
-                    duration: _elapsed,
-                    fontSize: timeFontSize,
-                    color: onSurface,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: timerControlGap),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (started)
-                  TextButton.icon(
-                    onPressed: widget.onRestart,
-                    icon: const Icon(Icons.restart_alt),
-                    label: Text(context.l10n.actionRestart),
-                  )
-                else
-                  TextButton(
-                    onPressed: () => _addOneMinute(context),
-                    child: Text(context.l10n.addOneMinute),
-                  ),
-                if (widget.trailingControl != null) ...[
-                  const SizedBox(height: 8),
-                  widget.trailingControl!,
-                ],
-              ],
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _addOneMinute(BuildContext context) async {
-    final settings = context.read<Setting>();
-    if (defaultTargetPlatform != TargetPlatform.linux)
-      await requestNotificationPermission();
-    await widget.timerState.addOneMinute(
-      settings.alarmSound,
-      settings.vibrate,
-      settings.enableSound,
-      settings.keepRinging,
-    );
-  }
+  Widget build(BuildContext context) => TimerFace(
+    value: (_elapsed.inMilliseconds / const Duration(minutes: 5).inMilliseconds)
+        .clamp(0.0, 1.0),
+    duration: _elapsed,
+    time: _formatElapsed(_elapsed),
+    timerState: widget.timerState,
+    trailingControl: widget.trailingControl,
+    onRestart: _elapsed > Duration.zero ? widget.onRestart : null,
+    stopwatch: true,
+  );
 
   String _formatElapsed(Duration elapsed) {
     final hours = elapsed.inHours;

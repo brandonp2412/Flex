@@ -1,3 +1,4 @@
+import 'package:flex/sets/workout_unit_field.dart';
 import 'package:flex/sets/workout_number_field.dart';
 import 'dart:math';
 
@@ -477,32 +478,11 @@ class _StartPlanPageState extends State<StartPlanPage>
     );
   }
 
-  Widget unitSelector() {
-    return Selector<Setting, bool>(
-      selector: (context, settings) => settings.showUnits,
-      builder: (context, showUnits, child) => Visibility(
-        visible: showUnits,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8.0),
-            DropdownButtonFormField<String>(
-              isExpanded: true,
-              decoration: InputDecoration(labelText: context.l10n.unitLabel),
-              key: ValueKey(_unit),
-              initialValue: _unit,
-              items: _unitItems,
-              onChanged: (String? newValue) {
-                setState(() {
-                  _unit = newValue!;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget unitSelector() => WorkoutUnitField(
+    unit: _unit,
+    inWorkout: true,
+    onChanged: (value) => setState(() => _unit = value),
+  );
 
   Widget notesField() {
     return Selector<Setting, bool>(
@@ -526,11 +506,6 @@ class _StartPlanPageState extends State<StartPlanPage>
       ),
     );
   }
-
-  List<DropdownMenuItem<String>> get _unitItems => [
-    ...strengthUnitMenuItems(context.l10n),
-    ...cardioUnitMenuItems(context.l10n),
-  ];
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

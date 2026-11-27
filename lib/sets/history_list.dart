@@ -1,23 +1,13 @@
+import 'package:flex/sets/history_list_state.dart';
 import 'package:flex/exercise_avatar.dart';
 
-import 'package:flex/app_confirmation.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/database/body_weight_repository.dart';
-import 'package:flex/database/exercise_set_repository.dart';
-import 'package:flex/l10n/l10n.dart';
-import 'package:flex/main.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
-import 'package:flex/set_summary.dart';
-import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/utils.dart';
-import 'package:flex/weight_page.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-enum _HistoryContextAction { edit, delete }
 
 class HistoryList extends StatefulWidget {
   final List<ExerciseSetView> sets;
@@ -45,84 +35,20 @@ class HistoryList extends StatefulWidget {
   State<HistoryList> createState() => _HistoryListState();
 }
 
-class _HistoryListState extends State<HistoryList> {
-  bool _goingNext = false;
+class _HistoryListState extends HistoryListState<HistoryList> {
+  @override
+  ScrollController get scroll => widget.scroll;
+  @override
+  Function get onNext => widget.onNext;
+  @override
+  bool get bodyWeight => widget.bodyWeight;
+  @override
+  Future<void> Function()? get onChanged => widget.onChanged;
   List<ExerciseSetView> _current = [];
-
-  Future<void> _editEntry(ExerciseSetView exerciseSet) async {
-    if (widget.bodyWeight) {
-      final weight = await getBodyWeightById(db, exerciseSet.id);
-      if (!mounted || weight == null) return;
-      await Navigator.of(
-        context,
-      ).push(FlexPageRoute(builder: (context) => WeightPage(initial: weight)));
-    } else {
-      await Navigator.of(context).push(
-        FlexPageRoute(
-          builder: (context) => EditSetPage(exerciseSet: exerciseSet),
-        ),
-      );
-    }
-    if (mounted) await widget.onChanged?.call();
-  }
-
-  Future<void> _showContextMenu(
-    BuildContext context,
-    TapDownDetails details,
-    ExerciseSetView exerciseSet,
-  ) async {
-    final action = await showDesktopContextMenu<_HistoryContextAction>(
-      context,
-      details.globalPosition,
-      [
-        PopupMenuItem(
-          value: _HistoryContextAction.edit,
-          child: ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: Text(context.l10n.actionEdit),
-          ),
-        ),
-        PopupMenuItem(
-          value: _HistoryContextAction.delete,
-          child: ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: Text(context.l10n.actionDelete),
-          ),
-        ),
-      ],
-    );
-    if (!context.mounted) return;
-
-    switch (action) {
-      case _HistoryContextAction.edit:
-        await _editEntry(exerciseSet);
-        break;
-      case _HistoryContextAction.delete:
-        final confirmed = await showAppConfirmation(
-          context,
-          title: context.l10n.confirmDelete,
-          message: context.l10n.deleteSetConfirmation(exerciseSet.name),
-          actionLabel: context.l10n.actionDelete,
-          destructive: true,
-        );
-        if (confirmed == true) {
-          if (widget.bodyWeight) {
-            await deleteBodyWeight(db, exerciseSet.id);
-          } else {
-            await deleteExerciseSets(db, [exerciseSet.id]);
-          }
-          if (mounted) await widget.onChanged?.call();
-        }
-        break;
-      case null:
-        break;
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    widget.scroll.addListener(scrollListener);
     _current = List.from(widget.sets);
   }
 
@@ -156,16 +82,7 @@ class _HistoryListState extends State<HistoryList> {
           )
         : null;
 
-    final trailing = formatSetSummary(
-      context,
-      unitCode: exerciseSet.unit,
-      cardio: exerciseSet.cardio,
-      weight: exerciseSet.weight,
-      reps: exerciseSet.reps,
-      distance: exerciseSet.distance,
-      duration: exerciseSet.duration,
-      incline: exerciseSet.incline,
-    );
+    final trailing = setSummary(context, exerciseSet);
 
     return Column(
       children: [
@@ -259,7 +176,7 @@ class _HistoryListState extends State<HistoryList> {
                   if (widget.selected.isNotEmpty) {
                     widget.onSelect(exerciseSet.id);
                   } else {
-                    _editEntry(exerciseSet);
+                    editEntry(exerciseSet);
                   }
                 },
               ),
@@ -270,7 +187,7 @@ class _HistoryListState extends State<HistoryList> {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onSecondaryTapDown: (details) =>
-                    _showContextMenu(context, details, exerciseSet),
+                    showContextMenu(context, details, exerciseSet),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 4,
@@ -385,23 +302,5 @@ class _HistoryListState extends State<HistoryList> {
         return _buildListItem(_current[index], index, showImages);
       },
     );
-  }
-
-  void scrollListener() {
-    if (widget.scroll.position.pixels <
-            widget.scroll.position.maxScrollExtent - 200 ||
-        _goingNext)
-      return;
-    _goingNext = true;
-    widget.onNext();
-    setState(() {
-      _goingNext = false;
-    });
-  }
-
-  @override
-  void dispose() {
-    widget.scroll.removeListener(scrollListener);
-    super.dispose();
   }
 }

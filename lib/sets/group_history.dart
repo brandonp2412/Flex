@@ -1,22 +1,14 @@
+import 'package:flex/sets/history_list_state.dart';
 import 'package:flex/exercise_avatar.dart';
 
-import 'package:flex/app_confirmation.dart';
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/database/exercise_set_repository.dart';
-import 'package:flex/l10n/l10n.dart';
-import 'package:flex/main.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
-import 'package:flex/set_summary.dart';
-import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/sets/history_page.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-enum _GroupedHistoryContextAction { edit, delete }
 
 class GroupHistory extends StatefulWidget {
   final List<HistoryDayGroup> days;
@@ -37,60 +29,11 @@ class GroupHistory extends StatefulWidget {
   State<GroupHistory> createState() => _GroupHistoryState();
 }
 
-class _GroupHistoryState extends State<GroupHistory> {
-  bool _goingNext = false;
-
-  Future<void> _showContextMenu(
-    BuildContext context,
-    TapDownDetails details,
-    ExerciseSetView exerciseSet,
-  ) async {
-    final action = await showDesktopContextMenu<_GroupedHistoryContextAction>(
-      context,
-      details.globalPosition,
-      [
-        PopupMenuItem(
-          value: _GroupedHistoryContextAction.edit,
-          child: ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: Text(context.l10n.actionEdit),
-          ),
-        ),
-        PopupMenuItem(
-          value: _GroupedHistoryContextAction.delete,
-          child: ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: Text(context.l10n.actionDelete),
-          ),
-        ),
-      ],
-    );
-    if (!context.mounted) return;
-
-    switch (action) {
-      case _GroupedHistoryContextAction.edit:
-        await Navigator.of(context).push(
-          FlexPageRoute(
-            builder: (context) => EditSetPage(exerciseSet: exerciseSet),
-          ),
-        );
-        break;
-      case _GroupedHistoryContextAction.delete:
-        final confirmed = await showAppConfirmation(
-          context,
-          title: context.l10n.confirmDelete,
-          message: context.l10n.deleteSetConfirmation(exerciseSet.name),
-          actionLabel: context.l10n.actionDelete,
-          destructive: true,
-        );
-        if (confirmed == true) {
-          await deleteExerciseSets(db, [exerciseSet.id]);
-        }
-        break;
-      case null:
-        break;
-    }
-  }
+class _GroupHistoryState extends HistoryListState<GroupHistory> {
+  @override
+  ScrollController get scroll => widget.scroll;
+  @override
+  Function get onNext => widget.onNext;
 
   @override
   Widget build(BuildContext context) {
@@ -225,16 +168,7 @@ class _GroupHistoryState extends State<GroupHistory> {
           )
         : null;
 
-    final title = formatSetSummary(
-      context,
-      unitCode: exerciseSet.unit,
-      cardio: exerciseSet.cardio,
-      weight: exerciseSet.weight,
-      reps: exerciseSet.reps,
-      distance: exerciseSet.distance,
-      duration: exerciseSet.duration,
-      incline: exerciseSet.incline,
-    );
+    final title = setSummary(context, exerciseSet);
 
     final tile = Material(
       color: widget.selected.contains(exerciseSet.id)
@@ -260,11 +194,7 @@ class _GroupHistoryState extends State<GroupHistory> {
           if (widget.selected.isNotEmpty)
             widget.onSelect(exerciseSet.id);
           else
-            Navigator.of(context).push(
-              FlexPageRoute(
-                builder: (context) => EditSetPage(exerciseSet: exerciseSet),
-              ),
-            );
+            editEntry(exerciseSet);
         },
       ),
     );
@@ -272,32 +202,8 @@ class _GroupHistoryState extends State<GroupHistory> {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onSecondaryTapDown: (details) =>
-          _showContextMenu(context, details, exerciseSet),
+          showContextMenu(context, details, exerciseSet),
       child: tile,
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    widget.scroll.addListener(scrollListener);
-  }
-
-  @override
-  void dispose() {
-    widget.scroll.removeListener(scrollListener);
-    super.dispose();
-  }
-
-  void scrollListener() {
-    if (widget.scroll.position.pixels <
-            widget.scroll.position.maxScrollExtent - 200 ||
-        _goingNext)
-      return;
-    _goingNext = true;
-    widget.onNext();
-    setState(() {
-      _goingNext = false;
-    });
   }
 }

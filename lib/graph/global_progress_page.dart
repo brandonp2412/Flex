@@ -4,6 +4,7 @@ import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/graph/flex_line_chart.dart';
 import 'package:flex/graph/graph_options_controls.dart';
+import 'package:flex/graph/graph_filter_state.dart';
 import 'package:flex/graph/graph_period_picker.dart';
 import 'package:flex/graph/strength_data.dart';
 import 'package:flex/l10n/l10n.dart';
@@ -22,20 +23,18 @@ class GlobalProgressPage extends StatefulWidget {
   State<GlobalProgressPage> createState() => _GlobalProgressPageState();
 }
 
-class _GlobalProgressPageState extends State<GlobalProgressPage> {
+class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
   StrengthMetric metric = StrengthMetric.bestWeight;
   List<StrengthData> data = [];
   List<String?> categories = [];
   Map<StrengthDataLookupKey, StrengthData> _tooltipData = const {};
   Period period = Period.day;
-  DateTime? startDate;
-  DateTime? endDate;
-  String targetUnit = 'kg';
-  int limit = 100;
 
   @override
   void initState() {
     super.initState();
+    targetUnit = 'kg';
+    limit = 100;
     setData();
 
     widget.tabController.addListener(tabListener);
@@ -63,13 +62,14 @@ class _GlobalProgressPageState extends State<GlobalProgressPage> {
     super.dispose();
   }
 
+  @override
   void setData() async {
     final newData = await getGlobalData(
       target: targetUnit,
       metric: metric,
       period: period,
-      start: startDate,
-      end: endDate,
+      start: start,
+      end: end,
       limit: limit,
     );
     final newCategories = await getCategories();
@@ -270,7 +270,7 @@ class _GlobalProgressPageState extends State<GlobalProgressPage> {
                 ),
               ],
               const SizedBox(height: 4),
-              GraphOptionsButton(onPressed: _showOptions),
+              GraphOptionsButton(onPressed: showOptions),
               const SizedBox(height: 4),
               Flexible(
                 child: SingleChildScrollView(
@@ -319,113 +319,14 @@ class _GlobalProgressPageState extends State<GlobalProgressPage> {
     );
   }
 
-  void _showOptions() {
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetContext, setSheet) {
-            final settings = context.read<Setting>();
-            void refreshSheet() => setSheet(() {});
+  @override
+  int get maxLimit => 200;
 
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  0,
-                  16,
-                  16 + MediaQuery.of(sheetContext).viewInsets.bottom,
-                ),
-                child: GraphOptionsControls(
-                  compact: false,
-                  shortDateFormat: settings.shortDateFormat,
-                  unitValue: settings.showUnits ? targetUnit : null,
-                  unitItems: settings.showUnits
-                      ? strengthUnitMenuItems(context.l10n)
-                      : const [],
-                  onUnitChanged: (value) {
-                    setState(() {
-                      targetUnit = value;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                  startDate: startDate,
-                  endDate: endDate,
-                  onSelectStart: () async {
-                    await selectStart();
-                    if (sheetContext.mounted) refreshSheet();
-                  },
-                  onClearStart: () {
-                    setState(() {
-                      startDate = null;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                  onSelectEnd: () async {
-                    await selectEnd();
-                    if (sheetContext.mounted) refreshSheet();
-                  },
-                  onClearEnd: () {
-                    setState(() {
-                      endDate = null;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                  limit: limit,
-                  maxLimit: 200,
-                  onLimitChanged: (value) {
-                    setState(() {
-                      limit = value;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> selectEnd() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: endDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate == null || !mounted) return;
-
-    setState(() {
-      endDate = pickedDate;
-    });
-    setData();
-  }
-
-  Future<void> selectStart() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: startDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate == null || !mounted) return;
-
-    setState(() {
-      startDate = pickedDate;
-    });
-    setData();
-  }
+  @override
+  List<DropdownMenuItem<String>> get optionsUnits =>
+      context.read<Setting>().showUnits
+      ? strengthUnitMenuItems(context.l10n)
+      : const [];
 
   String tooltipText(int seriesIndex, int xIndex, List<DateTime> allDates) {
     if (seriesIndex < 0 ||

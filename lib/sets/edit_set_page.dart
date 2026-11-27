@@ -1,3 +1,6 @@
+import 'package:flex/sets/workout_category_field.dart';
+import 'package:flex/sets/workout_editor_fields.dart';
+import 'package:flex/sets/workout_unit_field.dart';
 import 'package:flex/sets/workout_number_field.dart';
 import 'dart:async';
 import 'dart:math';
@@ -17,10 +20,8 @@ import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/sets/keyboard_close_observer.dart';
-import 'package:flex/settings/category_management_page.dart';
 import 'package:flex/stepper_field.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flex/unsaved_changes.dart';
@@ -388,96 +389,22 @@ class _EditSetPageState extends State<EditSetPage>
     );
   }
 
-  Widget unitSelector() {
-    return Selector<Setting, bool>(
-      builder: (context, showUnits, child) => Visibility(
-        visible: showUnits,
-        child: DropdownButtonFormField<String>(
-          decoration: InputDecoration(labelText: context.l10n.unitLabel),
-          initialValue: _unit,
-          items: getUnitItems(context),
-          onChanged: (String? newValue) {
-            markDirty();
-            setState(() {
-              _unit = newValue!;
-            });
-          },
-        ),
-      ),
-      selector: (context, settings) => settings.showUnits,
-    );
-  }
+  Widget unitSelector() => WorkoutUnitField(
+    unit: _unit,
+    onChanged: (value) {
+      markDirty();
+      setState(() => _unit = value);
+    },
+  );
 
-  Widget categorySelector() {
-    return Selector<Setting, bool>(
-      selector: (context, settings) => settings.showCategories,
-      builder: (context, showCategories, child) {
-        if (!showCategories) {
-          return const SizedBox();
-        }
-
-        return StreamBuilder(
-          stream: getCategoriesStream(),
-          builder: (context, snapshot) {
-            return Autocomplete<String>(
-              initialValue: TextEditingValue(
-                text: widget.exerciseSet.category ?? "",
-              ),
-              optionsBuilder: (TextEditingValue textEditingValue) {
-                if (snapshot.data == null) return [];
-                if (textEditingValue.text == '') {
-                  return snapshot.data!;
-                }
-                return snapshot.data!.where((String option) {
-                  return option.toLowerCase().contains(
-                    textEditingValue.text.toLowerCase(),
-                  );
-                });
-              },
-              onSelected: (String selection) {
-                markDirty();
-                setState(() {
-                  _category = selection;
-                });
-              },
-              fieldViewBuilder:
-                  (
-                    BuildContext context,
-                    TextEditingController ctrl,
-                    FocusNode focusNode,
-                    VoidCallback onSubmit,
-                  ) {
-                    _categoryCtrl = ctrl;
-                    return TextFormField(
-                      controller: ctrl,
-                      focusNode: focusNode,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.categoryLabel,
-                        helperText: context.l10n.categoryHelper,
-                        suffixIcon: IconButton(
-                          tooltip: context.l10n.manageCategories,
-                          icon: const Icon(Icons.settings),
-                          onPressed: () => Navigator.of(context).push(
-                            FlexPageRoute(
-                              builder: (_) => const CategoryManagementPage(),
-                            ),
-                          ),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        markDirty();
-                        setState(() {
-                          _category = value.isNotEmpty ? value : null;
-                        });
-                      },
-                    );
-                  },
-            );
-          },
-        );
-      },
-    );
-  }
+  Widget categorySelector() => WorkoutCategoryField(
+    initial: widget.exerciseSet.category,
+    onController: (controller) => _categoryCtrl = controller,
+    onChanged: (value) {
+      markDirty();
+      setState(() => _category = value);
+    },
+  );
 
   Widget notesField() {
     return Selector<Setting, bool>(
@@ -802,26 +729,6 @@ class _EditSetPageState extends State<EditSetPage>
     Navigator.of(context).pop();
   }
 
-  Future<void> selectTime(DateTime pickedDate) async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(_created),
-    );
-
-    if (pickedTime != null && mounted) {
-      markDirty();
-      setState(() {
-        _created = DateTime(
-          pickedDate.year,
-          pickedDate.month,
-          pickedDate.day,
-          pickedTime.hour,
-          pickedTime.minute,
-        );
-      });
-    }
-  }
-
   void setORM() {
     final parsedReps = parseDisplayNumber(context, _reps.text);
     final parsedWeight = parseDisplayNumber(context, _weight.text);
@@ -831,13 +738,6 @@ class _EditSetPageState extends State<EditSetPage>
         : parsedWeight * (1.0278 - (0.0278 * parsedReps));
     _orm.text =
         "${formatDisplayNumber(context, estimate, minDigits: 2)} $_unit";
-  }
-
-  List<DropdownMenuItem<String>> getUnitItems(BuildContext context) {
-    return [
-      ...strengthUnitMenuItems(context.l10n),
-      ...cardioUnitMenuItems(context.l10n),
-    ];
   }
 
   void updateFields(
@@ -884,15 +784,9 @@ class _EditSetPageState extends State<EditSetPage>
   }
 
   Future<void> selectDate() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _created,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      selectTime(pickedDate);
-    }
+    final picked = await pickWorkoutDateTime(context, _created);
+    if (picked == null || !mounted) return;
+    markDirty();
+    setState(() => _created = picked);
   }
 }

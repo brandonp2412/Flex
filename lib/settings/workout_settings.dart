@@ -1,6 +1,6 @@
+import 'package:flex/settings/setting_choice.dart';
 import 'package:flex/settings/setting_toggle.dart';
 import 'package:drift/drift.dart' hide Column;
-import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -165,29 +165,19 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
         l10n.paceCardio,
         l10n.distanceCardio,
       ]))
-        Padding(
-          padding: settingsPadding,
-          child: DropdownButtonFormField<String>(
-            decoration: InputDecoration(labelText: l10n.defaultGraphMetric),
-            initialValue: settings.defaultGraphMetric,
-            items: [
-              DropdownMenuItem(
-                value: 'bestWeight',
-                child: Text(l10n.bestWeight),
-              ),
-              DropdownMenuItem(value: 'bestReps', child: Text(l10n.bestReps)),
-              DropdownMenuItem(value: 'oneRepMax', child: Text(l10n.oneRepMax)),
-              DropdownMenuItem(value: 'volume', child: Text(l10n.volume)),
-              DropdownMenuItem(value: 'pace', child: Text(l10n.paceCardio)),
-              DropdownMenuItem(
-                value: 'distance',
-                child: Text(l10n.distanceCardio),
-              ),
-            ],
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(defaultGraphMetric: Value(value!)),
-            ),
-          ),
+        SettingChoice<String>(
+          label: l10n.defaultGraphMetric,
+          value: settings.defaultGraphMetric,
+          choices: {
+            'bestWeight': l10n.bestWeight,
+            'bestReps': l10n.bestReps,
+            'oneRepMax': l10n.oneRepMax,
+            'volume': l10n.volume,
+            'pace': l10n.paceCardio,
+            'distance': l10n.distanceCardio,
+          },
+          update: (value) =>
+              SettingsCompanion(defaultGraphMetric: Value(value)),
         ),
       if (matches([
         l10n.defaultGraphPeriod,
@@ -196,21 +186,17 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
         l10n.monthly,
         l10n.yearly,
       ]))
-        Padding(
-          padding: settingsPadding,
-          child: DropdownButtonFormField<String>(
-            decoration: InputDecoration(labelText: l10n.defaultGraphPeriod),
-            initialValue: settings.defaultGraphPeriod,
-            items: [
-              DropdownMenuItem(value: 'day', child: Text(l10n.daily)),
-              DropdownMenuItem(value: 'week', child: Text(l10n.weekly)),
-              DropdownMenuItem(value: 'month', child: Text(l10n.monthly)),
-              DropdownMenuItem(value: 'year', child: Text(l10n.yearly)),
-            ],
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(defaultGraphPeriod: Value(value!)),
-            ),
-          ),
+        SettingChoice<String>(
+          label: l10n.defaultGraphPeriod,
+          value: settings.defaultGraphPeriod,
+          choices: {
+            'day': l10n.daily,
+            'week': l10n.weekly,
+            'month': l10n.monthly,
+            'year': l10n.yearly,
+          },
+          update: (value) =>
+              SettingsCompanion(defaultGraphPeriod: Value(value)),
         ),
       if (matches([
         l10n.defaultGraphLimit,
@@ -221,23 +207,13 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
         '100',
         '200',
       ]))
-        Padding(
-          padding: settingsPadding,
-          child: DropdownButtonFormField<int>(
-            decoration: InputDecoration(labelText: l10n.defaultGraphLimit),
-            initialValue: settings.defaultGraphLimit,
-            items: const [
-              DropdownMenuItem(value: 10, child: Text("10")),
-              DropdownMenuItem(value: 20, child: Text("20")),
-              DropdownMenuItem(value: 30, child: Text("30")),
-              DropdownMenuItem(value: 50, child: Text("50")),
-              DropdownMenuItem(value: 100, child: Text("100")),
-              DropdownMenuItem(value: 200, child: Text("200")),
-            ],
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(defaultGraphLimit: Value(value!)),
-            ),
-          ),
+        SettingChoice<int>(
+          label: l10n.defaultGraphLimit,
+          value: settings.defaultGraphLimit,
+          choices: {
+            for (final n in [10, 20, 30, 50, 100, 200]) n: n.toString(),
+          },
+          update: (value) => SettingsCompanion(defaultGraphLimit: Value(value)),
         ),
       if (matches([
         l10n.defaultTimeBasedXAxis,

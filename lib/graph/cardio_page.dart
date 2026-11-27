@@ -1,20 +1,13 @@
-import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/database/exercise_catalog.dart';
-import 'package:flex/empty_state.dart';
 import 'package:flex/graph/cardio_data.dart';
 import 'package:flex/graph/edit_graph_page.dart';
 import 'package:flex/graph/exercise_graph_state.dart';
-import 'package:flex/graph/flex_line_chart.dart';
-import 'package:flex/graph/graph_metric_chips.dart';
-import 'package:flex/graph/graph_options_controls.dart';
-import 'package:flex/graph/graph_period_picker.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/platform_page_route.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,10 +37,6 @@ class _CardioPageState extends ExerciseGraphState<CardioPage, CardioMetric> {
   TabController get tabController => widget.tabCtrl;
 
   @override
-  DateTime? pointDate(int index) =>
-      index < 0 || index >= _data.length ? null : _data[index].created;
-
-  @override
   List<DropdownMenuItem<String>> get optionsUnits {
     if (!context.read<Setting>().showUnits) return const [];
     return switch (metric) {
@@ -61,54 +50,48 @@ class _CardioPageState extends ExerciseGraphState<CardioPage, CardioMetric> {
   void initState() {
     super.initState();
     _data = widget.initialData;
-    targetUnit = widget.initialUnit;
-    exerciseName = widget.initialName;
-    final settings = context.read<Setting>();
-    timeAxis = settings.defaultGraphTimeBasedXAxis;
-    limit = settings.defaultGraphLimit;
-    metric = isWeightUnit(targetUnit)
-        ? CardioMetric.weight
-        : CardioMetric.values.firstWhere(
-            (m) => m.name == settings.defaultGraphMetric,
-            orElse: () => CardioMetric.pace,
-          );
-    period = Period.values.firstWhere(
-      (p) => p.name == settings.defaultGraphPeriod,
-      orElse: () => Period.day,
-    );
-    widget.tabCtrl.addListener(onTabChanged);
-    _loadPreferences();
+    initialize(widget.initialName, widget.initialUnit);
   }
 
-  Future<void> _loadPreferences() async {
-    final pref = await getExerciseByName(db, exerciseName);
-    if (pref == null || !mounted) return;
-    setState(() {
-      final stored = pref.graphMetric.split(',');
-      final allowed = isWeightUnit(targetUnit)
-          ? {CardioMetric.weight, CardioMetric.duration, CardioMetric.incline}
-          : {
-              CardioMetric.pace,
-              CardioMetric.inclineAdjustedPace,
-              CardioMetric.duration,
-              CardioMetric.distance,
-              CardioMetric.incline,
-            };
-      metric = CardioMetric.values.firstWhere(
-        (m) => stored.contains(m.name) && allowed.contains(m),
-        orElse: () =>
-            isWeightUnit(targetUnit) ? CardioMetric.weight : CardioMetric.pace,
-      );
-      period = Period.values.firstWhere(
-        (p) => p.name == pref.graphPeriod,
-        orElse: () => period,
-      );
-      limit = pref.graphLimit;
-      timeAxis = pref.graphTimeBasedXAxis;
-      notesCtrl.text = pref.notes ?? '';
-    });
-    setData();
+  @override
+  CardioMetric defaultMetric(Setting settings) => isWeightUnit(targetUnit)
+      ? CardioMetric.weight
+      : CardioMetric.values.firstWhere(
+          (m) => m.name == settings.defaultGraphMetric,
+          orElse: () => CardioMetric.pace,
+        );
+
+  @override
+  CardioMetric storedMetric(List<String> stored) {
+    final allowed = isWeightUnit(targetUnit)
+        ? {CardioMetric.weight, CardioMetric.duration, CardioMetric.incline}
+        : {
+            CardioMetric.pace,
+            CardioMetric.inclineAdjustedPace,
+            CardioMetric.duration,
+            CardioMetric.distance,
+            CardioMetric.incline,
+          };
+    return CardioMetric.values.firstWhere(
+      (m) => stored.contains(m.name) && allowed.contains(m),
+      orElse: () =>
+          isWeightUnit(targetUnit) ? CardioMetric.weight : CardioMetric.pace,
+    );
   }
+
+  @override
+  DateTime? pointDate(int index) =>
+      index < 0 || index >= _data.length ? null : _data[index].created;
+
+  @override
+  List<({DateTime created, double value})> get chartRows => [
+    for (final row in _data)
+      (created: row.created, value: double.parse(row.value.toStringAsFixed(1))),
+  ];
+
+  @override
+  String tooltip(int index, String format) =>
+      tooltipText(metric, _data[index], format);
 
   String tooltipText(
     CardioMetric selectedMetric,
@@ -146,183 +129,51 @@ class _CardioPageState extends ExerciseGraphState<CardioPage, CardioMetric> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final shortDateFormat = context.select<Setting, String>(
-      (settings) => settings.shortDateFormat,
-    );
-    final desktop = isDesktopLayout(context);
-    final theme = Theme.of(context);
+  List<(CardioMetric, String)> get metricOptions => isWeightUnit(targetUnit)
+      ? <(CardioMetric, String)>[
+          (CardioMetric.weight, context.l10n.weightLabel),
+          (CardioMetric.duration, context.l10n.durationLabel),
+          (CardioMetric.incline, context.l10n.inclineLabel),
+        ]
+      : <(CardioMetric, String)>[
+          (CardioMetric.pace, context.l10n.paceDistanceTime),
+          (CardioMetric.inclineAdjustedPace, context.l10n.adjustedPace),
+          (CardioMetric.duration, context.l10n.durationLabel),
+          (CardioMetric.distance, context.l10n.distanceLabel),
+          (CardioMetric.incline, context.l10n.inclineLabel),
+        ];
 
-    final metricOptions = isWeightUnit(targetUnit)
-        ? <(CardioMetric, String)>[
-            (CardioMetric.weight, context.l10n.weightLabel),
-            (CardioMetric.duration, context.l10n.durationLabel),
-            (CardioMetric.incline, context.l10n.inclineLabel),
-          ]
-        : <(CardioMetric, String)>[
-            (CardioMetric.pace, context.l10n.paceDistanceTime),
-            (CardioMetric.inclineAdjustedPace, context.l10n.adjustedPace),
-            (CardioMetric.duration, context.l10n.durationLabel),
-            (CardioMetric.distance, context.l10n.distanceLabel),
-            (CardioMetric.incline, context.l10n.inclineLabel),
-          ];
-
-    final metricSelector = GraphMetricChips<CardioMetric>(
-      options: metricOptions,
-      selected: metric,
-      onChanged: (next) {
-        if (metric == next) return;
-        setState(() {
-          metric = next;
-        });
-        setData();
-        savePreferences();
-      },
+  @override
+  Future<void> editGraph() async {
+    final newName = await Navigator.of(context).push<String>(
+      FlexPageRoute(builder: (context) => EditGraphPage(name: exerciseName)),
     );
-    final periodSelector = GraphPeriodPicker(
-      selected: period,
-      onChanged: (value) {
-        setState(() {
-          period = value;
-        });
-        setData();
-        savePreferences();
-      },
-    );
-    final palette = GraphMetricChips.palette(theme.colorScheme);
-    final lineColor =
-        palette[metricOptions.indexWhere((o) => o.$1 == metric) %
-            palette.length];
-    final points = <FlexLineChartPoint>[];
-    for (var index = 0; index < _data.length; index++) {
-      final row = _data[index];
-      final value = double.parse(row.value.toStringAsFixed(1));
-      points.add(
-        FlexLineChartPoint(
-          timeAxis
-              ? row.created.millisecondsSinceEpoch.toDouble()
-              : index.toDouble(),
-          value,
-          column: index,
-        ),
-      );
+    if (mounted && newName != null) {
+      final updated = await getExerciseByName(db, newName);
+      if (!mounted) return;
+      setState(() {
+        exerciseName = newName;
+        if (updated != null) targetUnit = updated.displayUnit;
+        final supportsWeight = isWeightUnit(targetUnit);
+        final allowed = supportsWeight
+            ? {CardioMetric.weight, CardioMetric.duration, CardioMetric.incline}
+            : {
+                CardioMetric.pace,
+                CardioMetric.inclineAdjustedPace,
+                CardioMetric.duration,
+                CardioMetric.distance,
+                CardioMetric.incline,
+              };
+        if (!allowed.contains(metric)) {
+          metric = supportsWeight ? CardioMetric.weight : CardioMetric.pace;
+        }
+      });
+      setData();
     }
-
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: Text(exerciseName),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              final newName = await Navigator.of(context).push<String>(
-                FlexPageRoute(
-                  builder: (context) => EditGraphPage(name: exerciseName),
-                ),
-              );
-              if (mounted && newName != null) {
-                final updated = await getExerciseByName(db, newName);
-                if (!mounted) return;
-                setState(() {
-                  exerciseName = newName;
-                  if (updated != null) targetUnit = updated.displayUnit;
-                  final supportsWeight = isWeightUnit(targetUnit);
-                  final allowed = supportsWeight
-                      ? {
-                          CardioMetric.weight,
-                          CardioMetric.duration,
-                          CardioMetric.incline,
-                        }
-                      : {
-                          CardioMetric.pace,
-                          CardioMetric.inclineAdjustedPace,
-                          CardioMetric.duration,
-                          CardioMetric.distance,
-                          CardioMetric.incline,
-                        };
-                  if (!allowed.contains(metric)) {
-                    metric = supportsWeight
-                        ? CardioMetric.weight
-                        : CardioMetric.pace;
-                  }
-                });
-                setData();
-              }
-            },
-            icon: const Icon(Icons.edit),
-            tooltip: context.l10n.actionEdit,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 16.0,
-            right: 16.0,
-            bottom: desktop ? 24.0 : bottomNavHeight,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 8),
-              periodSelector,
-              const SizedBox(height: 8),
-              metricSelector,
-              const SizedBox(height: 8),
-              Expanded(
-                child: _data.isEmpty
-                    ? AppEmptyState(
-                        icon: Icons.monitor_heart_outlined,
-                        title: context.l10n.noDataFor(exerciseName),
-                        message: context.l10n.completeSetForChart,
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.only(right: 32.0, top: 16.0),
-                        child: FlexLineChart(
-                          lineColor: lineColor,
-                          points: points,
-                          tooltipText: (index) => tooltipText(
-                            metric,
-                            _data[index],
-                            shortDateFormat,
-                          ),
-                          onPointSelected: touchLine,
-                          dates: _data.map((row) => row.created).toList(),
-                          timeBasedXAxis: timeAxis,
-                        ),
-                      ),
-              ),
-              const SizedBox(height: 8),
-              GraphActionButtons(
-                onHistory: showHistory,
-                onOptions: showOptions,
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: TextField(
-                  controller: notesCtrl,
-                  readOnly: true,
-                  onTap: editNotes,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.exerciseNotes,
-                    hintText: context.l10n.notesForExercise,
-                  ),
-                  minLines: 2,
-                  maxLines: 5,
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
-    );
   }
+
+  @override
+  bool get cardio => true;
 
   @override
   Future<void> setData() async {
