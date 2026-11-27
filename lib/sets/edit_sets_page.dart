@@ -1,3 +1,4 @@
+import 'package:flex/sets/workout_number_field.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/app_fab.dart';
@@ -133,35 +134,21 @@ class _EditSetsPageState extends State<EditSetsPage>
                 const SizedBox(height: 12),
                 if (_cardio == true) ...[
                   if (isWeightUnit(_unit))
-                    TextFormField(
+                    WorkoutNumberField(
                       controller: _weight,
                       decoration: InputDecoration(
                         labelText: l10n.weightLabel,
                         hintText: _oldWeights,
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      onTap: () => selectAll(_weight),
                       onChanged: (_) => markDirty(),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return null;
-                        if (parseDisplayNumber(context, value) == null)
-                          return l10n.invalidNumber;
-                        return null;
-                      },
                     )
                   else
-                    TextFormField(
+                    WorkoutNumberField(
                       controller: _distance,
                       decoration: InputDecoration(
                         labelText: l10n.distanceLabel,
                         hintText: _oldDist,
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      onTap: () => selectAll(_distance),
                       onChanged: (_) => markDirty(),
                       validator: (value) {
                         if (value == null) return null;
@@ -174,61 +161,39 @@ class _EditSetsPageState extends State<EditSetsPage>
                   Row(
                     children: [
                       Expanded(
-                        child: TextFormField(
+                        child: WorkoutNumberField(
                           controller: _minutes,
                           decoration: InputDecoration(
                             labelText: l10n.minutesLabel,
                             hintText: _oldMin,
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: false,
-                          ),
-                          onTap: () => selectAll(_minutes),
+                          integer: true,
                           onChanged: (_) => markDirty(),
                           textInputAction: TextInputAction.next,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return null;
-                            if (int.tryParse(value) == null)
-                              return l10n.invalidNumber;
-                            return null;
-                          },
                         ),
                       ),
                       const SizedBox(width: 8.0),
                       Expanded(
-                        child: TextFormField(
+                        child: WorkoutNumberField(
                           controller: _seconds,
                           decoration: InputDecoration(
                             labelText: l10n.secondsLabel,
                             hintText: _oldSec,
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: false,
-                          ),
-                          onTap: () => selectAll(_seconds),
+                          integer: true,
                           onChanged: (_) => markDirty(),
                           textInputAction: TextInputAction.next,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return null;
-                            if (int.tryParse(value) == null)
-                              return l10n.invalidNumber;
-                            return null;
-                          },
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
+                  WorkoutNumberField(
                     controller: _incline,
                     decoration: InputDecoration(
                       labelText: l10n.inclinePercent,
                       hintText: _oldInc,
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onTap: () => selectAll(_incline),
                     onChanged: (_) => markDirty(),
                     validator: (value) {
                       if (value == null) return null;
@@ -239,26 +204,16 @@ class _EditSetsPageState extends State<EditSetsPage>
                   ),
                 ],
                 if (_cardio == false || _cardio == null) ...[
-                  TextFormField(
+                  WorkoutNumberField(
                     controller: _reps,
                     decoration: InputDecoration(
                       labelText: l10n.repsLabel,
                       hintText: _oldReps,
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onTap: () => selectAll(_reps),
                     onChanged: (_) => markDirty(),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return null;
-                      if (parseDisplayNumber(context, value) == null)
-                        return l10n.invalidNumber;
-                      return null;
-                    },
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
+                  WorkoutNumberField(
                     controller: _weight,
                     decoration: InputDecoration(
                       labelText: switch (_unit) {
@@ -269,40 +224,20 @@ class _EditSetsPageState extends State<EditSetsPage>
                       },
                       hintText: _oldWeights,
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    onTap: () => selectAll(_weight),
                     onChanged: (_) => markDirty(),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return null;
-                      if (parseDisplayNumber(context, value) == null)
-                        return l10n.invalidNumber;
-                      return null;
-                    },
                   ),
                 ],
                 const SizedBox(height: 12),
                 Selector<Setting, bool>(
                   builder: (context, showBodyWeight, child) => Visibility(
                     visible: showBodyWeight,
-                    child: TextFormField(
+                    child: WorkoutNumberField(
                       controller: _body,
                       decoration: InputDecoration(
                         labelText: l10n.bodyWeightLabel,
                         hintText: _oldBody,
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      onTap: () => selectAll(_body),
                       onChanged: (_) => markDirty(),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return null;
-                        if (parseDisplayNumber(context, value) == null)
-                          return l10n.invalidNumber;
-                        return null;
-                      },
                     ),
                   ),
                   selector: (context, settings) => settings.showBodyWeight,

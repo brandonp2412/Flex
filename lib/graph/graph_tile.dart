@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flex/exercise_avatar.dart';
 
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
@@ -51,43 +51,15 @@ class GraphTile extends StatelessWidget {
       (settings) => settings.showImages,
     );
 
-    Widget? leading;
-
-    if (showImages && exerciseSet.image?.isNotEmpty == true) {
-      leading = GestureDetector(
-        onTap: () => onSelect(exerciseSet.selectionKey),
-        child: Image.file(
-          File(exerciseSet.image!),
-          cacheWidth: 64,
-          errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
-        ),
-      );
-    } else if (showImages) {
-      leading = GestureDetector(
-        onTap: () => onSelect(exerciseSet.selectionKey),
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              exerciseSet.name.isNotEmpty
-                  ? exerciseSet.name[0].toUpperCase()
-                  : '?',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    final leading = showImages
+        ? ExerciseAvatar(
+            name: exerciseSet.name,
+            image: exerciseSet.image?.isNotEmpty == true
+                ? exerciseSet.image
+                : null,
+            onTap: () => onSelect(exerciseSet.selectionKey),
+          )
+        : null;
 
     final desktop = isDesktopLayout(context);
     final colors = Theme.of(context).colorScheme;

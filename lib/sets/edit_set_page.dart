@@ -1,3 +1,4 @@
+import 'package:flex/sets/workout_number_field.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -377,20 +378,12 @@ class _EditSetPageState extends State<EditSetPage>
   Widget bodyFields(bool showBodyWeight) {
     return Visibility(
       visible: showBodyWeight,
-      child: TextFormField(
+      child: WorkoutNumberField(
         controller: _body,
         decoration: InputDecoration(
           labelText: context.l10n.bodyWeightWithUnit(_bodyUnit),
         ),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        onTap: () => selectAll(_body),
         onChanged: (_) => markDirty(),
-        validator: (value) {
-          if (value == null) return null;
-          if (value.isNotEmpty && parseDisplayNumber(context, value) == null)
-            return context.l10n.invalidNumber;
-          return null;
-        },
       ),
     );
   }
@@ -549,38 +542,24 @@ class _EditSetPageState extends State<EditSetPage>
     return Row(
       children: [
         Expanded(
-          child: TextFormField(
+          child: WorkoutNumberField(
             controller: _minutes,
             decoration: InputDecoration(labelText: context.l10n.minutesLabel),
-            keyboardType: const TextInputType.numberWithOptions(decimal: false),
-            onTap: () => selectAll(_minutes),
+            integer: true,
             onChanged: (_) => markDirty(),
             textInputAction: TextInputAction.next,
             onFieldSubmitted: (value) => selectAll(_seconds),
-            validator: (value) {
-              if (value == null || value.isEmpty) return null;
-              if (int.tryParse(value) == null)
-                return context.l10n.invalidNumber;
-              return null;
-            },
           ),
         ),
         const SizedBox(width: 8.0),
         Expanded(
-          child: TextFormField(
+          child: WorkoutNumberField(
             controller: _seconds,
             decoration: InputDecoration(labelText: context.l10n.secondsLabel),
-            keyboardType: const TextInputType.numberWithOptions(decimal: false),
-            onTap: () => selectAll(_seconds),
+            integer: true,
             onChanged: (_) => markDirty(),
             textInputAction: TextInputAction.next,
             onFieldSubmitted: (value) => selectAll(_incline),
-            validator: (value) {
-              if (value == null || value.isEmpty) return null;
-              if (int.tryParse(value) == null)
-                return context.l10n.invalidNumber;
-              return null;
-            },
           ),
         ),
       ],

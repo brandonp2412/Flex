@@ -84,7 +84,6 @@ def check_repository(root: Path, base_ref: str | None = None) -> None:
     require(current_schema >= 1, "Invalid Drift schema version")
     for folder, prefix, suffix in (
         ("drift_schemas/db", "drift_schema_v", ".json"),
-        ("test/drift/db/generated", "schema_v", ".dart"),
     ):
         path = root / folder
         versions = sorted(

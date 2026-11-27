@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
@@ -7,10 +5,9 @@ import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/graph/edit_graph_page.dart';
+import 'package:flex/graph/exercise_graph_state.dart';
 import 'package:flex/graph/flex_line_chart.dart';
-import 'package:flex/graph/graph_history_page.dart';
 import 'package:flex/graph/graph_metric_chips.dart';
-import 'package:flex/graph/graph_notes_page.dart';
 import 'package:flex/graph/graph_options_controls.dart';
 import 'package:flex/graph/graph_period_picker.dart';
 import 'package:flex/graph/strength_data.dart';
@@ -18,7 +15,6 @@ import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
-import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -43,29 +39,32 @@ class StrengthPage extends StatefulWidget {
   createState() => _StrengthPageState();
 }
 
-class _StrengthPageState extends State<StrengthPage> {
+class _StrengthPageState
+    extends ExerciseGraphState<StrengthPage, StrengthMetric> {
   late List<StrengthData> _data;
-  late String _targetUnit;
-  late String _exerciseName;
-  late bool timeAxis;
-  Timer? _refreshTimer;
-  Timer? _notesDebounce;
 
-  late int limit;
-  late StrengthMetric metric;
-  int _dataRequest = 0;
-  late Period period;
-  DateTime? start;
-  DateTime? end;
-  DateTime lastTap = DateTime(0);
-  final _notesCtrl = TextEditingController();
+  @override
+  TabController get tabController => widget.tabCtrl;
+
+  @override
+  DateTime? pointDate(int index) =>
+      index < 0 || index >= _data.length ? null : _data[index].created;
+
+  @override
+  bool get bodyWeight => widget.bodyWeight;
+
+  @override
+  List<DropdownMenuItem<String>> get optionsUnits =>
+      context.read<Setting>().showUnits
+      ? strengthUnitMenuItems(context.l10n)
+      : const [];
 
   @override
   void initState() {
     super.initState();
     _data = widget.initialData;
-    _targetUnit = widget.initialUnit;
-    _exerciseName = widget.initialName;
+    targetUnit = widget.initialUnit;
+    exerciseName = widget.initialName;
     final settings = context.read<Setting>();
     timeAxis = settings.defaultGraphTimeBasedXAxis;
     limit = settings.defaultGraphLimit;
@@ -80,12 +79,12 @@ class _StrengthPageState extends State<StrengthPage> {
       (p) => p.name == settings.defaultGraphPeriod,
       orElse: () => Period.day,
     );
-    widget.tabCtrl.addListener(_onTabChanged);
+    widget.tabCtrl.addListener(onTabChanged);
     if (!widget.bodyWeight) _loadPreferences();
   }
 
   Future<void> _loadPreferences() async {
-    final pref = await getExerciseByName(db, _exerciseName);
+    final pref = await getExerciseByName(db, exerciseName);
     if (pref == null || !mounted) return;
     setState(() {
       final stored = pref.graphMetric.split(',');
@@ -102,58 +101,9 @@ class _StrengthPageState extends State<StrengthPage> {
       );
       limit = pref.graphLimit;
       timeAxis = pref.graphTimeBasedXAxis;
-      _notesCtrl.text = pref.notes ?? '';
+      notesCtrl.text = pref.notes ?? '';
     });
     setData();
-  }
-
-  Future<void> _savePreferences() async {
-    if (widget.bodyWeight) return;
-    final exercise = await getExerciseByName(db, _exerciseName);
-    if (exercise == null) return;
-    await updateExerciseGraphPreferences(
-      db,
-      exerciseId: exercise.id,
-      metric: metric.name,
-      period: period.name,
-      limit: limit,
-      timeBasedXAxis: timeAxis,
-      notes: _notesCtrl.text.isEmpty ? null : _notesCtrl.text,
-    );
-  }
-
-  void _onNotesChanged() {
-    _notesDebounce?.cancel();
-    _notesDebounce = Timer(const Duration(milliseconds: 600), _savePreferences);
-  }
-
-  Future<void> _editNotes() async {
-    await Navigator.of(context, rootNavigator: true).push(
-      FlexPageRoute(
-        builder: (context) =>
-            GraphNotesPage(controller: _notesCtrl, onChanged: _onNotesChanged),
-      ),
-    );
-    _notesDebounce?.cancel();
-    await _savePreferences();
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    _notesDebounce?.cancel();
-    _notesCtrl.dispose();
-    widget.tabCtrl.removeListener(_onTabChanged);
-    super.dispose();
-  }
-
-  void _onTabChanged() {
-    final settings = context.read<Setting>();
-    if (widget.tabCtrl.index ==
-        settings.tabs.split(',').indexOf('GraphsPage')) {
-      setData();
-    }
   }
 
   @override
@@ -187,7 +137,7 @@ class _StrengthPageState extends State<StrengthPage> {
           metric = next;
         });
         setData();
-        _savePreferences();
+        savePreferences();
       },
     );
     final periodSelector = GraphPeriodPicker(
@@ -197,7 +147,7 @@ class _StrengthPageState extends State<StrengthPage> {
           period = value;
         });
         setData();
-        _savePreferences();
+        savePreferences();
       },
     );
 
@@ -221,7 +171,7 @@ class _StrengthPageState extends State<StrengthPage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text(_exerciseName),
+        title: Text(exerciseName),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -232,12 +182,12 @@ class _StrengthPageState extends State<StrengthPage> {
               onPressed: () async {
                 String? newName = await Navigator.of(context).push(
                   FlexPageRoute(
-                    builder: (context) => EditGraphPage(name: _exerciseName),
+                    builder: (context) => EditGraphPage(name: exerciseName),
                   ),
                 );
                 if (mounted && newName != null) {
                   setState(() {
-                    _exerciseName = newName;
+                    exerciseName = newName;
                   });
                 }
               },
@@ -288,17 +238,17 @@ class _StrengthPageState extends State<StrengthPage> {
               ),
               const SizedBox(height: 8),
               GraphActionButtons(
-                onHistory: _showHistory,
-                onOptions: _showOptions,
+                onHistory: showHistory,
+                onOptions: showOptions,
               ),
               const SizedBox(height: 8),
               if (showNotes) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: TextField(
-                    controller: _notesCtrl,
+                    controller: notesCtrl,
                     readOnly: true,
-                    onTap: _editNotes,
+                    onTap: editNotes,
                     decoration: InputDecoration(
                       labelText: context.l10n.exerciseNotes,
                       hintText: context.l10n.notesForExercise,
@@ -315,147 +265,29 @@ class _StrengthPageState extends State<StrengthPage> {
     );
   }
 
-  Future<void> _showHistory() async {
-    final exerciseSets = widget.bodyWeight
-        ? await getBodyWeightGraphHistory()
-        : await getGraphHistory(_exerciseName);
-    if (!mounted) return;
-
-    final desktop = isDesktopLayout(context);
-    await Navigator.of(context).push(
-      FlexPageRoute(
-        builder: (context) => GraphHistoryPage(
-          name: _exerciseName,
-          initialSets: exerciseSets,
-          tabController: widget.tabCtrl,
-          bodyWeight: widget.bodyWeight,
-        ),
-      ),
-    );
-    if (!mounted) return;
-    _refreshTimer?.cancel();
-    if (desktop) {
-      setData();
-    } else {
-      _refreshTimer = Timer(kThemeAnimationDuration, setData);
-    }
-  }
-
-  void _showOptions() {
-    final settings = context.read<Setting>();
-    final l10n = context.l10n;
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetContext, setSheet) {
-            void refreshSheet() => setSheet(() {});
-
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  0,
-                  16,
-                  16 + MediaQuery.of(sheetContext).viewInsets.bottom,
-                ),
-                child: GraphOptionsControls(
-                  compact: false,
-                  shortDateFormat: settings.shortDateFormat,
-                  unitValue: settings.showUnits ? _targetUnit : null,
-                  unitItems: settings.showUnits
-                      ? strengthUnitMenuItems(l10n)
-                      : const [],
-                  onUnitChanged: (value) {
-                    if (!mounted) return;
-                    setState(() {
-                      _targetUnit = value;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                  startDate: start,
-                  endDate: end,
-                  onSelectStart: () async {
-                    if (!mounted) return;
-                    await _selectStart();
-                    if (sheetContext.mounted) refreshSheet();
-                  },
-                  onClearStart: () {
-                    if (!mounted) return;
-                    setState(() {
-                      start = null;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                  onSelectEnd: () async {
-                    if (!mounted) return;
-                    await _selectEnd();
-                    if (sheetContext.mounted) refreshSheet();
-                  },
-                  onClearEnd: () {
-                    if (!mounted) return;
-                    setState(() {
-                      end = null;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                  limit: limit,
-                  maxLimit: 100,
-                  onLimitChanged: (value) {
-                    if (!mounted) return;
-                    setState(() {
-                      limit = value;
-                    });
-                    setData();
-                    _savePreferences();
-                    refreshSheet();
-                  },
-                  timeBasedXAxis: timeAxis,
-                  onTimeAxisChange: (value) {
-                    if (!mounted) return;
-                    setState(() {
-                      timeAxis = value;
-                    });
-                    _savePreferences();
-                    refreshSheet();
-                  },
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
+  @override
   Future<void> setData() async {
     if (!mounted) return;
-    final request = ++_dataRequest;
+    final request = ++dataRequest;
     final selected = metric;
     final rows = widget.bodyWeight
         ? await getBodyWeightData(
-            target: _targetUnit,
+            target: targetUnit,
             period: period,
             start: start,
             end: end,
             limit: limit,
           )
         : await getStrengthData(
-            target: _targetUnit,
-            name: _exerciseName,
+            target: targetUnit,
+            name: exerciseName,
             metric: selected,
             period: period,
             start: start,
             end: end,
             limit: limit,
           );
-    if (!mounted || request != _dataRequest) return;
+    if (!mounted || request != dataRequest) return;
     setState(() => _data = rows);
   }
 
@@ -466,71 +298,11 @@ class _StrengthPageState extends State<StrengthPage> {
   ) {
     final created = formatDisplayDate(context, row.created, format);
     final value = formatDisplayNumber(context, row.value, minDigits: 2);
-    final displayUnit = displayMeasurementUnit(context.l10n, _targetUnit);
+    final displayUnit = displayMeasurementUnit(context.l10n, targetUnit);
     return switch (selectedMetric) {
       StrengthMetric.bestReps ||
       StrengthMetric.relativeStrength => '$value $created',
       _ => '$value$displayUnit $created',
     };
-  }
-
-  Future<void> touchLine(int index) async {
-    if (DateTime.now().difference(lastTap) >=
-        const Duration(milliseconds: 300)) {
-      lastTap = DateTime.now();
-      return;
-    }
-
-    if (widget.bodyWeight || index < 0 || index >= _data.length) return;
-    final row = _data[index];
-    final desktop = isDesktopLayout(context);
-    final exerciseSet = await getGraphPointSet(_exerciseName, row.created);
-    if (!mounted || exerciseSet == null) return;
-
-    await Navigator.of(context).push(
-      FlexPageRoute(
-        builder: (context) => EditSetPage(exerciseSet: exerciseSet),
-      ),
-    );
-    _refreshTimer?.cancel();
-    if (desktop) {
-      setData();
-    } else {
-      _refreshTimer = Timer(kThemeAnimationDuration, setData);
-    }
-  }
-
-  Future<void> _selectEnd() async {
-    if (!mounted) return;
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: end,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate == null || !mounted) return;
-
-    setState(() {
-      end = pickedDate;
-    });
-    setData();
-  }
-
-  Future<void> _selectStart() async {
-    if (!mounted) return;
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: start,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate == null || !mounted) return;
-
-    setState(() {
-      start = pickedDate;
-    });
-    setData();
   }
 }

@@ -54,6 +54,8 @@ chromedriver.zip
 chromedriver-win64/
 
 coverage/
+/test/drift/db/generated/
+/lib/l10n/generated/
 # Widget Preview related
 .widget_preview/
 

@@ -1,3 +1,4 @@
+import 'package:flex/settings/setting_toggle.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/database/database.dart';
 import 'package:flex/graph/graph_curve_settings.dart';
@@ -127,23 +128,13 @@ List<Widget> getAppearanceSettings(
     if (matches([l10n.systemColorScheme, l10n.systemColorSchemeDescription]))
       Padding(
         padding: const EdgeInsets.only(top: 8.0),
-        child: Tooltip(
-          message: l10n.systemColorSchemeDescription,
-          child: ListTile(
-            title: Text(l10n.systemColorScheme, textAlign: TextAlign.start),
-            leading: settings.systemColors
-                ? const Icon(Icons.color_lens)
-                : const Icon(Icons.color_lens_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(systemColors: Value(!settings.systemColors)),
-            ),
-            trailing: Switch(
-              value: settings.systemColors,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(systemColors: Value(value)),
-              ),
-            ),
-          ),
+        child: SettingToggle(
+          title: Text(l10n.systemColorScheme, textAlign: TextAlign.start),
+          description: l10n.systemColorSchemeDescription,
+          value: settings.systemColors,
+          icon: Icons.color_lens,
+          outlinedIcon: Icons.color_lens_outlined,
+          update: (value) => SettingsCompanion(systemColors: Value(value)),
         ),
       ),
     if (!settings.systemColors &&
@@ -208,63 +199,31 @@ List<Widget> getAppearanceSettings(
         ),
       ),
     if (matches([l10n.showImages, l10n.showImagesDescription]))
-      Tooltip(
-        message: l10n.showImagesDescription,
-        child: ListTile(
-          title: Text(l10n.showImages, textAlign: TextAlign.start),
-          leading: settings.showImages
-              ? const Icon(Icons.image)
-              : const Icon(Icons.image_outlined),
-          onTap: () => db.settings.update().write(
-            SettingsCompanion(showImages: Value(!settings.showImages)),
-          ),
-          trailing: Switch(
-            value: settings.showImages,
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(showImages: Value(value)),
-            ),
-          ),
-        ),
+      SettingToggle(
+        title: Text(l10n.showImages, textAlign: TextAlign.start),
+        description: l10n.showImagesDescription,
+        value: settings.showImages,
+        icon: Icons.image,
+        outlinedIcon: Icons.image_outlined,
+        update: (value) => SettingsCompanion(showImages: Value(value)),
       ),
     if (matches([l10n.showGlobalProgress, l10n.showGlobalProgressDescription]))
-      Tooltip(
-        message: l10n.showGlobalProgressDescription,
-        child: ListTile(
-          title: Text(l10n.showGlobalProgress, textAlign: TextAlign.start),
-          leading: settings.showGlobalProgress
-              ? const Icon(Icons.public)
-              : const Icon(Icons.public_outlined),
-          onTap: () => db.settings.update().write(
-            SettingsCompanion(
-              showGlobalProgress: Value(!settings.showGlobalProgress),
-            ),
-          ),
-          trailing: Switch(
-            value: settings.showGlobalProgress,
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(showGlobalProgress: Value(value)),
-            ),
-          ),
-        ),
+      SettingToggle(
+        title: Text(l10n.showGlobalProgress, textAlign: TextAlign.start),
+        description: l10n.showGlobalProgressDescription,
+        value: settings.showGlobalProgress,
+        icon: Icons.public,
+        outlinedIcon: Icons.public_outlined,
+        update: (value) => SettingsCompanion(showGlobalProgress: Value(value)),
       ),
     if (matches([l10n.peekGraph, l10n.peekGraphDescription]))
-      Tooltip(
-        message: l10n.peekGraphDescription,
-        child: ListTile(
-          title: Text(l10n.peekGraph, textAlign: TextAlign.start),
-          leading: settings.peekGraph
-              ? const Icon(Icons.visibility)
-              : const Icon(Icons.visibility_outlined),
-          onTap: () => db.settings.update().write(
-            SettingsCompanion(peekGraph: Value(!settings.peekGraph)),
-          ),
-          trailing: Switch(
-            value: settings.peekGraph,
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(peekGraph: Value(value)),
-            ),
-          ),
-        ),
+      SettingToggle(
+        title: Text(l10n.peekGraph, textAlign: TextAlign.start),
+        description: l10n.peekGraphDescription,
+        value: settings.peekGraph,
+        icon: Icons.visibility,
+        outlinedIcon: Icons.visibility_outlined,
+        update: (value) => SettingsCompanion(peekGraph: Value(value)),
       ),
     if (matches([
       l10n.chartGridlines,

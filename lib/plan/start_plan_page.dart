@@ -1,3 +1,4 @@
+import 'package:flex/sets/workout_number_field.dart';
 import 'dart:math';
 
 import 'package:flex/app_fab.dart';
@@ -362,33 +363,22 @@ class _StartPlanPageState extends State<StartPlanPage>
       Row(
         children: [
           Expanded(
-            child: TextFormField(
+            child: WorkoutNumberField(
               controller: _minutes,
               focusNode: _minutesFocus,
               decoration: InputDecoration(labelText: context.l10n.minutesLabel),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: false,
-              ),
-              onTap: () => selectAll(_minutes),
+              integer: true,
               textInputAction: TextInputAction.next,
               onFieldSubmitted: (_) => _focusAndSelect(_secondsFocus, _seconds),
-              validator: (value) {
-                if (value?.isNotEmpty == true && int.tryParse(value!) == null)
-                  return context.l10n.invalidNumber;
-                return null;
-              },
             ),
           ),
           const SizedBox(width: 8.0),
           Expanded(
-            child: TextFormField(
+            child: WorkoutNumberField(
               controller: _seconds,
               focusNode: _secondsFocus,
               decoration: InputDecoration(labelText: context.l10n.secondsLabel),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: false,
-              ),
-              onTap: () => selectAll(_seconds),
+              integer: true,
               textInputAction: TextInputAction.next,
               onFieldSubmitted: (_) {
                 if (isWeightUnit(_unit)) {
@@ -396,11 +386,6 @@ class _StartPlanPageState extends State<StartPlanPage>
                 } else {
                   _focusAndSelect(_distanceFocus, _distance);
                 }
-              },
-              validator: (value) {
-                if (value?.isNotEmpty == true && int.tryParse(value!) == null)
-                  return context.l10n.invalidNumber;
-                return null;
               },
             ),
           ),
@@ -413,39 +398,25 @@ class _StartPlanPageState extends State<StartPlanPage>
             Expanded(child: _weightField())
           else
             Expanded(
-              child: TextFormField(
+              child: WorkoutNumberField(
                 textInputAction: TextInputAction.next,
                 controller: _distance,
                 focusNode: _distanceFocus,
                 decoration: InputDecoration(
                   labelText: context.l10n.distanceLabel,
                 ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
                 onFieldSubmitted: (_) =>
                     _focusAndSelect(_inclineFocus, _incline),
-                onTap: () => selectAll(_distance),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  if (parseDisplayNumber(context, value) == null)
-                    return context.l10n.invalidNumber;
-                  return null;
-                },
               ),
             ),
           const SizedBox(width: 8.0),
           Expanded(
-            child: TextFormField(
+            child: WorkoutNumberField(
               controller: _incline,
               focusNode: _inclineFocus,
               decoration: InputDecoration(
                 labelText: context.l10n.inclinePercent,
               ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              onTap: () => selectAll(_incline),
               textInputAction: showNotes
                   ? TextInputAction.next
                   : TextInputAction.done,
@@ -456,12 +427,7 @@ class _StartPlanPageState extends State<StartPlanPage>
                   await _save();
                 }
               },
-              validator: (value) {
-                if (value == null || value.isEmpty) return null;
-                if (double.tryParse(value) == null)
-                  return context.l10n.invalidNumber;
-                return null;
-              },
+              validator: rawDecimalValidator(context),
             ),
           ),
         ],

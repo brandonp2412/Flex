@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flex/exercise_avatar.dart';
 
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/app_search.dart';
@@ -217,43 +217,13 @@ class _GroupHistoryState extends State<GroupHistory> {
     bool showImages,
     bool desktop,
   ) {
-    Widget? leading;
-
-    if (showImages && exerciseSet.image != null) {
-      leading = GestureDetector(
-        onTap: () => widget.onSelect(exerciseSet.id),
-        child: Image.file(
-          File(exerciseSet.image!),
-          cacheWidth: 64,
-          errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
-        ),
-      );
-    } else if (showImages) {
-      leading = GestureDetector(
-        onTap: () => widget.onSelect(exerciseSet.id),
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              exerciseSet.name.isNotEmpty
-                  ? exerciseSet.name[0].toUpperCase()
-                  : '?',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    final leading = showImages
+        ? ExerciseAvatar(
+            name: exerciseSet.name,
+            image: exerciseSet.image,
+            onTap: () => widget.onSelect(exerciseSet.id),
+          )
+        : null;
 
     final title = formatSetSummary(
       context,

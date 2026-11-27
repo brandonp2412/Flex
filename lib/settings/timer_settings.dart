@@ -1,3 +1,4 @@
+import 'package:flex/settings/setting_toggle.dart';
 import 'dart:async';
 
 import 'package:drift/drift.dart' hide Column;
@@ -118,42 +119,22 @@ List<Widget> getTimerSettings(
         ),
       ),
     if (matches([l10n.enableSound, l10n.enableSoundDescription]))
-      Tooltip(
-        message: l10n.enableSoundDescription,
-        child: ListTile(
-          title: Text(l10n.enableSound, textAlign: TextAlign.start),
-          leading: settings.enableSound
-              ? const Icon(Icons.music_note)
-              : const Icon(Icons.music_note_outlined),
-          onTap: () => db.settings.update().write(
-            SettingsCompanion(enableSound: Value(!settings.enableSound)),
-          ),
-          trailing: Switch(
-            value: settings.enableSound,
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(enableSound: Value(value)),
-            ),
-          ),
-        ),
+      SettingToggle(
+        title: Text(l10n.enableSound, textAlign: TextAlign.start),
+        description: l10n.enableSoundDescription,
+        value: settings.enableSound,
+        icon: Icons.music_note,
+        outlinedIcon: Icons.music_note_outlined,
+        update: (value) => SettingsCompanion(enableSound: Value(value)),
       ),
     if (matches([l10n.keepRinging, l10n.keepRingingDescription]))
-      Tooltip(
-        message: l10n.keepRingingDescription,
-        child: ListTile(
-          title: Text(l10n.keepRinging, textAlign: TextAlign.start),
-          leading: settings.keepRinging
-              ? const Icon(Icons.notifications_active)
-              : const Icon(Icons.notifications_none),
-          onTap: () => db.settings.update().write(
-            SettingsCompanion(keepRinging: Value(!settings.keepRinging)),
-          ),
-          trailing: Switch(
-            value: settings.keepRinging,
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(keepRinging: Value(value)),
-            ),
-          ),
-        ),
+      SettingToggle(
+        title: Text(l10n.keepRinging, textAlign: TextAlign.start),
+        description: l10n.keepRingingDescription,
+        value: settings.keepRinging,
+        icon: Icons.notifications_active,
+        outlinedIcon: Icons.notifications_none,
+        update: (value) => SettingsCompanion(keepRinging: Value(value)),
       ),
     if (matches([l10n.keepScreenOn, l10n.keepScreenOnDescription]))
       Tooltip(

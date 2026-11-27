@@ -1,3 +1,4 @@
+import 'package:flex/settings/setting_toggle.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
@@ -18,90 +19,46 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
   return (
     history: [
       if (matches([l10n.groupHistory, l10n.groupHistoryDescription]))
-        Tooltip(
-          message: l10n.groupHistoryDescription,
-          child: ListTile(
-            title: Text(l10n.groupHistory),
-            subtitle: Text(l10n.groupHistoryDescription),
-            leading: settings.groupHistory
-                ? const Icon(Icons.view_agenda)
-                : const Icon(Icons.view_agenda_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(groupHistory: Value(!settings.groupHistory)),
-            ),
-            trailing: Switch(
-              value: settings.groupHistory,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(groupHistory: Value(value)),
-              ),
-            ),
-          ),
+        SettingToggle(
+          title: Text(l10n.groupHistory),
+          subtitle: Text(l10n.groupHistoryDescription),
+          description: l10n.groupHistoryDescription,
+          value: settings.groupHistory,
+          icon: Icons.view_agenda,
+          outlinedIcon: Icons.view_agenda_outlined,
+          update: (value) => SettingsCompanion(groupHistory: Value(value)),
         ),
       if (matches([l10n.showUnits, l10n.showUnitsDescription]))
-        Tooltip(
-          message: l10n.showUnitsDescription,
-          child: ListTile(
-            title: Text(l10n.showUnits),
-            subtitle: Text(l10n.showUnitsDescription),
-            leading: settings.showUnits
-                ? const Icon(Icons.scale)
-                : const Icon(Icons.scale_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(showUnits: Value(!settings.showUnits)),
-            ),
-            trailing: Switch(
-              value: settings.showUnits,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(showUnits: Value(value)),
-              ),
-            ),
-          ),
+        SettingToggle(
+          title: Text(l10n.showUnits),
+          subtitle: Text(l10n.showUnitsDescription),
+          description: l10n.showUnitsDescription,
+          value: settings.showUnits,
+          icon: Icons.scale,
+          outlinedIcon: Icons.scale_outlined,
+          update: (value) => SettingsCompanion(showUnits: Value(value)),
         ),
     ],
     tracking: [
       if (matches([l10n.showBodyWeight, l10n.showBodyWeightDescription]))
-        Tooltip(
-          message: l10n.showBodyWeightDescription,
-          child: ListTile(
-            title: Text(l10n.showBodyWeight),
-            subtitle: Text(l10n.showBodyWeightDescription),
-            leading: settings.showBodyWeight
-                ? const Icon(Icons.monitor_weight)
-                : const Icon(Icons.monitor_weight_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(
-                showBodyWeight: Value(!settings.showBodyWeight),
-              ),
-            ),
-            trailing: Switch(
-              value: settings.showBodyWeight,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(showBodyWeight: Value(value)),
-              ),
-            ),
-          ),
+        SettingToggle(
+          title: Text(l10n.showBodyWeight),
+          subtitle: Text(l10n.showBodyWeightDescription),
+          description: l10n.showBodyWeightDescription,
+          value: settings.showBodyWeight,
+          icon: Icons.monitor_weight,
+          outlinedIcon: Icons.monitor_weight_outlined,
+          update: (value) => SettingsCompanion(showBodyWeight: Value(value)),
         ),
       if (matches([l10n.showCategories, l10n.showCategoriesDescription]))
-        Tooltip(
-          message: l10n.showCategoriesDescription,
-          child: ListTile(
-            title: Text(l10n.showCategories),
-            subtitle: Text(l10n.showCategoriesDescription),
-            leading: settings.showCategories
-                ? const Icon(Icons.category)
-                : const Icon(Icons.category_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(
-                showCategories: Value(!settings.showCategories),
-              ),
-            ),
-            trailing: Switch(
-              value: settings.showCategories,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(showCategories: Value(value)),
-              ),
-            ),
-          ),
+        SettingToggle(
+          title: Text(l10n.showCategories),
+          subtitle: Text(l10n.showCategoriesDescription),
+          description: l10n.showCategoriesDescription,
+          value: settings.showCategories,
+          icon: Icons.category,
+          outlinedIcon: Icons.category_outlined,
+          update: (value) => SettingsCompanion(showCategories: Value(value)),
         ),
       if (matches([l10n.manageCategories, l10n.manageCategoriesDescription]))
         ListTile(
@@ -113,24 +70,14 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
           ).push(FlexPageRoute(builder: (_) => const CategoryManagementPage())),
         ),
       if (matches([l10n.showNotes, l10n.showNotesDescription]))
-        Tooltip(
-          message: l10n.showNotesDescription,
-          child: ListTile(
-            title: Text(l10n.showNotes),
-            subtitle: Text(l10n.showNotesDescription),
-            leading: settings.showNotes
-                ? const Icon(Icons.note_alt)
-                : const Icon(Icons.note_alt_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(showNotes: Value(!settings.showNotes)),
-            ),
-            trailing: Switch(
-              value: settings.showNotes,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(showNotes: Value(value)),
-              ),
-            ),
-          ),
+        SettingToggle(
+          title: Text(l10n.showNotes),
+          subtitle: Text(l10n.showNotesDescription),
+          description: l10n.showNotesDescription,
+          value: settings.showNotes,
+          icon: Icons.note_alt,
+          outlinedIcon: Icons.note_alt_outlined,
+          update: (value) => SettingsCompanion(showNotes: Value(value)),
         ),
       if (matches([
         l10n.positiveReinforcement,
@@ -173,26 +120,15 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
         l10n.durationEstimation,
         l10n.durationEstimationDescription,
       ]))
-        Tooltip(
-          message: l10n.durationEstimationDescription,
-          child: ListTile(
-            title: Text(l10n.durationEstimation),
-            subtitle: Text(l10n.durationEstimationDescription),
-            leading: settings.durationEstimation
-                ? const Icon(Icons.schedule)
-                : const Icon(Icons.schedule_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(
-                durationEstimation: Value(!settings.durationEstimation),
-              ),
-            ),
-            trailing: Switch(
-              value: settings.durationEstimation,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(durationEstimation: Value(value)),
-              ),
-            ),
-          ),
+        SettingToggle(
+          title: Text(l10n.durationEstimation),
+          subtitle: Text(l10n.durationEstimationDescription),
+          description: l10n.durationEstimationDescription,
+          value: settings.durationEstimation,
+          icon: Icons.schedule,
+          outlinedIcon: Icons.schedule_outlined,
+          update: (value) =>
+              SettingsCompanion(durationEstimation: Value(value)),
         ),
     ],
     graphs: [
@@ -200,48 +136,24 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
         l10n.showGraphXAxisToggle,
         l10n.showGraphXAxisToggleDescription,
       ]))
-        Tooltip(
-          message: l10n.showGraphXAxisToggleDescription,
-          child: ListTile(
-            title: Text(l10n.showGraphXAxisToggle),
-            subtitle: Text(l10n.showGraphXAxisToggleDescription),
-            leading: settings.showGraphXAxis
-                ? const Icon(Icons.show_chart)
-                : const Icon(Icons.show_chart_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(
-                showGraphXAxis: Value(!settings.showGraphXAxis),
-              ),
-            ),
-            trailing: Switch(
-              value: settings.showGraphXAxis,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(showGraphXAxis: Value(value)),
-              ),
-            ),
-          ),
+        SettingToggle(
+          title: Text(l10n.showGraphXAxisToggle),
+          subtitle: Text(l10n.showGraphXAxisToggleDescription),
+          description: l10n.showGraphXAxisToggleDescription,
+          value: settings.showGraphXAxis,
+          icon: Icons.show_chart,
+          outlinedIcon: Icons.show_chart_outlined,
+          update: (value) => SettingsCompanion(showGraphXAxis: Value(value)),
         ),
       if (matches([l10n.showGraphLimit, l10n.showGraphLimitDescription]))
-        Tooltip(
-          message: l10n.showGraphLimitDescription,
-          child: ListTile(
-            title: Text(l10n.showGraphLimit),
-            subtitle: Text(l10n.showGraphLimitDescription),
-            leading: settings.showGraphLimit
-                ? const Icon(Icons.tune)
-                : const Icon(Icons.tune_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(
-                showGraphLimit: Value(!settings.showGraphLimit),
-              ),
-            ),
-            trailing: Switch(
-              value: settings.showGraphLimit,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(showGraphLimit: Value(value)),
-              ),
-            ),
-          ),
+        SettingToggle(
+          title: Text(l10n.showGraphLimit),
+          subtitle: Text(l10n.showGraphLimitDescription),
+          description: l10n.showGraphLimitDescription,
+          value: settings.showGraphLimit,
+          icon: Icons.tune,
+          outlinedIcon: Icons.tune_outlined,
+          update: (value) => SettingsCompanion(showGraphLimit: Value(value)),
         ),
       if (matches([
         l10n.defaultGraphMetric,
@@ -331,28 +243,15 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
         l10n.defaultTimeBasedXAxis,
         l10n.defaultTimeBasedXAxisDescription,
       ]))
-        Tooltip(
-          message: l10n.defaultTimeBasedXAxisDescription,
-          child: ListTile(
-            title: Text(l10n.defaultTimeBasedXAxis),
-            subtitle: Text(l10n.defaultTimeBasedXAxisDescription),
-            leading: settings.defaultGraphTimeBasedXAxis
-                ? const Icon(Icons.timeline)
-                : const Icon(Icons.timeline_outlined),
-            onTap: () => db.settings.update().write(
-              SettingsCompanion(
-                defaultGraphTimeBasedXAxis: Value(
-                  !settings.defaultGraphTimeBasedXAxis,
-                ),
-              ),
-            ),
-            trailing: Switch(
-              value: settings.defaultGraphTimeBasedXAxis,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(defaultGraphTimeBasedXAxis: Value(value)),
-              ),
-            ),
-          ),
+        SettingToggle(
+          title: Text(l10n.defaultTimeBasedXAxis),
+          subtitle: Text(l10n.defaultTimeBasedXAxisDescription),
+          description: l10n.defaultTimeBasedXAxisDescription,
+          value: settings.defaultGraphTimeBasedXAxis,
+          icon: Icons.timeline,
+          outlinedIcon: Icons.timeline_outlined,
+          update: (value) =>
+              SettingsCompanion(defaultGraphTimeBasedXAxis: Value(value)),
         ),
     ],
   );

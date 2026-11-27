@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
@@ -8,17 +6,15 @@ import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/graph/cardio_data.dart';
 import 'package:flex/graph/edit_graph_page.dart';
+import 'package:flex/graph/exercise_graph_state.dart';
 import 'package:flex/graph/flex_line_chart.dart';
-import 'package:flex/graph/graph_history_page.dart';
 import 'package:flex/graph/graph_metric_chips.dart';
-import 'package:flex/graph/graph_notes_page.dart';
 import 'package:flex/graph/graph_options_controls.dart';
 import 'package:flex/graph/graph_period_picker.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
-import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -41,32 +37,36 @@ class CardioPage extends StatefulWidget {
   createState() => _CardioPageState();
 }
 
-class _CardioPageState extends State<CardioPage> {
+class _CardioPageState extends ExerciseGraphState<CardioPage, CardioMetric> {
   late List<CardioData> _data;
-  late String _targetUnit;
-  late String _exerciseName;
-  late int limit;
-  late CardioMetric metric;
-  int _dataRequest = 0;
-  late Period period;
-  DateTime? start;
-  DateTime? end;
-  DateTime lastTap = DateTime(0);
-  late bool timeAxis;
-  Timer? _refreshTimer;
-  Timer? _notesDebounce;
-  final _notesCtrl = TextEditingController();
+
+  @override
+  TabController get tabController => widget.tabCtrl;
+
+  @override
+  DateTime? pointDate(int index) =>
+      index < 0 || index >= _data.length ? null : _data[index].created;
+
+  @override
+  List<DropdownMenuItem<String>> get optionsUnits {
+    if (!context.read<Setting>().showUnits) return const [];
+    return switch (metric) {
+      CardioMetric.weight => strengthUnitMenuItems(context.l10n),
+      CardioMetric.distance => cardioDistanceUnitMenuItems(context.l10n),
+      _ => const [],
+    };
+  }
 
   @override
   void initState() {
     super.initState();
     _data = widget.initialData;
-    _targetUnit = widget.initialUnit;
-    _exerciseName = widget.initialName;
+    targetUnit = widget.initialUnit;
+    exerciseName = widget.initialName;
     final settings = context.read<Setting>();
     timeAxis = settings.defaultGraphTimeBasedXAxis;
     limit = settings.defaultGraphLimit;
-    metric = isWeightUnit(_targetUnit)
+    metric = isWeightUnit(targetUnit)
         ? CardioMetric.weight
         : CardioMetric.values.firstWhere(
             (m) => m.name == settings.defaultGraphMetric,
@@ -76,16 +76,16 @@ class _CardioPageState extends State<CardioPage> {
       (p) => p.name == settings.defaultGraphPeriod,
       orElse: () => Period.day,
     );
-    widget.tabCtrl.addListener(_onTabChanged);
+    widget.tabCtrl.addListener(onTabChanged);
     _loadPreferences();
   }
 
   Future<void> _loadPreferences() async {
-    final pref = await getExerciseByName(db, _exerciseName);
+    final pref = await getExerciseByName(db, exerciseName);
     if (pref == null || !mounted) return;
     setState(() {
       final stored = pref.graphMetric.split(',');
-      final allowed = isWeightUnit(_targetUnit)
+      final allowed = isWeightUnit(targetUnit)
           ? {CardioMetric.weight, CardioMetric.duration, CardioMetric.incline}
           : {
               CardioMetric.pace,
@@ -97,7 +97,7 @@ class _CardioPageState extends State<CardioPage> {
       metric = CardioMetric.values.firstWhere(
         (m) => stored.contains(m.name) && allowed.contains(m),
         orElse: () =>
-            isWeightUnit(_targetUnit) ? CardioMetric.weight : CardioMetric.pace,
+            isWeightUnit(targetUnit) ? CardioMetric.weight : CardioMetric.pace,
       );
       period = Period.values.firstWhere(
         (p) => p.name == pref.graphPeriod,
@@ -105,57 +105,9 @@ class _CardioPageState extends State<CardioPage> {
       );
       limit = pref.graphLimit;
       timeAxis = pref.graphTimeBasedXAxis;
-      _notesCtrl.text = pref.notes ?? '';
+      notesCtrl.text = pref.notes ?? '';
     });
     setData();
-  }
-
-  Future<void> _savePreferences() async {
-    final exercise = await getExerciseByName(db, _exerciseName);
-    if (exercise == null) return;
-    await updateExerciseGraphPreferences(
-      db,
-      exerciseId: exercise.id,
-      metric: metric.name,
-      period: period.name,
-      limit: limit,
-      timeBasedXAxis: timeAxis,
-      notes: _notesCtrl.text.isEmpty ? null : _notesCtrl.text,
-    );
-  }
-
-  void _onNotesChanged() {
-    _notesDebounce?.cancel();
-    _notesDebounce = Timer(const Duration(milliseconds: 600), _savePreferences);
-  }
-
-  Future<void> _editNotes() async {
-    await Navigator.of(context, rootNavigator: true).push(
-      FlexPageRoute(
-        builder: (context) =>
-            GraphNotesPage(controller: _notesCtrl, onChanged: _onNotesChanged),
-      ),
-    );
-    _notesDebounce?.cancel();
-    await _savePreferences();
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    _notesDebounce?.cancel();
-    _notesCtrl.dispose();
-    widget.tabCtrl.removeListener(_onTabChanged);
-    super.dispose();
-  }
-
-  void _onTabChanged() {
-    final settings = context.read<Setting>();
-    if (widget.tabCtrl.index ==
-        settings.tabs.split(',').indexOf('GraphsPage')) {
-      setData();
-    }
   }
 
   String tooltipText(
@@ -193,32 +145,6 @@ class _CardioPageState extends State<CardioPage> {
     return "$text\n$created";
   }
 
-  Future<void> touchLine(int index) async {
-    if (DateTime.now().difference(lastTap) >=
-        const Duration(milliseconds: 300)) {
-      lastTap = DateTime.now();
-      return;
-    }
-
-    if (index < 0 || index >= _data.length) return;
-    final row = _data[index];
-    final desktop = isDesktopLayout(context);
-    final exerciseSet = await getGraphPointSet(_exerciseName, row.created);
-    if (!mounted || exerciseSet == null) return;
-
-    await Navigator.of(context).push(
-      FlexPageRoute(
-        builder: (context) => EditSetPage(exerciseSet: exerciseSet),
-      ),
-    );
-    _refreshTimer?.cancel();
-    if (desktop) {
-      setData();
-    } else {
-      _refreshTimer = Timer(kThemeAnimationDuration, setData);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final shortDateFormat = context.select<Setting, String>(
@@ -227,7 +153,7 @@ class _CardioPageState extends State<CardioPage> {
     final desktop = isDesktopLayout(context);
     final theme = Theme.of(context);
 
-    final metricOptions = isWeightUnit(_targetUnit)
+    final metricOptions = isWeightUnit(targetUnit)
         ? <(CardioMetric, String)>[
             (CardioMetric.weight, context.l10n.weightLabel),
             (CardioMetric.duration, context.l10n.durationLabel),
@@ -250,7 +176,7 @@ class _CardioPageState extends State<CardioPage> {
           metric = next;
         });
         setData();
-        _savePreferences();
+        savePreferences();
       },
     );
     final periodSelector = GraphPeriodPicker(
@@ -260,7 +186,7 @@ class _CardioPageState extends State<CardioPage> {
           period = value;
         });
         setData();
-        _savePreferences();
+        savePreferences();
       },
     );
     final palette = GraphMetricChips.palette(theme.colorScheme);
@@ -285,7 +211,7 @@ class _CardioPageState extends State<CardioPage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text(_exerciseName),
+        title: Text(exerciseName),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -295,16 +221,16 @@ class _CardioPageState extends State<CardioPage> {
             onPressed: () async {
               final newName = await Navigator.of(context).push<String>(
                 FlexPageRoute(
-                  builder: (context) => EditGraphPage(name: _exerciseName),
+                  builder: (context) => EditGraphPage(name: exerciseName),
                 ),
               );
               if (mounted && newName != null) {
                 final updated = await getExerciseByName(db, newName);
                 if (!mounted) return;
                 setState(() {
-                  _exerciseName = newName;
-                  if (updated != null) _targetUnit = updated.displayUnit;
-                  final supportsWeight = isWeightUnit(_targetUnit);
+                  exerciseName = newName;
+                  if (updated != null) targetUnit = updated.displayUnit;
+                  final supportsWeight = isWeightUnit(targetUnit);
                   final allowed = supportsWeight
                       ? {
                           CardioMetric.weight,
@@ -351,7 +277,7 @@ class _CardioPageState extends State<CardioPage> {
                 child: _data.isEmpty
                     ? AppEmptyState(
                         icon: Icons.monitor_heart_outlined,
-                        title: context.l10n.noDataFor(_exerciseName),
+                        title: context.l10n.noDataFor(exerciseName),
                         message: context.l10n.completeSetForChart,
                       )
                     : Padding(
@@ -372,16 +298,16 @@ class _CardioPageState extends State<CardioPage> {
               ),
               const SizedBox(height: 8),
               GraphActionButtons(
-                onHistory: _showHistory,
-                onOptions: _showOptions,
+                onHistory: showHistory,
+                onOptions: showOptions,
               ),
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: TextField(
-                  controller: _notesCtrl,
+                  controller: notesCtrl,
                   readOnly: true,
-                  onTap: _editNotes,
+                  onTap: editNotes,
                   decoration: InputDecoration(
                     labelText: context.l10n.exerciseNotes,
                     hintText: context.l10n.notesForExercise,
@@ -398,165 +324,21 @@ class _CardioPageState extends State<CardioPage> {
     );
   }
 
-  Future<void> _showHistory() async {
-    final exerciseSets = await getGraphHistory(_exerciseName);
-    if (!mounted) return;
-
-    final desktop = isDesktopLayout(context);
-    await Navigator.of(context).push(
-      FlexPageRoute(
-        builder: (context) => GraphHistoryPage(
-          name: _exerciseName,
-          initialSets: exerciseSets,
-          tabController: widget.tabCtrl,
-        ),
-      ),
-    );
-    if (!mounted) return;
-    _refreshTimer?.cancel();
-    if (desktop) {
-      setData();
-    } else {
-      _refreshTimer = Timer(kThemeAnimationDuration, setData);
-    }
-  }
-
-  void _showOptions() {
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetContext, setSheet) {
-            final settings = context.read<Setting>();
-            final showUnitControl =
-                settings.showUnits &&
-                (metric == CardioMetric.distance ||
-                    metric == CardioMetric.weight);
-            final unitItems = switch (metric) {
-              _ when !showUnitControl => <DropdownMenuItem<String>>[],
-              CardioMetric.weight => strengthUnitMenuItems(context.l10n),
-              _ => cardioDistanceUnitMenuItems(context.l10n),
-            };
-            void refreshSheet() => setSheet(() {});
-
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  0,
-                  16,
-                  16 + MediaQuery.of(sheetContext).viewInsets.bottom,
-                ),
-                child: GraphOptionsControls(
-                  compact: false,
-                  shortDateFormat: settings.shortDateFormat,
-                  unitValue: showUnitControl ? _targetUnit : null,
-                  unitItems: unitItems,
-                  onUnitChanged: (value) {
-                    setState(() {
-                      _targetUnit = value;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                  startDate: start,
-                  endDate: end,
-                  onSelectStart: () async {
-                    await _selectStart();
-                    if (sheetContext.mounted) refreshSheet();
-                  },
-                  onClearStart: () {
-                    setState(() {
-                      start = null;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                  onSelectEnd: () async {
-                    await _selectEnd();
-                    if (sheetContext.mounted) refreshSheet();
-                  },
-                  onClearEnd: () {
-                    setState(() {
-                      end = null;
-                    });
-                    setData();
-                    refreshSheet();
-                  },
-                  limit: limit,
-                  maxLimit: 100,
-                  onLimitChanged: (value) {
-                    setState(() {
-                      limit = value;
-                    });
-                    setData();
-                    _savePreferences();
-                    refreshSheet();
-                  },
-                  timeBasedXAxis: timeAxis,
-                  onTimeAxisChange: (value) {
-                    setState(() {
-                      timeAxis = value;
-                    });
-                    _savePreferences();
-                    refreshSheet();
-                  },
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
+  @override
   Future<void> setData() async {
     if (!mounted) return;
-    final request = ++_dataRequest;
+    final request = ++dataRequest;
     final selected = metric;
     final rows = await getCardioData(
       end: end,
       period: period,
       metric: selected,
-      name: _exerciseName,
+      name: exerciseName,
       start: start,
-      target: _targetUnit,
+      target: targetUnit,
       limit: limit,
     );
-    if (!mounted || request != _dataRequest) return;
+    if (!mounted || request != dataRequest) return;
     setState(() => _data = rows);
-  }
-
-  Future<void> _selectEnd() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: end,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (picked == null || !mounted) return;
-    setState(() {
-      end = picked;
-    });
-    setData();
-  }
-
-  Future<void> _selectStart() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: start,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (picked == null || !mounted) return;
-    setState(() {
-      start = picked;
-    });
-    setData();
   }
 }

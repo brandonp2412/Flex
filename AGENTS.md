@@ -6,6 +6,7 @@
 
 # Required Flutter Completion Checks
 
+- After a fresh checkout, run `flutter pub get` and `dart run drift_dev schema generate --data-classes --companions drift_schemas/db test/drift/db/generated` to restore the generated migration test fixtures.
 - Before considering any work complete, run all of the following and ensure they pass:
   1. `dart format .`
   2. `flutter analyze`

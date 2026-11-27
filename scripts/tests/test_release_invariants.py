@@ -35,13 +35,9 @@ class ReleaseInvariantTests(unittest.TestCase):
         for version in range(1, 73):
             if version == 9:
                 continue
-            for folder, name in (
-                ("drift_schemas/db", f"drift_schema_v{version}.json"),
-                ("test/drift/db/generated", f"schema_v{version}.dart"),
-            ):
-                target = self.root / folder / name
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.touch()
+            target = self.root / "drift_schemas/db" / f"drift_schema_v{version}.json"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.touch()
         self.base_pubspec = (self.root / "pubspec.yaml").read_text()
         version_line = next(
             line for line in self.base_pubspec.splitlines()

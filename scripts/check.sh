@@ -11,6 +11,7 @@ python3 scripts/check-release-invariants.py --base-ref "${FLEX_BASE_REF:-HEAD^}"
 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 flutter pub get --enforce-lockfile
 dart run build_runner build
+dart run drift_dev schema generate --data-classes --companions drift_schemas/db test/drift/db/generated
 
 echo "== formatting =="
 dart format --output=none --set-exit-if-changed lib test integration_test

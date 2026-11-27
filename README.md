@@ -41,6 +41,7 @@ Flex is open source and built with Flutter.
 
 ```sh
 flutter pub get
+dart run drift_dev schema generate --data-classes --companions drift_schemas/db test/drift/db/generated
 flutter run
 ```
 

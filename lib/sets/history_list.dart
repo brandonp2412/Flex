@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flex/exercise_avatar.dart';
 
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/bottom_nav.dart';
@@ -148,43 +148,13 @@ class _HistoryListState extends State<HistoryList> {
         previous != null &&
         !DateUtils.isSameDay(exerciseSet.created, previous.created);
 
-    Widget? leading;
-
-    if (showImages && exerciseSet.image != null) {
-      leading = GestureDetector(
-        onTap: () => widget.onSelect(exerciseSet.id),
-        child: Image.file(
-          File(exerciseSet.image!),
-          cacheWidth: 64,
-          errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
-        ),
-      );
-    } else if (showImages) {
-      leading = GestureDetector(
-        onTap: () => widget.onSelect(exerciseSet.id),
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              exerciseSet.name.isNotEmpty
-                  ? exerciseSet.name[0].toUpperCase()
-                  : '?',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    final leading = showImages
+        ? ExerciseAvatar(
+            name: exerciseSet.name,
+            image: exerciseSet.image,
+            onTap: () => widget.onSelect(exerciseSet.id),
+          )
+        : null;
 
     final trailing = formatSetSummary(
       context,
