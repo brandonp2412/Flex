@@ -1,3 +1,4 @@
+import 'package:flex/plan/plan_progress.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
@@ -9,7 +10,6 @@ import 'package:flex/plan/exercise_modal.dart';
 import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/sets/edit_set_page.dart';
-import 'package:flex/utils.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -128,57 +128,36 @@ class _StartListState extends State<StartList> {
     final max = exercise.planExercise.maxSets ?? maxSets;
 
     final desktop = isDesktopLayout(context);
-    Widget trail = const SizedBox();
-    switch (trailing) {
-      case PlanTrailing.reorder:
-        trail = ReorderableDragStartListener(
-          index: index,
-          child: const Icon(Icons.drag_handle, size: 32),
-        );
-        break;
-
-      case PlanTrailing.ratio:
-        trail = Text(
-          "${formatDisplayNumber(context, count, maxDigits: 0)} / ${formatDisplayNumber(context, max, maxDigits: 0)}",
-          style: const TextStyle(fontSize: 16),
-        );
-        break;
-
-      case PlanTrailing.count:
-        trail = Text(
-          formatDisplayNumber(context, count, maxDigits: 0),
-          style: const TextStyle(fontSize: 16),
-        );
-        break;
-
-      case PlanTrailing.percent:
-        trail = Text(
-          formatDisplayPercent(context, count / max),
-          style: const TextStyle(fontSize: 16),
-        );
-        break;
-
-      case PlanTrailing.none:
-        trail = const SizedBox();
-        break;
-    }
+    final trail = switch (trailing) {
+      PlanTrailing.reorder => ReorderableDragStartListener(
+        index: index,
+        child: const Icon(Icons.drag_handle, size: 32),
+      ),
+      PlanTrailing.none => const SizedBox(),
+      _ => Text(
+        planProgressLabel(context, trailing, count, max),
+        style: const TextStyle(fontSize: 16),
+      ),
+    };
 
     final colors = Theme.of(context).colorScheme;
     final selected = index == widget.selected;
 
+    Widget actions({bool inline = false}) => ExerciseModal(
+      key: ValueKey(exercise.planExercise.id),
+      planExercise: exercise.planExercise,
+      exerciseName: exercise.exercise.name,
+      workoutId: widget.workoutId,
+      hasData: count > 0,
+      onSelect: () {
+        if (mounted) widget.onSelect(index);
+      },
+      inlineActions: inline,
+    );
     Future<void> showActions() => showModalBottomSheet<void>(
       useRootNavigator: true,
       context: context,
-      builder: (context) => SafeArea(
-        child: ExerciseModal(
-          planExercise: exercise.planExercise,
-          exerciseId: exercise.exercise.id,
-          exerciseName: exercise.exercise.name,
-          workoutId: widget.workoutId,
-          hasData: count > 0,
-          onSelect: () => widget.onSelect(index),
-        ),
-      ),
+      builder: (_) => SafeArea(child: actions()),
     );
 
     final content = desktop
@@ -248,7 +227,12 @@ class _StartListState extends State<StartList> {
                                   (trailing == PlanTrailing.reorder ||
                                       trailing == PlanTrailing.none)) ...[
                                 Text(
-                                  '${formatDisplayNumber(context, count, maxDigits: 0)} / ${formatDisplayNumber(context, max, maxDigits: 0)}',
+                                  planProgressLabel(
+                                    context,
+                                    PlanTrailing.ratio,
+                                    count,
+                                    max,
+                                  ),
                                   style: Theme.of(context).textTheme.labelLarge
                                       ?.copyWith(
                                         color: colors.onSurfaceVariant,
@@ -261,16 +245,7 @@ class _StartListState extends State<StartList> {
                           ),
                           Padding(
                             padding: EdgeInsets.only(left: compact ? 0 : 36),
-                            child: ExerciseModal(
-                              key: ValueKey(exercise.planExercise.id),
-                              planExercise: exercise.planExercise,
-                              exerciseId: exercise.exercise.id,
-                              exerciseName: exercise.exercise.name,
-                              workoutId: widget.workoutId,
-                              hasData: count > 0,
-                              onSelect: () => widget.onSelect(index),
-                              inlineActions: true,
-                            ),
+                            child: actions(inline: true),
                           ),
                         ],
                       ),

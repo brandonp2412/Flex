@@ -233,7 +233,7 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
 
     if (lastWeight != null) {
       exerciseSet = exerciseSet.copyWith(
-        bodyWeight: displayBodyWeight(exerciseSet.unit, lastWeight.weightKg),
+        bodyWeight: displayLoad(exerciseSet.unit, lastWeight.weightKg),
       );
     }
 

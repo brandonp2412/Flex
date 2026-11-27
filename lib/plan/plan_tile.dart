@@ -1,3 +1,4 @@
+import 'package:flex/plan/plan_progress.dart';
 import 'package:flex/selection_tile.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
@@ -6,7 +7,6 @@ import 'package:flex/plan/plan_queries.dart';
 import 'package:flex/plan/start_plan_page.dart';
 import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/responsive.dart';
-import 'package:flex/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -164,22 +164,10 @@ class _PlanTileState extends State<PlanTile> {
           final count = widget.count;
           if (count == null) return const SizedBox();
 
-          if (trailing == PlanTrailing.count)
-            return Text(
-              formatDisplayNumber(context, count.total, maxDigits: 0),
-              style: const TextStyle(fontSize: 16),
-            );
-
-          if (trailing == PlanTrailing.percent)
-            return Text(
-              formatDisplayPercent(context, count.total / count.maxSets),
-              style: const TextStyle(fontSize: 16),
-            );
-          else
-            return Text(
-              "${formatDisplayNumber(context, count.total, maxDigits: 0)} / ${formatDisplayNumber(context, count.maxSets, maxDigits: 0)}",
-              style: const TextStyle(fontSize: 16),
-            );
+          return Text(
+            planProgressLabel(context, trailing, count.total, count.maxSets),
+            style: const TextStyle(fontSize: 16),
+          );
         },
       ),
       onOpen: () async {

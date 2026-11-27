@@ -1,3 +1,4 @@
+import 'package:flex/database/categories.dart';
 import 'package:flex/graph/graph_metric_chips.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';

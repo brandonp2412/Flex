@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flex/database/exercise_analytics.dart';
+import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/graph/flex_line_chart.dart';
@@ -422,7 +423,11 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
   Future<void> showHistory() async {
     final exerciseSets = bodyWeight
         ? await getBodyWeightGraphHistory()
-        : await getGraphHistory(exerciseName);
+        : await ExerciseSetQuery(
+            db,
+            exerciseName: exerciseName,
+            limit: 20,
+          ).get();
     if (!mounted) return;
 
     final desktop = isDesktopLayout(context);
@@ -472,7 +477,11 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
     if (index < 0 || index >= data.length) return;
     final created = data[index].created;
     final desktop = isDesktopLayout(context);
-    final exerciseSet = await getGraphPointSet(exerciseName, created);
+    final exerciseSet = await ExerciseSetQuery(
+      db,
+      exerciseName: exerciseName,
+      timestamp: created,
+    ).firstOrNull();
     if (!mounted || exerciseSet == null) return;
 
     await Navigator.of(context).push(

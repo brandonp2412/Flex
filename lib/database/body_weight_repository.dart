@@ -1,11 +1,5 @@
 import 'package:drift/drift.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/measurement_units.dart';
-
-double displayBodyWeight(String unit, double weightKg) =>
-    displayLoad(unit, weightKg);
-
-double? toKg(String unit, double value) => loadKg(unit, value);
 
 Future<BodyWeight?> getLatestBodyWeight(AppDatabase database) async =>
     (await getBodyWeightHistory(database, limit: 1)).firstOrNull;

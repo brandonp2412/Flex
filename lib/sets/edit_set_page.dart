@@ -113,7 +113,7 @@ class _EditSetPageState extends State<EditSetPage>
         bodyWeight == null
             ? last
             : last.copyWith(
-                bodyWeight: displayBodyWeight(last.unit, bodyWeight.weightKg),
+                bodyWeight: displayLoad(last.unit, bodyWeight.weightKg),
               ),
       );
     } else {
@@ -500,14 +500,14 @@ class _EditSetPageState extends State<EditSetPage>
     final bodyValue = parseDisplayNumber(context, _body.text);
     final bodyWeightKg = bodyValue == null || bodyValue == 0
         ? null
-        : toKg(_bodyUnit, bodyValue);
+        : loadKg(_bodyUnit, bodyValue);
     final exerciseSet = _input
         .apply(context, widget.exerciseSet)
         .copyWith(
           name: _name,
           unit: _unit,
           created: _created,
-          bodyWeight: parseDisplayNumber(context, _body.text),
+          bodyWeight: bodyValue,
           cardio: _cardio,
           restMs: Value(restMs),
           image: Value(_image),
@@ -603,9 +603,7 @@ class _EditSetPageState extends State<EditSetPage>
     final parsedReps = parseDisplayNumber(context, _input.reps.text);
     final parsedWeight = parseDisplayNumber(context, _input.weight.text);
     if (parsedReps == null || parsedWeight == null) return;
-    final estimate = parsedReps > 0
-        ? parsedWeight / (1.0278 - (0.0278 * parsedReps))
-        : parsedWeight * (1.0278 - (0.0278 * parsedReps));
+    final estimate = estimateOneRepMax(parsedWeight, parsedReps);
     _orm.text =
         "${formatDisplayNumber(context, estimate, minDigits: 2)} $_unit";
   }
@@ -635,9 +633,9 @@ class _EditSetPageState extends State<EditSetPage>
     if (formatOrm) setORM();
     if (exerciseSet.bodyWeight != 0) {
       final weightKg =
-          toKg(exerciseSet.unit, exerciseSet.bodyWeight) ??
+          loadKg(exerciseSet.unit, exerciseSet.bodyWeight) ??
           exerciseSet.bodyWeight;
-      _body.text = toString(displayBodyWeight(_bodyUnit, weightKg));
+      _body.text = toString(displayLoad(_bodyUnit, weightKg));
     }
     if (exerciseSet.category != null && exerciseSet.category!.isNotEmpty)
       _categoryCtrl.text = exerciseSet.category!;

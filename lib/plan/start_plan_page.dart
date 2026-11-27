@@ -586,7 +586,7 @@ class _StartPlanPageState extends State<StartPlanPage>
         final weightEntry = await getLatestBodyWeight(db);
         if (weightEntry != null) {
           bodyWeightKg = weightEntry.weightKg;
-          bodyWeight = displayBodyWeight(_unit, weightEntry.weightKg);
+          bodyWeight = displayLoad(_unit, weightEntry.weightKg);
         }
       }
       if (settings.showBodyWeight && bodyWeight == null) {
@@ -620,23 +620,20 @@ class _StartPlanPageState extends State<StartPlanPage>
       final created = DateTime.now().toLocal();
       final category = _data?.categories[exerciseId];
       if (!mounted) return;
-      final draft = ExerciseSetView(
-        id: 0,
-        bodyWeight: bodyWeight ?? 0,
-        cardio: _cardio,
-        category: category,
-        created: created,
-        distance: parseDisplayNumber(context, _input.distance.text) ?? 0,
-        duration: _input.duration,
-        image: _image,
-        incline: int.tryParse(_input.incline.text),
-        name: exercise,
-        notes: _notes.text,
-        planId: widget.plan.id,
-        reps: parseDisplayNumber(context, _input.reps.text) ?? 0,
-        restMs: restMs?.toInt(),
-        unit: _unit,
-        weight: parseDisplayNumber(context, _input.weight.text) ?? 0,
+      final draft = _input.apply(
+        context,
+        ExerciseSetView(
+          bodyWeight: bodyWeight ?? 0,
+          cardio: _cardio,
+          category: category,
+          created: created,
+          image: _image,
+          name: exercise,
+          notes: _notes.text,
+          planId: widget.plan.id,
+          restMs: restMs?.toInt(),
+          unit: _unit,
+        ),
       );
 
       final count = (data.sets[exerciseId]?.length ?? 0) + 1;
@@ -736,6 +733,6 @@ class _StartPlanPageState extends State<StartPlanPage>
       showAppMessage(context.l10n.noWeightEnteredYet);
       return;
     }
-    _input.weight.text = toString(displayBodyWeight(_unit, weightSet.weightKg));
+    _input.weight.text = toString(displayLoad(_unit, weightSet.weightKg));
   }
 }

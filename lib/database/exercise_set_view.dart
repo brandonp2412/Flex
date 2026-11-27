@@ -6,22 +6,22 @@ import 'package:drift/drift.dart';
 /// exercise_sets, while exercise identity/configuration lives in exercises.
 class ExerciseSetView {
   const ExerciseSetView({
-    required this.bodyWeight,
+    this.bodyWeight = 0,
     required this.cardio,
     this.category,
     required this.created,
-    required this.distance,
-    required this.duration,
-    required this.id,
+    this.distance = 0,
+    this.duration = 0,
+    this.id = 0,
     this.image,
     this.incline,
     required this.name,
     this.notes,
     this.planId,
-    required this.reps,
+    this.reps = 0,
     this.restMs,
     required this.unit,
-    required this.weight,
+    this.weight = 0,
   });
 
   final double bodyWeight;

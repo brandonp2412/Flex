@@ -1,9 +1,9 @@
+import 'package:flex/database/exercise_set_repository.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/categories.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/editor_content.dart';
 import 'package:flex/image_field.dart';
@@ -260,7 +260,7 @@ class _ExerciseEditorPageState extends State<ExerciseEditorPage>
 
   Future<void> _update() async {
     final l10n = context.l10n;
-    final count = await countGraphSets([name.text]);
+    final count = await countExerciseSetsForExercises(db, [name.text]);
     if (!mounted) return;
     if (count > 0 && widget.name != name.text) {
       final confirmed = await showAppConfirmation(

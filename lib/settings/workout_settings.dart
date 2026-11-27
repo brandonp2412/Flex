@@ -138,18 +138,10 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
           update: (value) => SettingsCompanion(showGraphLimit: Value(value)),
         ),
       ]),
-      if (matches([
-        l10n.defaultGraphMetric,
-        l10n.bestWeight,
-        l10n.bestReps,
-        l10n.oneRepMax,
-        '1RM',
-        l10n.volume,
-        l10n.paceCardio,
-        l10n.distanceCardio,
-      ]))
+      ...matchingChoices(term, [
         SettingChoice<String>(
           label: l10n.defaultGraphMetric,
+          searchTerms: ['1RM'],
           value: settings.defaultGraphMetric,
           choices: {
             'bestWeight': l10n.bestWeight,
@@ -162,13 +154,6 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
           update: (value) =>
               SettingsCompanion(defaultGraphMetric: Value(value)),
         ),
-      if (matches([
-        l10n.defaultGraphPeriod,
-        l10n.daily,
-        l10n.weekly,
-        l10n.monthly,
-        l10n.yearly,
-      ]))
         SettingChoice<String>(
           label: l10n.defaultGraphPeriod,
           value: settings.defaultGraphPeriod,
@@ -181,15 +166,6 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
           update: (value) =>
               SettingsCompanion(defaultGraphPeriod: Value(value)),
         ),
-      if (matches([
-        l10n.defaultGraphLimit,
-        '10',
-        '20',
-        '30',
-        '50',
-        '100',
-        '200',
-      ]))
         SettingChoice<int>(
           label: l10n.defaultGraphLimit,
           value: settings.defaultGraphLimit,
@@ -198,6 +174,7 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
           },
           update: (value) => SettingsCompanion(defaultGraphLimit: Value(value)),
         ),
+      ]),
       ...matchingToggles(term, [
         SettingToggle(
           label: l10n.defaultTimeBasedXAxis,

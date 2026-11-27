@@ -85,10 +85,11 @@ Stream<List<CategorySummary>> watchCategorySummaries() {
       );
 }
 
-Stream<List<String>> getCategoriesStream() {
-  return (db.select(
-    db.categories,
-  )..orderBy([(category) => OrderingTerm.asc(category.name)])).watch().map(
-    (categories) => categories.map((category) => category.name).toList(),
-  );
-}
+Selectable<String> _categoryNames() =>
+    (db.select(db.categories)
+          ..orderBy([(category) => OrderingTerm.asc(category.name)]))
+        .map((category) => category.name);
+
+Future<List<String>> getCategories() => _categoryNames().get();
+
+Stream<List<String>> getCategoriesStream() => _categoryNames().watch();

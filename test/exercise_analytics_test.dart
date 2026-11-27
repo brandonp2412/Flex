@@ -15,6 +15,50 @@ void main() {
 
   tearDown(() => db.close());
 
+  test(
+    'weekly buckets use calendar Mondays and retain the year boundary',
+    () async {
+      for (final (created, weight) in [
+        (DateTime(2026, 3, 8, 23, 30), 1.0),
+        (DateTime(2026, 3, 9), 2.0),
+        (DateTime(2026, 3, 15, 23, 30), 4.0),
+        (DateTime(2026, 3, 16), 8.0),
+        (DateTime(2026, 12, 31, 23, 30), 16.0),
+        (DateTime(2027, 1, 1), 32.0),
+        (DateTime(2027, 1, 3, 23, 30), 64.0),
+        (DateTime(2027, 1, 4), 128.0),
+      ]) {
+        await insertExerciseSetFixture(
+          db,
+          'Weekly lift',
+          reps: 1,
+          weight: weight,
+          category: 'Weekly',
+          created: created,
+        );
+      }
+      final local = await getStrengthData(
+        target: 'kg',
+        name: 'Weekly lift',
+        metric: StrengthMetric.volume,
+        period: Period.week,
+        start: null,
+        end: null,
+        limit: 20,
+      );
+      expect(local.map((row) => row.value), [1, 6, 8, 16, 96, 128]);
+      final global = await getGlobalData(
+        target: 'kg',
+        metric: StrengthMetric.volume,
+        period: Period.week,
+        start: null,
+        end: null,
+        limit: 2,
+      );
+      expect(global.map((row) => row.value), [96, 128]);
+    },
+  );
+
   test('strength analytics normalize mixed units and survive rename', () async {
     await insertExerciseSetFixture(
       db,

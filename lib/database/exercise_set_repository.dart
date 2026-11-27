@@ -1,3 +1,4 @@
+import 'package:flex/database/exercise_set_repository.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
@@ -65,9 +66,7 @@ ExerciseSetView exerciseSetView(
 
   return ExerciseSetView(
     id: set.id,
-    bodyWeight: set.bodyWeightKg == null
-        ? 0
-        : displayBodyWeight(unit, set.bodyWeightKg!),
+    bodyWeight: displayLoad(unit, set.bodyWeightKg),
     cardio: exercise.kind == 'cardio',
     category: category,
     created: set.timestamp.toLocal(),
@@ -308,7 +307,7 @@ Future<ExerciseSetView> insertExerciseSet(
       bodyWeightKg ??
       (exerciseSet.bodyWeight == 0
           ? null
-          : toKg(exerciseSet.unit, exerciseSet.bodyWeight)) ??
+          : loadKg(exerciseSet.unit, exerciseSet.bodyWeight)) ??
       (await getLatestBodyWeight(database))?.weightKg;
 
   final id = await database.exerciseSets.insertOne(
@@ -338,7 +337,7 @@ Future<void> updateExerciseSet(
           bodyWeightKg ??
               (exerciseSet.bodyWeight == 0
                   ? null
-                  : toKg(exerciseSet.unit, exerciseSet.bodyWeight)),
+                  : loadKg(exerciseSet.unit, exerciseSet.bodyWeight)),
         ),
       );
 }

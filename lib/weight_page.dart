@@ -1,3 +1,4 @@
+import 'package:flex/measurement_units.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/constants.dart';
@@ -48,7 +49,7 @@ class _WeightPageState extends State<WeightPage>
       _ when !_weightLoaded => '',
       null => context.l10n.noWeightEnteredYet,
       _ =>
-        '${formatDisplayNumber(context, displayBodyWeight(displayUnit, _previousWeight!.weightKg))} ${displayMeasurementUnit(context.l10n, displayUnit)}',
+        '${formatDisplayNumber(context, displayLoad(displayUnit, _previousWeight!.weightKg))} ${displayMeasurementUnit(context.l10n, displayUnit)}',
     };
 
     return guardUnsavedChanges(
@@ -139,7 +140,7 @@ class _WeightPageState extends State<WeightPage>
 
     final value = parseDisplayNumber(context, _ctrl.text)!;
     final unit = _unit ?? 'kg';
-    final weightKg = toKg(unit, value);
+    final weightKg = loadKg(unit, value);
     if (weightKg == null) return;
     if (widget.initial case final initial?) {
       await updateBodyWeight(
@@ -188,7 +189,7 @@ class _WeightPageState extends State<WeightPage>
     _initialValueLoaded = true;
     _ctrl.text = formatDisplayNumber(
       context,
-      displayBodyWeight(_unit ?? 'kg', initial.weightKg),
+      displayLoad(_unit ?? 'kg', initial.weightKg),
     );
   }
 

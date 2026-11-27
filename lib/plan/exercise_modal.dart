@@ -13,7 +13,6 @@ import 'package:provider/provider.dart';
 
 class ExerciseModal extends StatelessWidget {
   final PlanExercise planExercise;
-  final int exerciseId;
   final String exerciseName;
   final int? workoutId;
   final bool hasData;
@@ -23,7 +22,6 @@ class ExerciseModal extends StatelessWidget {
   const ExerciseModal({
     super.key,
     required this.planExercise,
-    required this.exerciseId,
     required this.exerciseName,
     required this.workoutId,
     required this.hasData,
@@ -70,49 +68,15 @@ class ExerciseModal extends StatelessWidget {
           },
         ),
         if (hasData)
-          action(
-            leading: const Icon(Icons.edit),
-            title: Text(context.l10n.actionEdit),
-            onTap: () async {
-              closeActions(context);
-              final workoutId = this.workoutId;
-              if (workoutId == null) return;
-              final exerciseSet = await ExerciseSetQuery(
-                db,
-                workoutId: workoutId,
-                exerciseId: exerciseId,
-              ).firstOrNull();
-              if (exerciseSet == null) return;
-              if (!context.mounted) return;
-              await Navigator.of(context).push(
-                FlexPageRoute(
-                  builder: (context) => EditSetPage(exerciseSet: exerciseSet),
-                ),
-              );
-              onSelect();
-            },
-          ),
-        if (hasData)
-          action(
-            leading: const Icon(Icons.undo),
-            title: Text(context.l10n.actionUndo),
-            onTap: () async {
-              closeActions(context);
-              final workoutId = this.workoutId;
-              if (workoutId == null) return;
-              final exerciseSet = await ExerciseSetQuery(
-                db,
-                workoutId: workoutId,
-                exerciseId: exerciseId,
-              ).firstOrNull();
-              if (exerciseSet == null) return;
-              await deleteExerciseSets(db, [exerciseSet.id]);
-              if (!context.mounted) return;
-              onSelect();
-              final timerState = context.read<TimerState>();
-              timerState.stopTimer();
-            },
-          ),
+          for (final (icon, title, undo) in [
+            (Icons.edit, context.l10n.actionEdit, false),
+            (Icons.undo, context.l10n.actionUndo, true),
+          ])
+            action(
+              leading: Icon(icon),
+              title: Text(title),
+              onTap: () => _editOrUndo(context, undo: undo),
+            ),
         if (!hasData)
           action(
             leading: const Icon(Icons.swap_horiz),
@@ -133,5 +97,29 @@ class ExerciseModal extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  Future<void> _editOrUndo(BuildContext context, {required bool undo}) async {
+    final navigator = Navigator.of(context);
+    final timer = undo ? context.read<TimerState>() : null;
+    closeActions(context);
+    final workoutId = this.workoutId;
+    if (workoutId == null) return;
+    final set = await ExerciseSetQuery(
+      db,
+      workoutId: workoutId,
+      exerciseId: planExercise.exerciseId,
+    ).firstOrNull();
+    if (set == null || !navigator.mounted) return;
+    if (undo) {
+      await deleteExerciseSets(db, [set.id]);
+      if (!navigator.mounted) return;
+      timer!.stopTimer();
+    } else {
+      await navigator.push(
+        FlexPageRoute(builder: (_) => EditSetPage(exerciseSet: set)),
+      );
+    }
+    if (navigator.mounted) onSelect();
   }
 }

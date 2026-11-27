@@ -1,3 +1,4 @@
+import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/tab_navigator.dart';
 import 'graph_tile.dart';
 import 'package:drift/drift.dart' hide Column;
@@ -157,7 +158,8 @@ class GraphsPageState extends State<GraphsPage>
       await _stream.first,
       keys,
     );
-    var count = await countGraphSets(
+    var count = await countExerciseSetsForExercises(
+      db,
       summaries
           .where((summary) => !summary.bodyWeight)
           .map((summary) => summary.name),
@@ -180,7 +182,7 @@ class GraphsPageState extends State<GraphsPage>
   Future<void> _deleteGraphSummary(GraphExerciseSummary summary) async {
     final count = summary.bodyWeight
         ? await db.bodyWeights.count().getSingle()
-        : await countGraphSets([summary.name]);
+        : await countExerciseSetsForExercises(db, [summary.name]);
     if (!mounted) return;
     final confirmed = await showAppConfirmation(
       context,

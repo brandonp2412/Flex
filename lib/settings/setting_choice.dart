@@ -1,3 +1,4 @@
+import 'package:flex/settings/setting_toggle.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
@@ -14,6 +15,7 @@ class SettingChoice<T extends Object> extends StatelessWidget {
     this.description,
     this.isExpanded = false,
     this.menuMaxHeight,
+    this.searchTerms = const [],
   });
   final String label;
   final T value;
@@ -22,6 +24,14 @@ class SettingChoice<T extends Object> extends StatelessWidget {
   final String? description;
   final bool isExpanded;
   final double? menuMaxHeight;
+  final List<String> searchTerms;
+
+  bool matches(String term) => settingMatches(term, [
+    label,
+    ?description,
+    ...choices.values,
+    ...searchTerms,
+  ]);
 
   @override
   Widget build(BuildContext context) {
@@ -44,3 +54,6 @@ class SettingChoice<T extends Object> extends StatelessWidget {
     );
   }
 }
+
+List<Widget> matchingChoices(String term, List<SettingChoice> choices) =>
+    choices.where((choice) => choice.matches(term)).toList();

@@ -55,61 +55,39 @@ List<GraphExerciseSummary> filterGraphSummariesBySelection(
     if (selection.contains(summary.selectionKey)) summary,
 ];
 
-String _periodKey(DateTime value, Period period) {
-  final date = value.toLocal();
-  switch (period) {
-    case Period.day:
-      return '${date.year}-${date.month}-${date.day}';
-    case Period.month:
-      return '${date.year}-${date.month}';
-    case Period.year:
-      return '${date.year}';
-    case Period.week:
-      final jan1 = DateTime(date.year);
-      final dayOfYear = date.difference(jan1).inDays;
-      final mondayOffset = (8 - jan1.weekday) % 7;
-      final week = dayOfYear < mondayOffset
-          ? 0
-          : 1 + ((dayOfYear - mondayOffset) ~/ 7);
-      return '${date.year}-$week';
-  }
-}
+typedef _CategoryPeriod = ({String category, DateTime start});
 
-String _categoryPeriodKey(String category, DateTime created, Period period) =>
-    '$category\u0000${_periodKey(created, period)}';
+_CategoryPeriod _categoryPeriodKey(
+  String category,
+  DateTime created,
+  Period period,
+) => (category: category, start: _periodStart(created, period));
 
 DateTime _periodStart(DateTime value, Period period) {
   final date = value.toLocal();
-  switch (period) {
-    case Period.day:
-      return DateTime(date.year, date.month, date.day);
-    case Period.month:
-      return DateTime(date.year, date.month);
-    case Period.year:
-      return DateTime(date.year);
-    case Period.week:
-      final jan1 = DateTime(date.year);
-      final firstMonday = jan1.add(Duration(days: (8 - jan1.weekday) % 7));
-      if (date.isBefore(firstMonday)) return jan1;
-      final week = date.difference(firstMonday).inDays ~/ 7;
-      return DateTime(
-        firstMonday.year,
-        firstMonday.month,
-        firstMonday.day + week * 7,
-      );
-  }
+  return switch (period) {
+    Period.day => DateTime(date.year, date.month, date.day),
+    Period.month => DateTime(date.year, date.month),
+    Period.year => DateTime(date.year),
+    Period.week => _weekStart(date),
+  };
 }
 
-Future<({Set<String> keys, DateTime? cutoff})> _latestGlobalBuckets({
+DateTime _weekStart(DateTime date) {
+  final monday = DateTime(date.year, date.month, date.day - date.weekday + 1);
+  return monday.year < date.year ? DateTime(date.year) : monday;
+}
+
+Future<({Set<_CategoryPeriod> keys, DateTime? cutoff})> _latestGlobalBuckets({
   required Period period,
   required DateTime? start,
   required DateTime? end,
   required int limit,
 }) async {
-  if (limit <= 0) return (keys: <String>{}, cutoff: null);
+  if (limit <= 0) return (keys: <_CategoryPeriod>{}, cutoff: null);
 
   const pageSize = 256;
-  final keys = <String>{};
+  final keys = <_CategoryPeriod>{};
   DateTime? cutoff;
   var offset = 0;
 
@@ -152,7 +130,7 @@ Future<({Set<String> keys, DateTime? cutoff})> _latestGlobalBuckets({
       final key = _categoryPeriodKey(category, created, period);
       if (!keys.add(key)) continue;
 
-      final bucketStart = _periodStart(created, period);
+      final bucketStart = key.start;
       if (cutoff == null || bucketStart.isBefore(cutoff)) {
         cutoff = bucketStart;
       }
@@ -166,14 +144,17 @@ Future<({Set<String> keys, DateTime? cutoff})> _latestGlobalBuckets({
   return (keys: keys, cutoff: cutoff);
 }
 
-List<List<ExerciseSetView>> _groupSets(
-  Iterable<ExerciseSetView> sets,
+List<List<T>> _groupPeriods<T>(
+  Iterable<T> rows,
+  DateTime Function(T) timestamp,
   Period period,
   int limit,
 ) {
-  final grouped = <String, List<ExerciseSetView>>{};
-  for (final set in sets) {
-    grouped.putIfAbsent(_periodKey(set.created, period), () => []).add(set);
+  final grouped = <DateTime, List<T>>{};
+  for (final row in rows) {
+    grouped
+        .putIfAbsent(_periodStart(timestamp(row), period), () => [])
+        .add(row);
   }
 
   final groups = grouped.values.toList();
@@ -189,12 +170,6 @@ double _loadInUnit(ExerciseSetView set, String target) {
 double _distanceInUnit(ExerciseSetView set, String target) {
   final metres = distanceMetres(set.unit, set.distance);
   return displayDistance(target, metres);
-}
-
-double _oneRepMax(double weight, double reps) {
-  final factor = 1.0278 - 0.0278 * reps;
-  if (factor == 0) return 0;
-  return weight >= 0 ? weight / factor : weight * factor;
 }
 
 ExerciseSetView _latest(List<ExerciseSetView> sets) =>
@@ -242,9 +217,9 @@ StrengthData _strengthBucket(
     case StrengthMetric.oneRepMax:
       representative = _bestSet(
         sets,
-        (set) => _oneRepMax(_loadInUnit(set, target), set.reps),
+        (set) => estimateOneRepMax(_loadInUnit(set, target), set.reps),
       );
-      value = _oneRepMax(
+      value = estimateOneRepMax(
         _loadInUnit(representative, target),
         representative.reps,
       );
@@ -288,18 +263,13 @@ Future<List<StrengthData>> getBodyWeightData({
     end: end,
     order: OrderingMode.asc,
   );
-  final grouped = <String, List<BodyWeight>>{};
-  for (final row in rows) {
-    grouped.putIfAbsent(_periodKey(row.timestamp, period), () => []).add(row);
-  }
-
-  final groups = grouped.values.toList()
-    ..sort((a, b) => b.last.timestamp.compareTo(a.last.timestamp));
-  return groups.take(limit).toList().reversed.map((group) {
+  return _groupPeriods(rows, (row) => row.timestamp, period, limit).map((
+    group,
+  ) {
     final row = group.last;
     return StrengthData(
       created: row.timestamp.toLocal(),
-      value: displayBodyWeight(target, row.weightKg),
+      value: displayLoad(target, row.weightKg),
       unit: target,
       reps: 1,
     );
@@ -321,7 +291,12 @@ Future<List<List<ExerciseSetView>>> _exerciseBuckets({
     endDateExclusive: end,
     order: OrderingMode.asc,
   ).get();
-  return _groupSets(sets.where((set) => set.cardio == cardio), period, limit);
+  return _groupPeriods(
+    sets.where((set) => set.cardio == cardio),
+    (set) => set.created,
+    period,
+    limit,
+  );
 }
 
 Future<List<StrengthData>> getStrengthData({
@@ -413,13 +388,6 @@ Future<List<CardioData>> getCardioData({
   ];
 }
 
-Future<List<String?>> getCategories() {
-  return (db.select(db.categories)
-        ..orderBy([(category) => OrderingTerm.asc(category.name)]))
-      .map((category) => category.name)
-      .get();
-}
-
 Future<List<StrengthData>> getGlobalData({
   required String target,
   required StrengthMetric metric,
@@ -445,7 +413,7 @@ Future<List<StrengthData>> getGlobalData({
     endDateExclusive: end,
   ).get();
 
-  final buckets = <String, List<ExerciseSetView>>{};
+  final buckets = <_CategoryPeriod, List<ExerciseSetView>>{};
   for (final set in allSets) {
     final category = set.category;
     if (category == null) continue;
@@ -565,13 +533,6 @@ Stream<List<GraphExerciseSummary>> watchGraphs() {
       );
 }
 
-Future<List<ExerciseSetView>> getGraphHistory(
-  String exerciseName, {
-  int limit = 20,
-}) {
-  return ExerciseSetQuery(db, exerciseName: exerciseName, limit: limit).get();
-}
-
 Future<List<ExerciseSetView>> getBodyWeightGraphHistory({
   int limit = 20,
 }) async {
@@ -593,21 +554,6 @@ Future<List<ExerciseSetView>> getBodyWeightGraphHistory({
         ),
       )
       .toList();
-}
-
-Future<ExerciseSetView?> getGraphPointSet(
-  String exerciseName,
-  DateTime timestamp,
-) {
-  return ExerciseSetQuery(
-    db,
-    exerciseName: exerciseName,
-    timestamp: timestamp,
-  ).firstOrNull();
-}
-
-Future<int> countGraphSets(Iterable<String> exerciseNames) {
-  return countExerciseSetsForExercises(db, exerciseNames);
 }
 
 Future<List<GraphData>> getExerciseGraphData({
