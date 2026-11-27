@@ -64,4 +64,3 @@ coverage/
 
 # Browser performance tool dependencies
 scripts/web-perf/node_modules/
-graphify-out
