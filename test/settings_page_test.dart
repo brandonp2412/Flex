@@ -34,10 +34,40 @@ void main() {
         textScaler: const TextScaler.linear(1.5),
       );
       expect(tester.takeException(), isNull);
+      await tester.scrollUntilVisible(
+        find.text('Workouts'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       await tester.tap(find.text('Workouts'));
       await tester.pumpAndSettle();
       expect(find.text('Show body weight'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final width in [390.0, 1200.0]) {
+    testWidgets('Settings categories are alphabetical at width $width', (
+      tester,
+    ) async {
+      await render(tester, surfaceSize: Size(width, 1000));
+      final labels = tester
+          .widgetList<ListTile>(find.byType(ListTile))
+          .map((tile) => (tile.title as Text).data);
+      expect(labels, [
+        'Appearance',
+        'Data management',
+        'Formats',
+        'Plans',
+        'Tabs',
+        'Timers',
+        'Workouts',
+      ]);
     });
   }
 
@@ -140,7 +170,17 @@ void main() {
   testWidgets('Workout settings reveal graph options on demand', (
     WidgetTester tester,
   ) async {
-    await render(tester);
+    await render(tester, surfaceSize: const Size(800, 900));
+    await tester.scrollUntilVisible(
+      find.text('Workouts'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.tap(find.text('Workouts'));
     await tester.pumpAndSettle();
 

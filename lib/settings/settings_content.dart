@@ -45,14 +45,7 @@ class _SettingsContentState extends State<SettingsContent>
     final settings = context.watch<Setting>();
     final desktop = isDesktopLayout(context);
     if (_searchCtrl.text.isNotEmpty) {
-      for (final category in [
-        SettingsCategory.appearance,
-        SettingsCategory.formats,
-        SettingsCategory.workouts,
-        SettingsCategory.timers,
-        SettingsCategory.data,
-        SettingsCategory.plans,
-      ]) {
+      for (final category in SettingsCategory.values) {
         filtered.addAll(
           settingsItems(
             context,

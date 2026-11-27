@@ -2,13 +2,13 @@ import 'package:flex/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 enum SettingsCategory {
-  workouts,
-  plans,
-  timers,
   appearance,
+  data,
   formats,
+  plans,
   tabs,
-  data;
+  timers,
+  workouts;
 
   (IconData, String, String) presentation(BuildContext context) {
     final l10n = context.l10n;
