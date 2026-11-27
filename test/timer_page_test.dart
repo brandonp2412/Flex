@@ -1,9 +1,25 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:flex/timer/timer_page.dart';
+import 'package:flex/timer/timer_state.dart';
 import 'package:flex/timer/timer_progress_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/test_app.dart';
+
+class RecordingExpiryTimer extends TimerState {
+  final expiredTitles = <String?>[];
+
+  @override
+  Future<void> notify(
+    String? title,
+    String? alarmSound,
+    bool enableSound,
+    bool keepRinging,
+  ) async {
+    expiredTitles.add(title);
+  }
+}
 
 void main() {
   testWidgets('stopwatch circle fills over five minutes and stays full', (
@@ -36,6 +52,34 @@ void main() {
     }
     expect(find.text('06:00'), findsOneWidget);
     harness.timerState.dispose();
+  });
+
+  testWidgets('extending a timer retains remaining duration and title', (
+    tester,
+  ) async {
+    final timer = RecordingExpiryTimer();
+    final harness = await FlexTestHarness.create(timerState: timer);
+    final settings = await harness.database.settings.select().getSingle();
+    await timer.startTimer(
+      'Bench',
+      const Duration(minutes: 2),
+      '',
+      false,
+      false,
+    );
+    await timer.addOneMinute(settings);
+    expect(timer.timer.total, const Duration(minutes: 3));
+    await tester.pump(const Duration(seconds: 65));
+    expect(timer.timer.isRunning(), isTrue);
+    expect(timer.expiredTitles, isEmpty);
+    await tester.pump(const Duration(seconds: 120));
+    expect(timer.timer.isRunning(), isFalse);
+    expect(timer.expiredTitles, ['Bench']);
+    await timer.addOneMinute(settings);
+    expect(timer.timer.total, const Duration(minutes: 1));
+    await tester.pump(const Duration(seconds: 65));
+    expect(timer.expiredTitles, ['Bench', null]);
+    timer.dispose();
   });
 
   testWidgets('Timer state resets after manual stop', (

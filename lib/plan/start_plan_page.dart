@@ -601,7 +601,7 @@ class _StartPlanPageState extends State<StartPlanPage>
 
       if (!mounted) return;
       final max = entry.planExercise.maxSets;
-      double? restMs = entry.exercise.defaultRestDurationMs?.toDouble();
+      final restMs = entry.exercise.defaultRestDurationMs;
       final warmupSets = entry.planExercise.warmupSets ?? 0;
       final peTimers = entry.planExercise.timers;
 
@@ -619,24 +619,19 @@ class _StartPlanPageState extends State<StartPlanPage>
           name: exercise,
           notes: _notes.text,
           planId: widget.plan.id,
-          restMs: restMs?.toInt(),
+          restMs: restMs,
           unit: _unit,
         ),
       );
 
       final count = (data.sets[exerciseId]?.length ?? 0) + 1;
 
-      restMs ??= settings.timerDuration.toDouble();
-
       if (settings.restTimers && count > warmupSets && peTimers) {
-        timerState.startTimer(
+        timerState.startRestTimer(
           "$exercise ($count/${max ?? settings.maxSets})",
-          Duration(milliseconds: restMs.toInt()),
-          settings.alarmSound,
-          settings.vibrate,
-          settings.enableSound,
-          "plan:${widget.plan.id}",
-          settings.keepRinging,
+          settings,
+          durationMs: restMs,
+          target: "plan:${widget.plan.id}",
         );
       }
 

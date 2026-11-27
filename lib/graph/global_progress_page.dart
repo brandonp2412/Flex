@@ -38,31 +38,10 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
     targetUnit = 'kg';
     limit = 100;
     setData();
-
-    widget.tabController.addListener(tabListener);
-  }
-
-  void tabListener() {
-    final settings = context.read<Setting>();
-    final graphsIndex = settings.tabs.split(',').indexOf('GraphsPage');
-    if (widget.tabController.indexIsChanging) return;
-    if (widget.tabController.index != graphsIndex) return;
-    setData();
   }
 
   @override
-  void didUpdateWidget(GlobalProgressPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.tabController == widget.tabController) return;
-    oldWidget.tabController.removeListener(tabListener);
-    widget.tabController.addListener(tabListener);
-  }
-
-  @override
-  void dispose() {
-    widget.tabController.removeListener(tabListener);
-    super.dispose();
-  }
+  TabController get graphTabController => widget.tabController;
 
   @override
   Future<void> setData() async {

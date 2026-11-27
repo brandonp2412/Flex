@@ -5,6 +5,7 @@ import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/workout_sessions.dart';
+import 'package:flex/plan/plan_queries.dart';
 import 'package:flex/plan/start_plan_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -36,6 +37,62 @@ void main() {
   setUp(() {
     db = testDb();
   });
+
+  test(
+    'plan overview updates counts from the active workout and enabled exercises',
+    () async {
+      final planId = await db.plans.insertOne(planFixture(title: 'Overview'));
+      final bench = await insertPlanExerciseFixture(
+        db,
+        planId: planId,
+        exercise: 'Overview bench',
+      );
+      final disabled = await insertPlanExerciseFixture(
+        db,
+        planId: planId,
+        exercise: 'Overview disabled',
+      );
+      await (db.planExercises.update()..where((row) => row.id.equals(bench.id)))
+          .write(const PlanExercisesCompanion(maxSets: Value(3)));
+      await (db.planExercises.update()
+            ..where((row) => row.id.equals(disabled.id)))
+          .write(
+            const PlanExercisesCompanion(
+              enabled: Value(false),
+              maxSets: Value(10),
+            ),
+          );
+      final stream = StreamIterator(
+        watchPlanOverviews(
+          db,
+        ).map((rows) => rows.singleWhere((row) => row.plan.id == planId)),
+      );
+      addTearDown(stream.cancel);
+      await stream.moveNext();
+      expect(stream.current.plan.title, 'Overview');
+      expect(stream.current.count.maxSets, 3);
+      expect(stream.current.count.total, 0);
+      final workout = await resumeOrStartWorkout(db, planId, now: testNow);
+      await stream.moveNext();
+      await addMirroredSet(
+        exerciseId: bench.exerciseId,
+        exerciseName: 'Overview bench',
+        planId: planId,
+        workoutId: workout.id,
+        created: testNow,
+        weight: 50,
+      );
+      await stream.moveNext();
+      expect(stream.current.count.total, 1);
+      await finishWorkout(
+        db,
+        workout.id,
+        now: testNow.add(const Duration(hours: 1)),
+      );
+      await stream.moveNext();
+      expect(stream.current.count.total, 0);
+    },
+  );
 
   test('start page distinguishes an empty plan from a deleted plan', () async {
     final planId = await db.plans.insertOne(planFixture());

@@ -120,19 +120,24 @@ class GraphsPageState extends State<GraphsPage>
     );
   }
 
-  Future<void> onDelete() async {
+  Future<List<GraphExerciseSummary>> _selectedSummaries() async {
     final keys = Set<String>.of(_selection);
-    final summaries = filterGraphSummariesBySelection(
-      await _stream.first,
-      keys,
-    );
+    return filterGraphSummariesBySelection(await _stream.first, keys);
+  }
+
+  Future<void> onDelete() async {
+    final summaries = await _selectedSummaries();
+    if (!mounted) return;
+    setState(_selection.clear);
+    await _deleteSummaries(summaries);
+  }
+
+  Future<void> _deleteSummaries(List<GraphExerciseSummary> summaries) async {
     final exerciseIds = summaries
         .where((summary) => !summary.bodyWeight)
         .map((summary) => summary.exerciseId!)
         .toList();
     final deleteWeight = summaries.any((summary) => summary.bodyWeight);
-
-    setState(_selection.clear);
 
     await db.transaction(() async {
       if (deleteWeight) {
@@ -152,12 +157,10 @@ class GraphsPageState extends State<GraphsPage>
     });
   }
 
-  Future<int> _countSelectedGraphRecords() async {
-    final keys = Set<String>.of(_selection);
-    final summaries = filterGraphSummariesBySelection(
-      await _stream.first,
-      keys,
-    );
+  Future<int> _countSelectedGraphRecords() async =>
+      _countRecords(await _selectedSummaries());
+
+  Future<int> _countRecords(List<GraphExerciseSummary> summaries) async {
     var count = await countExerciseSetsForExercises(
       db,
       summaries
@@ -171,7 +174,7 @@ class GraphsPageState extends State<GraphsPage>
   }
 
   Future<void> _editGraphSummary(GraphExerciseSummary summary) async {
-    if (summary.bodyWeight) return;
+    if (summary.bodyWeight || !mounted) return;
     await Navigator.of(context).push(
       FlexPageRoute(
         builder: (context) => ExerciseEditorPage.edit(name: summary.name),
@@ -180,9 +183,7 @@ class GraphsPageState extends State<GraphsPage>
   }
 
   Future<void> _deleteGraphSummary(GraphExerciseSummary summary) async {
-    final count = summary.bodyWeight
-        ? await db.bodyWeights.count().getSingle()
-        : await countExerciseSetsForExercises(db, [summary.name]);
+    final count = await _countRecords([summary]);
     if (!mounted) return;
     final confirmed = await showAppConfirmation(
       context,
@@ -193,10 +194,8 @@ class GraphsPageState extends State<GraphsPage>
     );
     if (confirmed != true || !mounted) return;
 
-    setState(() {
-      _selection.addAll([summary.selectionKey]);
-    });
-    await onDelete();
+    await _deleteSummaries([summary]);
+    if (mounted) setState(() => _selection.remove(summary.selectionKey));
   }
 
   Future<void> _hideGlobalProgressAt(Offset position) async {
@@ -338,7 +337,7 @@ class GraphsPageState extends State<GraphsPage>
                             ),
                           ),
                         )
-                      : graphList(exerciseSets, showGlobal);
+                      : graphList(exerciseSets, showProgress);
                 },
               ),
               search: AppSearch(
@@ -379,17 +378,9 @@ class GraphsPageState extends State<GraphsPage>
                   setState(() => _total = total);
                 },
                 onEdit: () async {
-                  final key = _selection.first;
-                  final summary = (await _stream.first).firstWhere(
-                    (entry) => entry.selectionKey == key,
-                  );
-                  if (summary.bodyWeight || !context.mounted) return;
-                  await Navigator.of(context).push(
-                    FlexPageRoute(
-                      builder: (context) =>
-                          ExerciseEditorPage.edit(name: summary.name),
-                    ),
-                  );
+                  final summaries = await _selectedSummaries();
+                  if (summaries.isNotEmpty)
+                    await _editGraphSummary(summaries.first);
                 },
                 confirmText: context.l10n.deleteGraphRecordsConfirmation(
                   _total,
@@ -403,10 +394,7 @@ class GraphsPageState extends State<GraphsPage>
   }
 
   Future<void> _openMergeGraphs() async {
-    final summaries = filterGraphSummariesBySelection(
-      await _stream.first,
-      Set<String>.of(_selection),
-    );
+    final summaries = await _selectedSummaries();
     if (summaries.length < 2 || !mounted) return;
     final merged = await navKey.currentState!.push<bool>(
       FlexPageRoute(
@@ -464,15 +452,8 @@ class GraphsPageState extends State<GraphsPage>
     );
   }
 
-  Widget graphList(List<GraphExerciseSummary> exerciseSets, bool showProgress) {
+  Widget graphList(List<GraphExerciseSummary> exerciseSets, bool showGlobal) {
     final desktop = isDesktopLayout(context);
-    final progressTerms =
-        '${context.l10n.globalProgress} ${context.l10n.navGraphs}'
-            .toLowerCase();
-    final showGlobal =
-        showProgress &&
-        _category == null &&
-        progressTerms.contains(_search.toLowerCase());
     final preview = exerciseSets
         .where((summary) => summary.hasData)
         .firstOrNull;

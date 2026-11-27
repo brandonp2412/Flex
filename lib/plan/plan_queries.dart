@@ -64,18 +64,14 @@ List<PlanExerciseDraft> filterPlanExerciseDrafts(
   ];
 }
 
-Stream<List<Plan>> watchPlans() {
-  return (db.select(
-    db.plans,
-  )..orderBy([(plan) => OrderingTerm(expression: plan.sequence)])).watch();
-}
+typedef PlanOverview = ({Plan plan, PlanCount count});
 
-Stream<List<PlanCount>> watchPlanCounts() {
+Stream<List<PlanOverview>> watchPlanOverviews(AppDatabase db) {
   return db
       .customSelect(
         '''
           SELECT
-            plans.id AS id,
+            plans.*,
             COALESCE(
               (
                 SELECT SUM(COALESCE(pe.max_sets, settings.max_sets))
@@ -100,6 +96,7 @@ Stream<List<PlanCount>> watchPlanCounts() {
           LEFT JOIN exercise_sets
             ON exercise_sets.workout_id = workouts.id
           GROUP BY plans.id
+          ORDER BY plans.sequence
         ''',
         readsFrom: {
           db.plans,
@@ -113,10 +110,13 @@ Stream<List<PlanCount>> watchPlanCounts() {
       .map(
         (rows) => rows
             .map(
-              (row) => PlanCount(
-                maxSets: row.read<int>('max_sets'),
-                planId: row.read<int>('id'),
-                total: row.read<int>('session_count'),
+              (row) => (
+                plan: db.plans.map(row.data),
+                count: PlanCount(
+                  maxSets: row.read<int>('max_sets'),
+                  planId: row.read<int>('id'),
+                  total: row.read<int>('session_count'),
+                ),
               ),
             )
             .toList(),

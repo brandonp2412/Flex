@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flex/audio/safe_audio_player.dart';
 import 'package:flex/crash_logger.dart';
+import 'package:flex/database/database.dart';
 import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
 import 'package:flex/native_timer_wrapper.dart';
@@ -18,6 +19,7 @@ class TimerState extends ChangeNotifier {
   bool justExpired = false;
   bool _keepScreenOn = true;
   String _target = 'timer';
+  String? _title;
   String? _pendingTarget;
 
   FlutterLocalNotificationsPlugin? _notifications;
@@ -141,24 +143,35 @@ class TimerState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addOneMinute(
-    String alarmSound,
-    bool vibrate,
-    bool enableSound,
-    bool keepRinging,
-  ) async {
+  Future<void> addOneMinute(Setting settings) async {
     starting = false;
+    if (!timer.isRunning()) _title = null;
     final updated = timer.increaseDuration(const Duration(minutes: 1));
     updateTimer(updated);
     await _schedule(
       updated,
-      const Duration(minutes: 1),
-      alarmSound,
-      vibrate,
-      enableSound,
-      keepRinging,
+      settings.alarmSound,
+      settings.vibrate,
+      settings.enableSound,
+      settings.keepRinging,
+      extending: true,
     );
   }
+
+  Future<void> startRestTimer(
+    String title,
+    Setting settings, {
+    int? durationMs,
+    required String target,
+  }) => startTimer(
+    title,
+    Duration(milliseconds: durationMs ?? settings.timerDuration),
+    settings.alarmSound,
+    settings.vibrate,
+    settings.enableSound,
+    target,
+    settings.keepRinging,
+  );
 
   @override
   void dispose() {
@@ -178,6 +191,7 @@ class TimerState extends ChangeNotifier {
   ]) async {
     talker.info('Starting rest timer for ${rest.inSeconds} seconds');
     _target = target;
+    _title = title;
     if (_keepScreenOn && _isAndroid) {
       _setWakelock(true);
     }
@@ -188,30 +202,22 @@ class TimerState extends ChangeNotifier {
       NativeTimerState.running,
     );
     updateTimer(timer);
-    await _schedule(
-      timer,
-      rest,
-      alarmSound,
-      vibrate,
-      enableSound,
-      keepRinging,
-      title: title,
-    );
+    await _schedule(timer, alarmSound, vibrate, enableSound, keepRinging);
   }
 
   Future<void> _schedule(
     NativeTimerWrapper timer,
-    Duration delay,
     String alarmSound,
     bool vibrate,
     bool enableSound,
     bool keepRinging, {
-    String? title,
+    bool extending = false,
   }) async {
+    final title = extending ? null : _title;
     if (_isAndroid) {
       final args = {
         'title': ?title,
-        if (title != null) 'restMs': delay.inMilliseconds,
+        if (!extending) 'restMs': timer.total.inMilliseconds,
         'timestamp': timer.stamp.millisecondsSinceEpoch,
         'alarmSound': alarmSound,
         'vibrate': vibrate,
@@ -228,8 +234,8 @@ class TimerState extends ChangeNotifier {
     } else {
       next?.cancel();
       next = Timer(
-        delay,
-        () => _expireDesktopTimer(title, alarmSound, enableSound, keepRinging),
+        timer.getRemaining(),
+        () => _expireDesktopTimer(_title, alarmSound, enableSound, keepRinging),
       );
     }
   }
@@ -308,6 +314,7 @@ class TimerState extends ChangeNotifier {
   Future<void> stopTimer() async {
     talker.info('Stopping rest timer');
     _target = 'timer';
+    _title = null;
     updateTimer(NativeTimerWrapper.emptyTimer());
     if (!_isAndroid) {
       player.stop();
@@ -332,8 +339,7 @@ class TimerState extends ChangeNotifier {
     timer = updated;
     if ((updated.state == NativeTimerState.expired ||
             updated.state == NativeTimerState.paused) &&
-        !kIsWeb &&
-        Platform.isAndroid) {
+        _isAndroid) {
       _setWakelock(false);
     }
     notifyListeners();

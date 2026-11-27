@@ -29,6 +29,11 @@ Stream<List<PlanExerciseEntry>> watchPlanExerciseEntries(
 Stream<List<PlanExerciseEntry>> watchAllPlanExerciseEntries(
   AppDatabase database, {
   int? planId,
+}) => _planExerciseEntries(database, planId: planId).watch();
+
+Selectable<PlanExerciseEntry> _planExerciseEntries(
+  AppDatabase database, {
+  int? planId,
 }) {
   final query = database.select(database.planExercises).join([
     innerJoin(
@@ -47,21 +52,17 @@ Stream<List<PlanExerciseEntry>> watchAllPlanExerciseEntries(
     OrderingTerm.asc(database.planExercises.sequence),
     OrderingTerm.asc(database.planExercises.id),
   ]);
-  return query.watch().map(
-    (rows) => [
-      for (final row in rows)
-        PlanExerciseEntry(
-          planExercise: row.readTable(database.planExercises),
-          exercise: row.readTable(database.exercises),
-        ),
-    ],
+  return query.map(
+    (row) => PlanExerciseEntry(
+      planExercise: row.readTable(database.planExercises),
+      exercise: row.readTable(database.exercises),
+    ),
   );
 }
 
-Future<List<PlanExerciseEntry>> getPlanExerciseEntries(
+Future<List<PlanExerciseEntry>> getAllPlanExerciseEntries(
   AppDatabase database,
-  int planId,
-) => watchPlanExerciseEntries(database, planId).first;
+) => _planExerciseEntries(database).get();
 
 Future<Workout> resumeOrStartWorkout(
   AppDatabase database,

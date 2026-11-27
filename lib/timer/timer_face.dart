@@ -98,11 +98,6 @@ class TimerFace extends StatelessWidget {
     final settings = context.read<Setting>();
     if (defaultTargetPlatform != TargetPlatform.linux)
       await requestNotificationPermission();
-    await timerState.addOneMinute(
-      settings.alarmSound,
-      settings.vibrate,
-      settings.enableSound,
-      settings.keepRinging,
-    );
+    await timerState.addOneMinute(settings);
   }
 }

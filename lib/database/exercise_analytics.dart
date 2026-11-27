@@ -533,6 +533,14 @@ Stream<List<GraphExerciseSummary>> watchGraphs() {
       );
 }
 
+Future<List<ExerciseSetView>> getGraphHistory(
+  String name, {
+  required bool bodyWeight,
+  int limit = 20,
+}) => bodyWeight
+    ? getBodyWeightGraphHistory(limit: limit)
+    : ExerciseSetQuery(db, exerciseName: name, limit: limit).get();
+
 Future<List<ExerciseSetView>> getBodyWeightGraphHistory({
   int limit = 20,
 }) async {

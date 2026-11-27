@@ -58,7 +58,8 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
   Timer? _notesDebounce;
   final notesCtrl = TextEditingController();
 
-  TabController get tabController => widget.tabCtrl;
+  @override
+  TabController get graphTabController => widget.tabCtrl;
   bool get bodyWeight => widget.bodyWeight;
   bool get cardio => widget.cardio;
   bool get weightedCardio => isWeightUnit(targetUnit);
@@ -155,7 +156,6 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
       (p) => p.name == settings.defaultGraphPeriod,
       orElse: () => Period.day,
     );
-    tabController.addListener(onTabChanged);
     if (!bodyWeight) loadPreferences();
   }
 
@@ -409,25 +409,14 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
     _refreshTimer?.cancel();
     _notesDebounce?.cancel();
     notesCtrl.dispose();
-    tabController.removeListener(onTabChanged);
     super.dispose();
   }
 
-  void onTabChanged() {
-    final settings = context.read<Setting>();
-    if (tabController.index == settings.tabs.split(',').indexOf('GraphsPage')) {
-      setData();
-    }
-  }
-
   Future<void> showHistory() async {
-    final exerciseSets = bodyWeight
-        ? await getBodyWeightGraphHistory()
-        : await ExerciseSetQuery(
-            db,
-            exerciseName: exerciseName,
-            limit: 20,
-          ).get();
+    final exerciseSets = await getGraphHistory(
+      exerciseName,
+      bodyWeight: bodyWeight,
+    );
     if (!mounted) return;
 
     final desktop = isDesktopLayout(context);
@@ -436,7 +425,7 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
         builder: (context) => GraphHistoryPage(
           name: exerciseName,
           initialSets: exerciseSets,
-          tabController: tabController,
+          tabController: graphTabController,
           bodyWeight: bodyWeight,
         ),
       ),

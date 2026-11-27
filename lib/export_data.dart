@@ -52,12 +52,16 @@ class _ExportDataState extends State<ExportData> {
   }
 
   Future<void> _exportPlans() async {
-    final plans = await db.plans.select().get();
+    final (plans, entries) = await db.transaction(
+      () async =>
+          (await db.plans.select().get(), await getAllPlanExerciseEntries(db)),
+    );
+    final byPlan = groupEnabledPlanExercisesByPlan(entries);
     final data = <List<dynamic>>[
       ['id', 'days', 'title', 'sequence', 'exercises'],
     ];
     for (final plan in plans) {
-      final planExercises = await getPlanExerciseEntries(db, plan.id);
+      final planExercises = byPlan[plan.id] ?? const <PlanExerciseEntry>[];
       data.add([
         plan.id,
         plan.days,
@@ -70,7 +74,7 @@ class _ExportDataState extends State<ExportData> {
     final csv = CsvEncoder(lineDelimiter: "\n").convert(data);
     await FilePicker.saveFile(
       fileName: 'plans.csv',
-      bytes: Uint8List.fromList(csv.codeUnits),
+      bytes: Uint8List.fromList(utf8.encode(csv)),
     );
     talker.info('Exported ${plans.length} plans to CSV');
   }

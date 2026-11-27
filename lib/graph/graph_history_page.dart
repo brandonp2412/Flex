@@ -1,3 +1,4 @@
+import 'package:flex/graph/graph_tab_refresh.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/database/database.dart';
@@ -10,7 +11,6 @@ import 'package:flex/platform_page_route.dart';
 import 'package:flex/sets/edit_sets_page.dart';
 import 'package:flex/sets/history_list.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class GraphHistoryPage extends StatefulWidget {
   final String name;
@@ -30,10 +30,18 @@ class GraphHistoryPage extends StatefulWidget {
   createState() => _GraphHistoryPageState();
 }
 
-class _GraphHistoryPageState extends State<GraphHistoryPage> {
+class _GraphHistoryPageState extends State<GraphHistoryPage>
+    with GraphTabRefresh<GraphHistoryPage> {
   late List<ExerciseSetView> _sets;
   final _selection = <int>{};
   int limit = 20;
+  int _request = 0;
+
+  @override
+  TabController get graphTabController => widget.tabController;
+
+  @override
+  Future<void> reloadGraph() => setSets();
   final scroll = ScrollController();
 
   @override
@@ -151,16 +159,7 @@ class _GraphHistoryPageState extends State<GraphHistoryPage> {
   }
 
   @override
-  void didUpdateWidget(GraphHistoryPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.tabController == widget.tabController) return;
-    oldWidget.tabController.removeListener(tabListener);
-    widget.tabController.addListener(tabListener);
-  }
-
-  @override
   void dispose() {
-    widget.tabController.removeListener(tabListener);
     scroll.dispose();
     super.dispose();
   }
@@ -169,28 +168,18 @@ class _GraphHistoryPageState extends State<GraphHistoryPage> {
   void initState() {
     super.initState();
     _sets = widget.initialSets;
-    widget.tabController.addListener(tabListener);
   }
 
   Future<void> setSets() async {
-    final result = widget.bodyWeight
-        ? await getBodyWeightGraphHistory(limit: limit)
-        : await ExerciseSetQuery(
-            db,
-            exerciseName: widget.name,
-            limit: limit,
-          ).get();
-    if (!mounted) return;
+    final request = ++_request;
+    final result = await getGraphHistory(
+      widget.name,
+      bodyWeight: widget.bodyWeight,
+      limit: limit,
+    );
+    if (!mounted || request != _request) return;
     setState(() {
       _sets = result;
     });
-  }
-
-  void tabListener() {
-    final settings = context.read<Setting>();
-    final index = settings.tabs.split(',').indexOf('GraphsPage');
-    if (widget.tabController.indexIsChanging) return;
-    if (widget.tabController.index != index) return;
-    setSets();
   }
 }

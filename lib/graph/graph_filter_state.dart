@@ -1,9 +1,11 @@
+import 'package:flex/graph/graph_tab_refresh.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/graph/graph_options_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-abstract class GraphFilterState<T extends StatefulWidget> extends State<T> {
+abstract class GraphFilterState<T extends StatefulWidget> extends State<T>
+    with GraphTabRefresh<T> {
   late String targetUnit;
   late int limit;
   DateTime? start;
@@ -15,6 +17,9 @@ abstract class GraphFilterState<T extends StatefulWidget> extends State<T> {
   void onLimitUpdated() {}
   void onTimeAxisUpdated(bool value) {}
   Future<void> setData();
+
+  @override
+  Future<void> reloadGraph() => setData();
 
   int _request = 0;
   int beginDataRequest() => ++_request;

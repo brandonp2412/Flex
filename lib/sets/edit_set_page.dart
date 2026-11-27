@@ -546,14 +546,11 @@ class _EditSetPageState extends State<EditSetPage>
     }
     if (!mounted) return;
     final timer = context.read<TimerState>();
-    timer.startTimer(
+    timer.startRestTimer(
       _name,
-      Duration(milliseconds: restMs ?? settings.timerDuration),
-      settings.alarmSound,
-      settings.vibrate,
-      settings.enableSound,
-      'history',
-      settings.keepRinging,
+      settings,
+      durationMs: restMs,
+      target: 'history',
     );
     if (!mounted) return;
     return _popAfterSave();

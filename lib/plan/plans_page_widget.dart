@@ -25,7 +25,7 @@ class PlansPageWidget extends StatefulWidget {
 
 class _PlansPageWidgetState extends State<PlansPageWidget> {
   String _search = '';
-  late Stream<List<Plan>> _plansStream;
+  late Stream<List<PlanOverview>> _plansStream;
   late Stream<List<PlanExerciseEntry>> _exerciseStream;
 
   final _selection = <int>{};
@@ -46,7 +46,7 @@ class _PlansPageWidgetState extends State<PlansPageWidget> {
   }
 
   void _createStreams() {
-    _plansStream = watchPlans();
+    _plansStream = watchPlanOverviews(db);
     _exerciseStream = watchAllPlanExerciseEntries(db);
   }
 
@@ -74,13 +74,14 @@ class _PlansPageWidgetState extends State<PlansPageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Plan>>(
+    return StreamBuilder<List<PlanOverview>>(
       stream: _plansStream,
       builder: (context, plansSnapshot) =>
           StreamBuilder<List<PlanExerciseEntry>>(
             stream: _exerciseStream,
             builder: (context, exercisesSnapshot) {
-              final plans = plansSnapshot.data ?? const <Plan>[];
+              final overviews = plansSnapshot.data ?? const <PlanOverview>[];
+              final plans = [for (final overview in overviews) overview.plan];
               final exercises = exercisesSnapshot.data;
               final filtered = _filterPlans(
                 plans,
@@ -99,6 +100,10 @@ class _PlansPageWidgetState extends State<PlansPageWidget> {
                           scroll: _scroll,
                           plans: plansSnapshot.hasData ? filtered : null,
                           exercises: exercises,
+                          countsByPlan: {
+                            for (final overview in overviews)
+                              overview.plan.id: overview.count,
+                          },
                           navKey: widget.navKey,
                           selected: _selection,
                           search: _search,
@@ -117,21 +122,24 @@ class _PlansPageWidgetState extends State<PlansPageWidget> {
                                 .where((plan) => _selection.contains(plan.id))
                                 .toList();
 
-                            final summaries = await Future.wait(
-                              selectedPlans.map((plan) async {
-                                final days = plan.days
-                                    .split(',')
-                                    .where((day) => day.isNotEmpty)
-                                    .map((day) => localizedWeekday(l10n, day))
-                                    .join(', ');
-                                final planExercises =
-                                    await getPlanExerciseEntries(db, plan.id);
-                                final summary = planExercises
-                                    .map((entry) => '- ${entry.exercise.name}')
-                                    .join('\n');
-                                return '$days:\n$summary';
-                              }),
+                            final byPlan = groupEnabledPlanExercisesByPlan(
+                              exercises ?? const [],
                             );
+                            final summaries = selectedPlans.map((plan) {
+                              final days = plan.days
+                                  .split(',')
+                                  .where((day) => day.isNotEmpty)
+                                  .map((day) => localizedWeekday(l10n, day))
+                                  .join(', ');
+                              final summary =
+                                  (byPlan[plan.id] ??
+                                          const <PlanExerciseEntry>[])
+                                      .map(
+                                        (entry) => '- ${entry.exercise.name}',
+                                      )
+                                      .join('\n');
+                              return '$days:\n$summary';
+                            });
 
                             await SharePlus.instance.share(
                               ShareParams(text: summaries.join('\n\n')),
@@ -142,12 +150,14 @@ class _PlansPageWidgetState extends State<PlansPageWidget> {
                           onDelete: () async {
                             final selectedIds = _selection.toList();
                             setState(_selection.clear);
-                            await db.planExercises.deleteWhere(
-                              (tbl) => tbl.planId.isIn(selectedIds),
-                            );
-                            await db.plans.deleteWhere(
-                              (tbl) => tbl.id.isIn(selectedIds),
-                            );
+                            await db.transaction(() async {
+                              await db.planExercises.deleteWhere(
+                                (tbl) => tbl.planId.isIn(selectedIds),
+                              );
+                              await db.plans.deleteWhere(
+                                (tbl) => tbl.id.isIn(selectedIds),
+                              );
+                            });
                           },
                           onSelectAll: () => setState(() {
                             _selection.addAll(filtered.map((plan) => plan.id));

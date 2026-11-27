@@ -4,7 +4,6 @@ import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/empty_state.dart';
-import 'package:flex/error_state.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/edit_plan_page.dart';
@@ -16,7 +15,7 @@ import 'package:flex/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class PlansList extends StatefulWidget {
+class PlansList extends StatelessWidget {
   final List<Plan>? plans;
   final List<PlanExerciseEntry>? exercises;
   final GlobalKey<NavigatorState> navKey;
@@ -24,6 +23,7 @@ class PlansList extends StatefulWidget {
   final Function(int) onSelect;
   final String search;
   final ScrollController scroll;
+  final Map<int, PlanCount> countsByPlan;
 
   const PlansList({
     super.key,
@@ -34,47 +34,12 @@ class PlansList extends StatefulWidget {
     required this.onSelect,
     required this.search,
     required this.scroll,
+    this.countsByPlan = const {},
   });
 
   @override
-  State<PlansList> createState() => _PlansListState();
-}
-
-class _PlansListState extends State<PlansList> {
-  late Stream<List<PlanCount>> _planCountsStream;
-
-  @override
-  void initState() {
-    super.initState();
-    _planCountsStream = watchPlanCounts();
-    dbVersion.addListener(_onDatabaseChanged);
-  }
-
-  @override
-  void dispose() {
-    dbVersion.removeListener(_onDatabaseChanged);
-    super.dispose();
-  }
-
-  void _onDatabaseChanged() {
-    if (!mounted) return;
-    setState(() => _planCountsStream = watchPlanCounts());
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<PlanCount>>(
-      stream: _planCountsStream,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) return const AppErrorState();
-        return _buildList(context, snapshot.data ?? const <PlanCount>[]);
-      },
-    );
-  }
-
-  Widget _buildList(BuildContext context, List<PlanCount> planCounts) {
-    final countsByPlan = {for (final count in planCounts) count.planId: count};
-    final searchLabel = widget.search.trim();
+    final searchLabel = search.trim();
     final noneFound = Padding(
       padding: const EdgeInsets.only(top: appSearchHeight),
       child: AppEmptyState(
@@ -104,14 +69,14 @@ class _PlansListState extends State<PlansList> {
       ),
     );
 
-    if (widget.plans == null || widget.exercises == null) {
+    if (plans == null || exercises == null) {
       return const SizedBox.shrink();
     }
 
     final weekday = weekdays[DateTime.now().weekday - 1];
-    final filteredPlans = widget.plans!.toList();
+    final filteredPlans = plans!.toList();
     if (filteredPlans.isEmpty) return noneFound;
-    final exercisesByPlan = groupEnabledPlanExercisesByPlan(widget.exercises!);
+    final exercisesByPlan = groupEnabledPlanExercisesByPlan(exercises!);
     final reorder =
         context.read<Setting>().planTrailing == PlanTrailing.reorder.toString();
     final padding = EdgeInsets.only(
@@ -128,17 +93,17 @@ class _PlansListState extends State<PlansList> {
           exercises: exercisesByPlan[plan.id] ?? const <PlanExerciseEntry>[],
           weekday: weekday,
           index: index,
-          navigatorKey: widget.navKey,
-          selected: widget.selected,
+          navigatorKey: navKey,
+          selected: selected,
           count: countsByPlan[plan.id],
-          onSelect: widget.onSelect,
+          onSelect: onSelect,
         ),
       );
     }
 
     if (reorder)
       return ReorderableListView.builder(
-        scrollController: widget.scroll,
+        scrollController: scroll,
         buildDefaultDragHandles: !isDesktopLayout(context),
         itemCount: filteredPlans.length,
         padding: padding,
@@ -161,7 +126,7 @@ class _PlansListState extends State<PlansList> {
       );
 
     return ListView.builder(
-      controller: widget.scroll,
+      controller: scroll,
       itemCount: filteredPlans.length,
       padding: padding,
       itemBuilder: item,
