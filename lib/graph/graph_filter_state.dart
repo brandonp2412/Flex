@@ -14,7 +14,11 @@ abstract class GraphFilterState<T extends StatefulWidget> extends State<T> {
   bool? get optionsTimeAxis => null;
   void onLimitUpdated() {}
   void onTimeAxisUpdated(bool value) {}
-  void setData();
+  Future<void> setData();
+
+  int _request = 0;
+  int beginDataRequest() => ++_request;
+  bool isCurrentDataRequest(int request) => mounted && request == _request;
 
   void showOptions() {
     showModalBottomSheet<void>(

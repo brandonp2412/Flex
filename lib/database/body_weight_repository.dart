@@ -7,29 +7,26 @@ double displayBodyWeight(String unit, double weightKg) =>
 
 double? toKg(String unit, double value) => loadKg(unit, value);
 
-Future<BodyWeight?> getLatestBodyWeight(AppDatabase database) {
-  return (database.bodyWeights.select()
-        ..orderBy([
-          (row) =>
-              OrderingTerm(expression: row.timestamp, mode: OrderingMode.desc),
-          (row) => OrderingTerm(expression: row.id, mode: OrderingMode.desc),
-        ])
-        ..limit(1))
-      .getSingleOrNull();
-}
+Future<BodyWeight?> getLatestBodyWeight(AppDatabase database) async =>
+    (await getBodyWeightHistory(database, limit: 1)).firstOrNull;
 
 Future<List<BodyWeight>> getBodyWeightHistory(
   AppDatabase database, {
-  int limit = 20,
+  int? limit = 20,
+  DateTime? start,
+  DateTime? end,
+  OrderingMode order = OrderingMode.desc,
 }) {
-  return (database.bodyWeights.select()
-        ..orderBy([
-          (row) =>
-              OrderingTerm(expression: row.timestamp, mode: OrderingMode.desc),
-          (row) => OrderingTerm(expression: row.id, mode: OrderingMode.desc),
-        ])
-        ..limit(limit))
-      .get();
+  final query = database.bodyWeights.select()
+    ..orderBy([
+      (row) => OrderingTerm(expression: row.timestamp, mode: order),
+      (row) => OrderingTerm(expression: row.id, mode: order),
+    ]);
+  if (start != null)
+    query.where((row) => row.timestamp.isBiggerOrEqualValue(start));
+  if (end != null) query.where((row) => row.timestamp.isSmallerThanValue(end));
+  if (limit != null) query.limit(limit);
+  return query.get();
 }
 
 Future<int> recordBodyWeight(

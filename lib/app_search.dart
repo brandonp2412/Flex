@@ -1,12 +1,10 @@
 import 'package:flex/app_confirmation.dart';
-import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/settings/settings_page.dart';
 import 'package:flex/weight_page.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 /// Vertical space occupied by [AppSearch] when floated on top of a list: the
 /// 56px search pill plus its 16px top padding. List views offset their content
@@ -94,67 +92,130 @@ class _AppSearchState extends State<AppSearch> {
     }
   }
 
-  List<Widget> _desktopActions(BuildContext context, Widget trailingMain) {
-    final selected = widget.controller.isNotEmpty;
-    return [
-      if (selected || widget.filter != null) trailingMain,
-      if (selected) ...[
-        IconButton(
-          key: const Key('desktop-clear-selection'),
-          tooltip: context.l10n.clearSelection,
-          icon: const Icon(Icons.deselect),
-          onPressed: _clearSelection,
-        ),
-        IconButton(
-          key: const Key('desktop-edit'),
-          tooltip: context.l10n.actionEdit,
-          icon: const Icon(Icons.edit_outlined),
-          onPressed: () async {
-            await widget.onEdit();
-          },
-        ),
-        IconButton(
-          key: const Key('desktop-share'),
-          tooltip: context.l10n.actionShare,
-          icon: const Icon(Icons.share_outlined),
-          onPressed: () async {
-            await widget.onShare();
-          },
-        ),
-      ] else ...[
-        IconButton(
-          key: const Key('desktop-weight'),
-          tooltip: context.l10n.weightLabel,
-          icon: const Icon(Icons.scale_outlined),
-          onPressed: () async {
-            await _handleMenuAction(_AppSearchMenuAction.weight);
-          },
-        ),
-        IconButton(
-          key: const Key('desktop-search-settings'),
-          tooltip: context.l10n.navSettings,
-          icon: const Icon(Icons.settings_outlined),
-          onPressed: () async {
-            await _handleMenuAction(_AppSearchMenuAction.settings);
-          },
-        ),
-      ],
-      if (selected && widget.controller.length > 1 && widget.onMerge != null)
-        FilledButton.icon(
-          key: const Key('desktop-merge-graphs'),
-          onPressed: widget.onMerge,
-          icon: const Icon(Icons.merge_type_rounded),
-          label: Text(context.l10n.mergeGraphs),
-        )
-      else
-        IconButton(
-          key: const Key('desktop-select-all'),
-          tooltip: context.l10n.selectAll,
-          icon: const Icon(Icons.done_all),
-          onPressed: widget.onSelectAll,
-        ),
-    ];
+  _AppSearchMenuAction get _primaryAction =>
+      widget.controller.length > 1 && widget.onMerge != null
+      ? _AppSearchMenuAction.merge
+      : _AppSearchMenuAction.selectAll;
+
+  List<_AppSearchMenuAction> get _secondaryActions =>
+      widget.controller.isNotEmpty
+      ? [
+          _AppSearchMenuAction.clearSelection,
+          _AppSearchMenuAction.edit,
+          _AppSearchMenuAction.share,
+        ]
+      : [_AppSearchMenuAction.weight, _AppSearchMenuAction.settings];
+
+  (String, IconData, String) _actionDetails(
+    BuildContext context,
+    _AppSearchMenuAction action, {
+    bool desktop = false,
+  }) {
+    final l10n = context.l10n;
+    return switch (action) {
+      _AppSearchMenuAction.selectAll => (
+        l10n.selectAll,
+        Icons.done_all,
+        'select-all',
+      ),
+      _AppSearchMenuAction.merge => (
+        l10n.mergeGraphs,
+        Icons.merge_type_rounded,
+        'merge-graphs',
+      ),
+      _AppSearchMenuAction.clearSelection => (
+        l10n.clearSelection,
+        Icons.deselect,
+        'clear-selection',
+      ),
+      _AppSearchMenuAction.edit => (
+        l10n.actionEdit,
+        desktop ? Icons.edit_outlined : Icons.edit,
+        'edit',
+      ),
+      _AppSearchMenuAction.share => (
+        l10n.actionShare,
+        desktop ? Icons.share_outlined : Icons.share,
+        'share',
+      ),
+      _AppSearchMenuAction.weight => (
+        l10n.weightLabel,
+        desktop ? Icons.scale_outlined : Icons.scale,
+        'weight',
+      ),
+      _AppSearchMenuAction.settings => (
+        l10n.navSettings,
+        desktop ? Icons.settings_outlined : Icons.settings,
+        'search-settings',
+      ),
+    };
   }
+
+  List<Widget> _desktopActions(BuildContext context, Widget trailingMain) => [
+    if (widget.controller.isNotEmpty || widget.filter != null) trailingMain,
+    for (final action in [..._secondaryActions, _primaryAction])
+      Builder(
+        builder: (context) {
+          final (label, icon, key) = _actionDetails(
+            context,
+            action,
+            desktop: true,
+          );
+          Future<void> onPressed() => _handleMenuAction(action);
+          return action == _AppSearchMenuAction.merge
+              ? FilledButton.icon(
+                  key: Key('desktop-$key'),
+                  onPressed: onPressed,
+                  icon: Icon(icon),
+                  label: Text(label),
+                )
+              : IconButton(
+                  key: Key('desktop-$key'),
+                  tooltip: label,
+                  icon: Icon(icon),
+                  onPressed: onPressed,
+                );
+        },
+      ),
+  ];
+
+  Widget _mobileMenu() => Builder(
+    builder: (context) => IconButton(
+      icon: const Icon(Icons.more_vert),
+      tooltip: context.l10n.showMenu,
+      onPressed: () async {
+        final button = context.findRenderObject() as RenderBox;
+        final overlay =
+            Navigator.of(context).overlay!.context.findRenderObject()
+                as RenderBox;
+        final position = RelativeRect.fromRect(
+          Rect.fromPoints(
+            button.localToGlobal(Offset.zero, ancestor: overlay),
+            button.localToGlobal(
+              button.size.bottomRight(Offset.zero),
+              ancestor: overlay,
+            ),
+          ),
+          Offset.zero & overlay.size,
+        );
+        final action = await showMenu<_AppSearchMenuAction>(
+          context: context,
+          position: position,
+          items: [
+            for (final action in [_primaryAction, ..._secondaryActions])
+              PopupMenuItem(
+                value: action,
+                child: ListTile(
+                  leading: Icon(_actionDetails(context, action).$2),
+                  title: Text(_actionDetails(context, action).$1),
+                ),
+              ),
+          ],
+        );
+        await _handleMenuAction(action);
+      },
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -251,100 +312,7 @@ class _AppSearchState extends State<AppSearch> {
                       transitionBuilder: (child, animation) =>
                           ScaleTransition(scale: animation, child: child),
                     ),
-                    Selector<Setting, bool>(
-                      selector: (p0, settings) => settings.showBodyWeight,
-                      builder: (context, showBodyWeight, child) => IconButton(
-                        icon: const Icon(Icons.more_vert),
-                        tooltip: context.l10n.showMenu,
-                        onPressed: () async {
-                          final RenderBox button =
-                              context.findRenderObject() as RenderBox;
-                          final RenderBox overlay =
-                              Navigator.of(
-                                    context,
-                                  ).overlay!.context.findRenderObject()
-                                  as RenderBox;
-                          final RelativeRect position = RelativeRect.fromRect(
-                            Rect.fromPoints(
-                              button.localToGlobal(
-                                Offset.zero,
-                                ancestor: overlay,
-                              ),
-                              button.localToGlobal(
-                                button.size.bottomRight(Offset.zero),
-                                ancestor: overlay,
-                              ),
-                            ),
-                            Offset.zero & overlay.size,
-                          );
-
-                          final action = await showMenu<_AppSearchMenuAction>(
-                            context: context,
-                            position: position,
-                            items: [
-                              if (sel.length > 1 && widget.onMerge != null)
-                                PopupMenuItem(
-                                  value: _AppSearchMenuAction.merge,
-                                  child: ListTile(
-                                    leading: const Icon(
-                                      Icons.merge_type_rounded,
-                                    ),
-                                    title: Text(context.l10n.mergeGraphs),
-                                  ),
-                                )
-                              else
-                                PopupMenuItem(
-                                  value: _AppSearchMenuAction.selectAll,
-                                  child: ListTile(
-                                    leading: const Icon(Icons.done_all),
-                                    title: Text(context.l10n.selectAll),
-                                  ),
-                                ),
-                              if (sel.isNotEmpty) ...[
-                                PopupMenuItem(
-                                  value: _AppSearchMenuAction.clearSelection,
-                                  child: ListTile(
-                                    leading: const Icon(Icons.deselect),
-                                    title: Text(context.l10n.clearSelection),
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: _AppSearchMenuAction.edit,
-                                  child: ListTile(
-                                    leading: const Icon(Icons.edit),
-                                    title: Text(context.l10n.actionEdit),
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: _AppSearchMenuAction.share,
-                                  child: ListTile(
-                                    leading: const Icon(Icons.share),
-                                    title: Text(context.l10n.actionShare),
-                                  ),
-                                ),
-                              ],
-                              if (sel.isEmpty)
-                                PopupMenuItem(
-                                  value: _AppSearchMenuAction.weight,
-                                  child: ListTile(
-                                    leading: const Icon(Icons.scale),
-                                    title: Text(context.l10n.weightLabel),
-                                  ),
-                                ),
-                              if (sel.isEmpty)
-                                PopupMenuItem(
-                                  value: _AppSearchMenuAction.settings,
-                                  child: ListTile(
-                                    leading: const Icon(Icons.settings),
-                                    title: Text(context.l10n.navSettings),
-                                  ),
-                                ),
-                            ],
-                          );
-                          await _handleMenuAction(action);
-                        },
-                      ),
-                    ),
+                    _mobileMenu(),
                   ],
           ),
         ),

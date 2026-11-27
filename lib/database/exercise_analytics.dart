@@ -281,19 +281,13 @@ Future<List<StrengthData>> getBodyWeightData({
   required DateTime? end,
   required int limit,
 }) async {
-  final query = db.bodyWeights.select()
-    ..orderBy([
-      (row) => OrderingTerm.asc(row.timestamp),
-      (row) => OrderingTerm.asc(row.id),
-    ]);
-  if (start != null) {
-    query.where((row) => row.timestamp.isBiggerOrEqualValue(start));
-  }
-  if (end != null) {
-    query.where((row) => row.timestamp.isSmallerThanValue(end));
-  }
-
-  final rows = await query.get();
+  final rows = await getBodyWeightHistory(
+    db,
+    limit: null,
+    start: start,
+    end: end,
+    order: OrderingMode.asc,
+  );
   final grouped = <String, List<BodyWeight>>{};
   for (final row in rows) {
     grouped.putIfAbsent(_periodKey(row.timestamp, period), () => []).add(row);
@@ -616,29 +610,54 @@ Future<int> countGraphSets(Iterable<String> exerciseNames) {
   return countExerciseSetsForExercises(db, exerciseNames);
 }
 
-Future<List<GraphData>> getInitialGraphData(GraphExerciseSummary summary) =>
-    switch (summary) {
-      _ when summary.bodyWeight => getBodyWeightData(
-        target: summary.unit,
-        period: Period.day,
-        start: null,
-        end: null,
-        limit: 20,
-      ),
-      _ when summary.cardio => getCardioData(
-        name: summary.name,
-        target: summary.unit,
-        metric: isWeightUnit(summary.unit)
-            ? CardioMetric.weight
-            : CardioMetric.pace,
-      ),
-      _ => getStrengthData(
-        target: summary.unit,
-        name: summary.name,
-        metric: StrengthMetric.bestWeight,
-        period: Period.day,
-        start: null,
-        end: null,
-        limit: 20,
-      ),
-    };
+Future<List<GraphData>> getExerciseGraphData({
+  required String name,
+  required String target,
+  required Enum metric,
+  bool bodyWeight = false,
+  Period period = Period.day,
+  DateTime? start,
+  DateTime? end,
+  required int limit,
+}) => bodyWeight
+    ? getBodyWeightData(
+        target: target,
+        period: period,
+        start: start,
+        end: end,
+        limit: limit,
+      )
+    : switch (metric) {
+        CardioMetric value => getCardioData(
+          name: name,
+          target: target,
+          metric: value,
+          period: period,
+          start: start,
+          end: end,
+          limit: limit,
+        ),
+        StrengthMetric value => getStrengthData(
+          name: name,
+          target: target,
+          metric: value,
+          period: period,
+          start: start,
+          end: end,
+          limit: limit,
+        ),
+        _ => throw ArgumentError.value(metric, 'metric'),
+      };
+
+Future<List<GraphData>> getInitialGraphData(GraphExerciseSummary summary) {
+  final cardio = summary.cardio && !summary.bodyWeight;
+  return getExerciseGraphData(
+    name: summary.name,
+    target: summary.unit,
+    bodyWeight: summary.bodyWeight,
+    metric: cardio
+        ? (isWeightUnit(summary.unit) ? CardioMetric.weight : CardioMetric.pace)
+        : StrengthMetric.bestWeight,
+    limit: cardio ? 11 : 20,
+  );
+}

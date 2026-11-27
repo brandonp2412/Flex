@@ -1,5 +1,4 @@
 import 'package:flex/sets/history_list_state.dart';
-import 'package:flex/exercise_summary_tile.dart';
 
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
@@ -34,6 +33,10 @@ class _GroupHistoryState extends HistoryListState<GroupHistory> {
   ScrollController get scroll => widget.scroll;
   @override
   Function get onNext => widget.onNext;
+  @override
+  Set<int> get selected => widget.selected;
+  @override
+  void select(int id) => widget.onSelect(id);
 
   @override
   Widget build(BuildContext context) {
@@ -135,24 +138,11 @@ class _GroupHistoryState extends HistoryListState<GroupHistory> {
       shape: const Border.symmetric(),
       children: [
         for (final exerciseSet in exercise.exerciseSets)
-          Builder(builder: (context) => _setRow(context, exerciseSet)),
+          Builder(
+            builder: (context) =>
+                entryTile(context, exerciseSet, grouped: true),
+          ),
       ],
-    );
-  }
-
-  Widget _setRow(BuildContext context, ExerciseSetView exerciseSet) {
-    return ExerciseSummaryTile(
-      name: exerciseSet.name,
-      summary: setSummary(context, exerciseSet),
-      created: exerciseSet.created,
-      image: exerciseSet.image,
-      selected: widget.selected.contains(exerciseSet.id),
-      selectionActive: widget.selected.isNotEmpty,
-      onSelect: () => widget.onSelect(exerciseSet.id),
-      onOpen: () => editEntry(exerciseSet),
-      onSecondaryTapDown: (details) =>
-          showContextMenu(context, details, exerciseSet),
-      grouped: true,
     );
   }
 }

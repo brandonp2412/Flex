@@ -1,4 +1,3 @@
-import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/database/exercise_set_view.dart';
 import 'package:flex/plan/session_sets.dart';
 import 'package:flutter/material.dart';
@@ -27,20 +26,9 @@ void main() {
 
     final sets = ValueNotifier<List<ExerciseSetView>>([set(1, 100)]);
     addTearDown(sets.dispose);
-    final previous = PreviousExerciseDay(
-      day: day.subtract(const Duration(days: 1)),
-      sets: List.filled(
-        5,
-        const PreviousExerciseSet(
-          cardio: false,
-          unit: 'kg',
-          reps: 8,
-          weight: 95,
-          distance: 0,
-          duration: 0,
-          incline: null,
-        ),
-      ),
+    final previous = List.filled(
+      5,
+      set(2, 95).copyWith(created: day.subtract(const Duration(days: 1))),
     );
 
     await harness.pump(

@@ -543,7 +543,7 @@ class _StartPlanPageState extends State<StartPlanPage>
         .join(', ');
   }
 
-  void _fillPreviousSet(PreviousExerciseSet previous) {
+  void _fillPreviousSet(ExerciseSetView previous) {
     setState(() {
       _unit = previous.unit;
       _input.fill(previous);

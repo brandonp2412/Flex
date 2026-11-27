@@ -51,7 +51,6 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
   late bool timeAxis;
   late Enum metric;
   late List<GraphData> data;
-  int dataRequest = 0;
   late Period period;
   DateTime lastTap = DateTime(0);
   Timer? _refreshTimer;
@@ -119,14 +118,12 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
           ),
       ];
     }
-    return [
-      (StrengthMetric.bestWeight, l10n.bestWeight),
-      (StrengthMetric.bestReps, l10n.bestReps),
-      (StrengthMetric.oneRepMax, l10n.oneRepMax),
-      (StrengthMetric.volume, l10n.volume),
-      if (context.select<Setting, bool>((settings) => settings.showBodyWeight))
-        (StrengthMetric.relativeStrength, l10n.relativeStrength),
-    ];
+    return strengthMetricOptions(
+      context,
+      showBodyWeight: context.select<Setting, bool>(
+        (settings) => settings.showBodyWeight,
+      ),
+    );
   }
 
   @override
@@ -164,35 +161,18 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
   @override
   Future<void> setData() async {
     if (!mounted) return;
-    final request = ++dataRequest;
-    final rows = bodyWeight
-        ? await getBodyWeightData(
-            target: targetUnit,
-            period: period,
-            start: start,
-            end: end,
-            limit: limit,
-          )
-        : cardio
-        ? await getCardioData(
-            name: exerciseName,
-            target: targetUnit,
-            metric: metric as CardioMetric,
-            period: period,
-            start: start,
-            end: end,
-            limit: limit,
-          )
-        : await getStrengthData(
-            name: exerciseName,
-            target: targetUnit,
-            metric: metric as StrengthMetric,
-            period: period,
-            start: start,
-            end: end,
-            limit: limit,
-          );
-    if (mounted && request == dataRequest) setState(() => data = rows);
+    final request = beginDataRequest();
+    final rows = await getExerciseGraphData(
+      name: exerciseName,
+      target: targetUnit,
+      bodyWeight: bodyWeight,
+      metric: metric,
+      period: period,
+      start: start,
+      end: end,
+      limit: limit,
+    );
+    if (isCurrentDataRequest(request)) setState(() => data = rows);
   }
 
   Future<void> editGraph() async {
@@ -456,6 +436,10 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
         ),
       ),
     );
+    refreshAfterNavigation(desktop);
+  }
+
+  void refreshAfterNavigation(bool desktop) {
     if (!mounted) return;
     _refreshTimer?.cancel();
     if (desktop) {
@@ -496,11 +480,6 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
         builder: (context) => EditSetPage(exerciseSet: exerciseSet),
       ),
     );
-    _refreshTimer?.cancel();
-    if (desktop) {
-      setData();
-    } else {
-      _refreshTimer = Timer(kThemeAnimationDuration, setData);
-    }
+    refreshAfterNavigation(desktop);
   }
 }

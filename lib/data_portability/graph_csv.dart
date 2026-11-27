@@ -1,3 +1,4 @@
+import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/database/categories.dart';
 import 'package:csv/csv.dart';
 import 'package:drift/drift.dart';
@@ -152,11 +153,7 @@ Future<GraphCsvImportResult> _importV2(
   var setCount = 0;
   var bodyWeightCount = 0;
 
-  await database.transaction(() async {
-    await database.exerciseSets.deleteAll();
-    await database.workouts.deleteAll();
-    await database.bodyWeights.deleteAll();
-
+  await _replaceHistory(database, () async {
     for (final row in records.where(
       (row) => row.string('recordType') == 'exercise',
     )) {
@@ -166,10 +163,11 @@ Future<GraphCsvImportResult> _importV2(
         database,
         row.nullableString('category'),
       );
-      final existing =
-          await (database.exercises.select()
-                ..where((exercise) => exercise.name.equals(name)))
-              .getSingleOrNull();
+      final existing = await getExerciseByName(
+        database,
+        name,
+        includeArchived: true,
+      );
 
       final companion = ExercisesCompanion(
         name: Value(name),
@@ -312,11 +310,7 @@ Future<GraphCsvImportResult> _importLegacy(
   var setCount = 0;
   var bodyWeightCount = 0;
 
-  await database.transaction(() async {
-    await database.exerciseSets.deleteAll();
-    await database.workouts.deleteAll();
-    await database.bodyWeights.deleteAll();
-
+  await _replaceHistory(database, () async {
     for (final weight in legacyWeights) {
       final kg = loadKg(weight.unit, weight.value);
       if (kg == null) continue;
@@ -331,10 +325,11 @@ Future<GraphCsvImportResult> _importLegacy(
       final name = row.string('name', required: true);
       if (exerciseIds.containsKey(name)) continue;
 
-      final existing =
-          await (database.exercises.select()
-                ..where((exercise) => exercise.name.equals(name)))
-              .getSingleOrNull();
+      final existing = await getExerciseByName(
+        database,
+        name,
+        includeArchived: true,
+      );
       final kind = row.boolean('cardio') ? 'cardio' : 'strength';
       final unit = row.string('unit', fallback: kind == 'cardio' ? 'km' : 'kg');
 
@@ -409,3 +404,13 @@ String? _legacyBodyWeightUnit(
   }
   return result ?? fallback;
 }
+
+Future<void> _replaceHistory(
+  AppDatabase database,
+  Future<void> Function() restore,
+) => database.transaction(() async {
+  await database.exerciseSets.deleteAll();
+  await database.workouts.deleteAll();
+  await database.bodyWeights.deleteAll();
+  await restore();
+});

@@ -1,3 +1,5 @@
+import 'package:flex/constants.dart';
+import 'package:flex/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 class GraphMetricChips<T> extends StatelessWidget {
@@ -87,3 +89,15 @@ class GraphMetricChips<T> extends StatelessWidget {
     );
   }
 }
+
+List<(StrengthMetric, String)> strengthMetricOptions(
+  BuildContext context, {
+  required bool showBodyWeight,
+}) => [
+  (StrengthMetric.bestWeight, context.l10n.bestWeight),
+  (StrengthMetric.bestReps, context.l10n.bestReps),
+  (StrengthMetric.oneRepMax, context.l10n.oneRepMax),
+  (StrengthMetric.volume, context.l10n.volume),
+  if (showBodyWeight)
+    (StrengthMetric.relativeStrength, context.l10n.relativeStrength),
+];

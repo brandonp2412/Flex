@@ -6,9 +6,6 @@ import 'package:flex/measurement_units.dart';
 
 export 'package:flex/measurement_units.dart';
 
-export 'package:flex/database/previous_exercise_set.dart';
-export 'package:flex/database/previous_exercise_day.dart';
-
 /// Converts a stored distance in metres to the exercise display unit.
 double displayDistance(String unit, double? distanceMetres) {
   if (distanceMetres == null) return 0;

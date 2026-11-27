@@ -2,13 +2,19 @@ import 'package:flex/database/categories.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/database/database.dart';
 
-Future<Exercise?> getExerciseByName(AppDatabase database, String name) {
-  return (database.exercises.select()..where(
-        (exercise) =>
-            exercise.name.equals(name) & exercise.archived.equals(false),
-      ))
-      .getSingleOrNull();
-}
+Future<Exercise?> getExerciseByName(
+  AppDatabase database,
+  String name, {
+  bool includeArchived = false,
+}) =>
+    (database.exercises.select()..where(
+          (exercise) =>
+              exercise.name.equals(name) &
+              (includeArchived
+                  ? const Constant(true)
+                  : exercise.archived.equals(false)),
+        ))
+        .getSingleOrNull();
 
 SimpleSelectStatement<$ExercisesTable, Exercise> _activeExercises(
   AppDatabase database,
@@ -195,10 +201,11 @@ Future<void> updateExerciseDefinition(
 }) async {
   final trimmedName = name.trim();
   final categoryId = await ensureCategoryId(database, category);
-  final target =
-      await (database.exercises.select()
-            ..where((row) => row.name.equals(trimmedName)))
-          .getSingleOrNull();
+  final target = await getExerciseByName(
+    database,
+    trimmedName,
+    includeArchived: true,
+  );
 
   final definition = ExercisesCompanion(
     name: Value(trimmedName),
@@ -264,10 +271,11 @@ Future<void> mergeExerciseGraphs(
       throw StateError('These exercises have incompatible types or units.');
     }
 
-    final collision =
-        await (database.exercises.select()
-              ..where((row) => row.name.equals(trimmedName)))
-            .getSingleOrNull();
+    final collision = await getExerciseByName(
+      database,
+      trimmedName,
+      includeArchived: true,
+    );
     if (collision != null && !exerciseIds.contains(collision.id)) {
       throw StateError('That name is already used by another exercise.');
     }

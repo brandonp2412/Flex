@@ -1,3 +1,4 @@
+import 'package:flex/graph/graph_metric_chips.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/exercise_analytics.dart';
@@ -63,7 +64,8 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
   }
 
   @override
-  void setData() async {
+  Future<void> setData() async {
+    final request = beginDataRequest();
     final newData = await getGlobalData(
       target: targetUnit,
       metric: metric,
@@ -73,7 +75,7 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
       limit: limit,
     );
     final newCategories = await getCategories();
-    if (!mounted) return;
+    if (!isCurrentDataRequest(request)) return;
     setState(() {
       data = newData;
       categories = newCategories;
@@ -138,14 +140,10 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
 
     final desktop = isDesktopLayout(context);
     final theme = Theme.of(context);
-    final metricOptions = <(StrengthMetric, String)>[
-      (StrengthMetric.bestWeight, context.l10n.bestWeight),
-      (StrengthMetric.bestReps, context.l10n.bestReps),
-      (StrengthMetric.oneRepMax, context.l10n.oneRepMax),
-      (StrengthMetric.volume, context.l10n.volume),
-      if (settings.showBodyWeight)
-        (StrengthMetric.relativeStrength, context.l10n.relativeStrength),
-    ];
+    final metricOptions = strengthMetricOptions(
+      context,
+      showBodyWeight: settings.showBodyWeight,
+    );
     final metricValue = metricOptions.any((option) => option.$1 == metric)
         ? metric
         : null;

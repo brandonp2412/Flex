@@ -190,7 +190,6 @@ class FlexLineChart extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final primary = lineColor ?? colorScheme.primary;
     final secondary = colorScheme.secondary;
-    final yBounds = calculateFlexChartYAxis(points);
     final labels = <LineChartAxisLabel>[];
 
     if (hideBottom != true) {
@@ -211,7 +210,8 @@ class FlexLineChart extends StatelessWidget {
     }
 
     return FlexLineChartInteraction(
-      renderer: FlexLineChartRenderer(
+      renderer: FlexLineChartRenderer.fromSettings(
+        settings: settings,
         series: [FlexLineChartSeries(points: points, color: primary)],
         trendSeries: showTrendLine == true
             ? FlexLineChartSeries(
@@ -219,13 +219,6 @@ class FlexLineChart extends StatelessWidget {
                 color: secondary,
               )
             : null,
-        minY: yBounds.$1,
-        maxY: yBounds.$2,
-        yStep: yBounds.$3,
-        curveLines: settings.curveLines,
-        curveSmoothness: settings.curveSmoothness ?? 0.35,
-        showGridlines: settings.showChartGridlines,
-        fillChartArea: settings.fillChartArea,
         showLeftLabels: hideLeft != true,
         bottomLabels: hideBottom != true,
         xLabels: labels,

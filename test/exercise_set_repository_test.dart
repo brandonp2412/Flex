@@ -452,11 +452,27 @@ void main() {
     ).map((data) => data.previous).first;
 
     expect(previous.keys.toSet(), {benchId, squatId});
-    expect(previous[benchId]!.day, DateTime(2026, 10, 7));
-    expect(previous[benchId]!.sets.map((set) => set.reps), [8, 6]);
-    expect(previous[benchId]!.sets.map((set) => set.weight), [90, 95]);
-    expect(previous[squatId]!.day, DateTime(2026, 10, 8));
-    expect(previous[squatId]!.sets, hasLength(1));
+    expect(
+      previous[benchId]!
+          .map(
+            (set) =>
+                DateTime(set.created.year, set.created.month, set.created.day),
+          )
+          .toSet(),
+      {DateTime(2026, 10, 7)},
+    );
+    expect(previous[benchId]!.map((set) => set.reps), [8, 6]);
+    expect(previous[benchId]!.map((set) => set.weight), [90, 95]);
+    expect(
+      previous[squatId]!
+          .map(
+            (set) =>
+                DateTime(set.created.year, set.created.month, set.created.day),
+          )
+          .toSet(),
+      {DateTime(2026, 10, 8)},
+    );
+    expect(previous[squatId]!, hasLength(1));
   });
 
   test('previous exercise days ignores sets from today', () async {
@@ -515,18 +531,15 @@ void main() {
     );
     addTearDown(iterator.cancel);
     expect(await iterator.moveNext(), isTrue);
-    expect(iterator.current[exerciseId]!.sets.single.unit, 'kg');
+    expect(iterator.current[exerciseId]!.single.unit, 'kg');
 
     await (database.exercises.update()
           ..where((exercise) => exercise.id.equals(exerciseId)))
         .write(const ExercisesCompanion(displayUnit: Value('lb')));
 
     expect(await iterator.moveNext(), isTrue);
-    expect(iterator.current[exerciseId]!.sets.single.unit, 'lb');
-    expect(
-      iterator.current[exerciseId]!.sets.single.weight,
-      closeTo(198.42, 0.01),
-    );
+    expect(iterator.current[exerciseId]!.single.unit, 'lb');
+    expect(iterator.current[exerciseId]!.single.weight, closeTo(198.42, 0.01));
   });
 
   test('selection ID query matches full history filters', () async {

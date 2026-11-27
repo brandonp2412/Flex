@@ -1,11 +1,10 @@
-import 'package:flex/database/set_performance.dart';
 import 'package:drift/drift.dart';
 
 /// UI/domain projection of an exercise set joined with exercise metadata.
 ///
 /// This intentionally is not a Drift table. Persistent set data lives in
 /// exercise_sets, while exercise identity/configuration lives in exercises.
-class ExerciseSetView implements SetPerformance {
+class ExerciseSetView {
   const ExerciseSetView({
     required this.bodyWeight,
     required this.cardio,
@@ -29,22 +28,17 @@ class ExerciseSetView implements SetPerformance {
   final bool cardio;
   final String? category;
   final DateTime created;
-  @override
   final double distance;
-  @override
   final double duration;
   final int id;
   final String? image;
-  @override
   final int? incline;
   final String name;
   final String? notes;
   final int? planId;
-  @override
   final double reps;
   final int? restMs;
   final String unit;
-  @override
   final double weight;
 
   ExerciseSetView copyWith({

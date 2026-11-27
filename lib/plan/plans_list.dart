@@ -74,9 +74,6 @@ class _PlansListState extends State<PlansList> {
 
   Widget _buildList(BuildContext context, List<PlanCount> planCounts) {
     final countsByPlan = {for (final count in planCounts) count.planId: count};
-    final exercisesByPlan = widget.exercises == null
-        ? null
-        : groupEnabledPlanExercisesByPlan(widget.exercises!);
     final searchLabel = widget.search.trim();
     final noneFound = Padding(
       padding: const EdgeInsets.only(top: appSearchHeight),
@@ -112,41 +109,40 @@ class _PlansListState extends State<PlansList> {
     }
 
     final weekday = weekdays[DateTime.now().weekday - 1];
-
     final filteredPlans = widget.plans!.toList();
+    if (filteredPlans.isEmpty) return noneFound;
+    final exercisesByPlan = groupEnabledPlanExercisesByPlan(widget.exercises!);
+    final reorder =
+        context.read<Setting>().planTrailing == PlanTrailing.reorder.toString();
+    final padding = EdgeInsets.only(
+      bottom: isDesktopLayout(context) ? 32 : fabListPadding,
+      top: appSearchHeight + 8,
+    );
 
-    if (widget.plans!.isEmpty || filteredPlans.isEmpty) return noneFound;
+    Widget item(BuildContext context, int index) {
+      final plan = filteredPlans[index];
+      return ResponsiveContent(
+        key: reorder ? Key(plan.id.toString()) : null,
+        child: PlanTile(
+          plan: plan,
+          exercises: exercisesByPlan[plan.id] ?? const <PlanExerciseEntry>[],
+          weekday: weekday,
+          index: index,
+          navigatorKey: widget.navKey,
+          selected: widget.selected,
+          count: countsByPlan[plan.id],
+          onSelect: widget.onSelect,
+        ),
+      );
+    }
 
-    final settings = context.read<Setting>();
-
-    if (settings.planTrailing == PlanTrailing.reorder.toString())
+    if (reorder)
       return ReorderableListView.builder(
         scrollController: widget.scroll,
         buildDefaultDragHandles: !isDesktopLayout(context),
         itemCount: filteredPlans.length,
-        padding: EdgeInsets.only(
-          bottom: isDesktopLayout(context) ? 32 : fabListPadding,
-          top: appSearchHeight + 8,
-        ),
-        itemBuilder: (context, index) {
-          final plan = filteredPlans[index];
-
-          return ResponsiveContent(
-            key: Key(plan.id.toString()),
-            child: PlanTile(
-              plan: plan,
-              exercises: exercisesByPlan == null
-                  ? null
-                  : exercisesByPlan[plan.id] ?? const <PlanExerciseEntry>[],
-              weekday: weekday,
-              index: index,
-              navigatorKey: widget.navKey,
-              selected: widget.selected,
-              count: countsByPlan[plan.id],
-              onSelect: (id) => widget.onSelect(id),
-            ),
-          );
-        },
+        padding: padding,
+        itemBuilder: item,
         onReorderItem: (int old, int idx) async {
           final temp = filteredPlans[old];
           filteredPlans.removeAt(old);
@@ -167,28 +163,8 @@ class _PlansListState extends State<PlansList> {
     return ListView.builder(
       controller: widget.scroll,
       itemCount: filteredPlans.length,
-      padding: EdgeInsets.only(
-        bottom: isDesktopLayout(context) ? 32 : fabListPadding,
-        top: appSearchHeight + 8,
-      ),
-      itemBuilder: (context, index) {
-        final plan = filteredPlans[index];
-
-        return ResponsiveContent(
-          child: PlanTile(
-            plan: plan,
-            exercises: exercisesByPlan == null
-                ? null
-                : exercisesByPlan[plan.id] ?? const <PlanExerciseEntry>[],
-            weekday: weekday,
-            index: index,
-            navigatorKey: widget.navKey,
-            selected: widget.selected,
-            count: countsByPlan[plan.id],
-            onSelect: (id) => widget.onSelect(id),
-          ),
-        );
-      },
+      padding: padding,
+      itemBuilder: item,
     );
   }
 }

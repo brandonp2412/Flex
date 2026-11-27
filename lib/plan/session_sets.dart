@@ -1,6 +1,5 @@
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/plan/set_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -12,8 +11,8 @@ class SessionSets extends StatefulWidget {
   final List<ExerciseSetView> sets;
   final int workoutId;
   final bool compact;
-  final PreviousExerciseDay? previous;
-  final ValueChanged<PreviousExerciseSet>? onPreviousSetTap;
+  final List<ExerciseSetView>? previous;
+  final ValueChanged<ExerciseSetView>? onPreviousSetTap;
 
   const SessionSets({
     super.key,
@@ -88,7 +87,7 @@ class _SessionSetsState extends State<SessionSets> {
 
     if (sets.isEmpty) {
       final previous = widget.previous;
-      if (previous == null || previous.sets.isEmpty) {
+      if (previous == null || previous.isEmpty) {
         return const SizedBox.shrink();
       }
       return _buildPreviousChips(previous);
@@ -138,95 +137,55 @@ class _SessionSetsState extends State<SessionSets> {
     );
   }
 
-  Widget _buildPreviousChips(PreviousExerciseDay previous) {
+  Widget _buildPreviousChips(List<ExerciseSetView> previous) => _scrollingChips(
+    key: const Key('previous-set-scroll'),
+    children: _chips(const [], previous),
+  );
+
+  List<Widget> _chips(
+    List<ExerciseSetView> current,
+    List<ExerciseSetView> previous,
+  ) {
+    final best = _bestId(current);
+    final total = current.length > previous.length
+        ? current.length
+        : previous.length;
+    final focus = current.length >= previous.length
+        ? current.length - 1
+        : current.length;
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    return _scrollingChips(
-      key: const Key('previous-set-scroll'),
-      children: [
-        for (var i = 0; i < previous.sets.length; i++)
-          Padding(
-            padding: EdgeInsets.only(
-              right:
-                  widget.compact &&
-                      keyboardOpen &&
-                      i == previous.sets.length - 1
-                  ? 4
-                  : 8,
-            ),
-            child: SetChip(
-              previousSet: previous.sets[i],
-              onPreviousTap: widget.onPreviousSetTap,
-              number: i + 1,
-              best: false,
-              compact: widget.compact,
-            ),
+    return [
+      for (var i = 0; i < total; i++)
+        Padding(
+          key: current.isNotEmpty && i == focus ? _focusSetKey : null,
+          padding: EdgeInsets.only(
+            right: widget.compact && keyboardOpen && i == total - 1 ? 4 : 8,
           ),
-      ],
-    );
-  }
-
-  Widget _buildChips(List<ExerciseSetView> sets) {
-    final best = _bestId(sets);
-    final hasNextSet = sets.length < (widget.previous?.sets.length ?? 0);
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (!widget.compact) const SizedBox(height: 16.0),
-        _scrollingChips(
-          key: const Key('session-set-scroll'),
-          controller: _scrollController,
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          children: [
-            for (var i = 0; i < sets.length; i++)
-              Padding(
-                key: !hasNextSet && i == sets.length - 1 ? _focusSetKey : null,
-                padding: EdgeInsets.only(
-                  right:
-                      widget.compact &&
-                          keyboardOpen &&
-                          !hasNextSet &&
-                          i == sets.length - 1
-                      ? 4
-                      : 8,
-                ),
-                child: SetChip(
-                  exerciseSet: sets[i],
-                  number: i + 1,
-                  best: sets[i].id == best,
-                  compact: widget.compact,
-                ),
-              ),
-            for (
-              var i = sets.length;
-              i < (widget.previous?.sets.length ?? 0);
-              i++
-            )
-              Padding(
-                key: hasNextSet && i == sets.length ? _focusSetKey : null,
-                padding: EdgeInsets.only(
-                  right:
-                      widget.compact &&
-                          keyboardOpen &&
-                          i == widget.previous!.sets.length - 1
-                      ? 4
-                      : 8,
-                ),
-                child: SetChip(
-                  previousSet: widget.previous!.sets[i],
-                  onPreviousTap: widget.onPreviousSetTap,
-                  number: i + 1,
-                  best: false,
-                  compact: widget.compact,
-                ),
-              ),
-          ],
+          child: SetChip(
+            exerciseSet: i < current.length ? current[i] : previous[i],
+            previous: i >= current.length,
+            onPreviousTap: widget.onPreviousSetTap,
+            number: i + 1,
+            best: i < current.length && current[i].id == best,
+            compact: widget.compact,
+          ),
         ),
-      ],
-    );
+    ];
   }
+
+  Widget _buildChips(List<ExerciseSetView> sets) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (!widget.compact) const SizedBox(height: 16),
+      _scrollingChips(
+        key: const Key('session-set-scroll'),
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        children: _chips(sets, widget.previous ?? const []),
+      ),
+    ],
+  );
 
   /// Id of the top set this session, using the measurement shown to the user.
   int? _bestId(List<ExerciseSetView> sets) {

@@ -181,7 +181,7 @@ void main() {
     expect(prefill!.planId, planA);
     expect(prefill.weight, 40);
     expect(page.sets[exercise.id], isNull);
-    expect(page.previous[exercise.id]?.sets.map((set) => set.weight), [45, 90]);
+    expect(page.previous[exercise.id]?.map((set) => set.weight), [45, 90]);
     final saved = await addMirroredSet(
       exerciseId: exercise.id,
       exerciseName: exercise.name,

@@ -1,3 +1,4 @@
+import 'package:flex/database/database.dart';
 import 'dart:math';
 
 import 'package:drafter/drafter.dart';
@@ -41,6 +42,37 @@ class FlexLineChartRenderer extends ChartRenderer
     required this.axisLabelColor,
     this.trendSeries,
   });
+
+  factory FlexLineChartRenderer.fromSettings({
+    required Setting settings,
+    required List<FlexLineChartSeries> series,
+    FlexLineChartSeries? trendSeries,
+    required bool showLeftLabels,
+    required bool bottomLabels,
+    required List<LineChartAxisLabel> xLabels,
+    required int? uniformXCount,
+    required Color axisLabelColor,
+  }) {
+    final (minY, maxY, yStep) = calculateFlexChartYAxis([
+      for (final line in series) ...line.points,
+    ]);
+    return FlexLineChartRenderer(
+      series: series,
+      trendSeries: trendSeries,
+      minY: minY,
+      maxY: maxY,
+      yStep: yStep,
+      curveLines: settings.curveLines,
+      curveSmoothness: settings.curveSmoothness ?? 0.35,
+      showGridlines: settings.showChartGridlines,
+      fillChartArea: settings.fillChartArea,
+      showLeftLabels: showLeftLabels,
+      bottomLabels: bottomLabels,
+      xLabels: xLabels,
+      uniformXCount: uniformXCount,
+      axisLabelColor: axisLabelColor,
+    );
+  }
 
   ChartBounds _bounds(Size size) {
     final left = showLeftLabels ? 48.0 : 8.0;

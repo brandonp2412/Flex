@@ -1,7 +1,6 @@
 import 'package:flex/database/database.dart';
 import 'package:flex/graph/flex_line_chart.dart';
 import 'package:flex/graph/flex_line_chart_interaction.dart';
-import 'package:flex/graph/flex_line_chart_layout.dart';
 import 'package:flex/graph/flex_line_chart_renderer.dart';
 import 'package:flex/graph/flex_line_chart_series.dart';
 import 'package:flex/graph/line_chart_axis_label.dart';
@@ -28,20 +27,11 @@ class FlexGroupedLineChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<Setting>();
     final axisLabelColor = Theme.of(context).colorScheme.onSurface;
-    final points = [for (final line in series) ...line.points];
-
-    final yBounds = calculateFlexChartYAxis(points);
 
     return FlexLineChartInteraction(
-      renderer: FlexLineChartRenderer(
+      renderer: FlexLineChartRenderer.fromSettings(
+        settings: settings,
         series: series,
-        minY: yBounds.$1,
-        maxY: yBounds.$2,
-        yStep: yBounds.$3,
-        curveLines: settings.curveLines,
-        curveSmoothness: settings.curveSmoothness ?? 0.35,
-        showGridlines: settings.showChartGridlines,
-        fillChartArea: settings.fillChartArea,
         showLeftLabels: showLeftLabels,
         bottomLabels: bottomLabels,
         xLabels: [

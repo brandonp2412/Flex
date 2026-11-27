@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flex/database/exercise_set_view.dart';
-import 'package:flex/database/set_performance.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/sets/workout_number_field.dart';
 import 'package:flex/utils.dart';
@@ -38,7 +37,7 @@ class WorkoutInput {
     }
   }
 
-  void fill(SetPerformance set, {bool preserveZeroFields = false}) {
+  void fill(ExerciseSetView set, {bool preserveZeroFields = false}) {
     if (!preserveZeroFields || set.reps != 0) reps.text = toString(set.reps);
     weight.text = toString(set.weight);
     if (!preserveZeroFields || set.distance != 0)

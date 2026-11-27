@@ -19,7 +19,7 @@ class StartPlanData {
   final List<PlanExerciseEntry> exercises;
   final Map<int, ExerciseSetView> defaults;
   final Map<int, List<ExerciseSetView>> sets;
-  final Map<int, PreviousExerciseDay> previous;
+  final Map<int, List<ExerciseSetView>> previous;
   final Map<int, String?> categories;
 }
 
@@ -95,7 +95,7 @@ Stream<StartPlanData> watchStartPlanData(
     final entries = <int, PlanExerciseEntry>{};
     final defaults = <int, ExerciseSetView>{};
     final sets = <int, List<ExerciseSetView>>{};
-    final previous = <int, PreviousExerciseDay>{};
+    final previous = <int, List<ExerciseSetView>>{};
     final categories = <int, String?>{};
     for (final row in rows) {
       final exercise = row.readTableOrNull(database.exercises);
@@ -127,23 +127,7 @@ Stream<StartPlanData> watchStartPlanData(
           view.created.year == date.year &&
           view.created.month == date.month &&
           view.created.day == date.day) {
-        previous
-            .putIfAbsent(
-              exercise.id,
-              () => PreviousExerciseDay(day: date, sets: []),
-            )
-            .sets
-            .add(
-              PreviousExerciseSet(
-                cardio: view.cardio,
-                unit: view.unit,
-                reps: view.reps,
-                weight: view.weight,
-                distance: view.distance,
-                duration: view.duration,
-                incline: view.incline,
-              ),
-            );
+        previous.putIfAbsent(exercise.id, () => []).add(view);
       }
     }
     return StartPlanData(

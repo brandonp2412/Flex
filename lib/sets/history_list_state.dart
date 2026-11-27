@@ -1,3 +1,4 @@
+import 'package:flex/exercise_summary_tile.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/database/body_weight_repository.dart';
@@ -14,6 +15,8 @@ import 'package:flutter/material.dart';
 abstract class HistoryListState<T extends StatefulWidget> extends State<T> {
   ScrollController get scroll;
   Function get onNext;
+  Set<int> get selected;
+  void select(int id);
   bool get bodyWeight => false;
   Future<void> Function()? get onChanged => null;
   bool _goingNext = false;
@@ -87,15 +90,34 @@ abstract class HistoryListState<T extends StatefulWidget> extends State<T> {
     }
   }
 
-  String setSummary(BuildContext context, ExerciseSetView set) =>
-      formatSetSummary(
-        context,
-        unitCode: set.unit,
-        cardio: set.cardio,
-        weight: set.weight,
-        reps: set.reps,
-        distance: set.distance,
-        duration: set.duration,
-        incline: set.incline,
-      );
+  Widget entryTile(
+    BuildContext context,
+    ExerciseSetView set, {
+    bool grouped = false,
+    bool showTime = false,
+  }) => ExerciseSummaryTile(
+    name: set.name,
+    summary: formatSetSummary(
+      context,
+      unitCode: set.unit,
+      cardio: set.cardio,
+      weight: set.weight,
+      reps: set.reps,
+      distance: set.distance,
+      duration: set.duration,
+      incline: set.incline,
+    ),
+    created: set.created,
+    image: set.image,
+    selected: selected.contains(set.id),
+    selectionActive: selected.isNotEmpty,
+    onSelect: () => select(set.id),
+    onOpen: () => editEntry(set),
+    onSecondaryTapDown: (details) => showContextMenu(context, details, set),
+    showTime: showTime,
+    grouped: grouped,
+    desktopPadding: grouped
+        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 5)
+        : const EdgeInsets.all(4),
+  );
 }

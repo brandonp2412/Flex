@@ -1,11 +1,9 @@
 import 'package:flex/sets/history_list_state.dart';
-import 'package:flex/exercise_summary_tile.dart';
 
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/utils.dart';
-import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -41,26 +39,14 @@ class _HistoryListState extends HistoryListState<HistoryList> {
   @override
   Function get onNext => widget.onNext;
   @override
+  Set<int> get selected => widget.selected;
+  @override
+  void select(int id) => widget.onSelect(id);
+  @override
   bool get bodyWeight => widget.bodyWeight;
   @override
   Future<void> Function()? get onChanged => widget.onChanged;
-  List<ExerciseSetView> _current = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _current = List.from(widget.sets);
-  }
-
-  @override
-  void didUpdateWidget(HistoryList oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!listEquals(oldWidget.sets, widget.sets)) {
-      setState(() {
-        _current = List.from(widget.sets);
-      });
-    }
-  }
+  List<ExerciseSetView> get _current => widget.sets;
 
   Widget _buildListItem(
     ExerciseSetView exerciseSet,
@@ -103,20 +89,7 @@ class _HistoryListState extends HistoryListState<HistoryList> {
           ),
         Builder(
           builder: (context) {
-            final tile = ExerciseSummaryTile(
-              name: exerciseSet.name,
-              summary: setSummary(context, exerciseSet),
-              created: exerciseSet.created,
-              image: exerciseSet.image,
-              selected: widget.selected.contains(exerciseSet.id),
-              selectionActive: widget.selected.isNotEmpty,
-              onSelect: () => widget.onSelect(exerciseSet.id),
-              onOpen: () => editEntry(exerciseSet),
-              onSecondaryTapDown: (details) =>
-                  showContextMenu(context, details, exerciseSet),
-              showTime: showTime,
-              desktopPadding: const EdgeInsets.all(4),
-            );
+            final tile = entryTile(context, exerciseSet, showTime: showTime);
             return isDesktopLayout(context)
                 ? ResponsiveContent(maxWidth: dataMaxWidth, child: tile)
                 : tile;
