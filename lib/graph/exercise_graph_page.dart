@@ -393,7 +393,7 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
   }
 
   Future<void> editNotes() async {
-    await Navigator.of(context, rootNavigator: true).push(
+    await Navigator.of(context, rootNavigator: !isDesktopLayout(context)).push(
       FlexPageRoute(
         builder: (context) =>
             GraphNotesPage(controller: notesCtrl, onChanged: _onNotesChanged),

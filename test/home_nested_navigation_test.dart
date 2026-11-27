@@ -1,3 +1,9 @@
+import 'package:flex/graph/exercise_editor_page.dart';
+import 'package:flex/graph/graph_notes_page.dart';
+import 'package:flex/graph/global_progress_page.dart';
+import 'package:flex/graph/graphs_page.dart';
+import 'package:flutter/gestures.dart';
+import '../integration_test/support/fixtures.dart';
 import 'package:flex/settings/settings_category_page.dart';
 import 'package:drift/drift.dart' hide Column, isNull;
 import 'package:flex/bottom_nav.dart';
@@ -10,6 +16,100 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/test_app.dart';
 
 void main() {
+  testWidgets('desktop graph actions stay inside the Graphs tab', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1200, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final harness = await FlexTestHarness.create();
+    await harness.database.settings.update().write(
+      const SettingsCompanion(
+        tabs: Value('GraphsPage,PlansPage'),
+        showGlobalProgress: Value(true),
+        showNotes: Value(true),
+        peekGraph: Value(false),
+      ),
+    );
+    await insertExerciseSetFixture(
+      harness.database,
+      'Bench press',
+      reps: 8,
+      weight: 60,
+      created: DateTime(2026, 11, 1),
+    );
+    await harness.pump(
+      tester,
+      const HomePage(),
+      surfaceSize: const Size(1200, 800),
+    );
+    await tester.pumpAndSettle();
+    final graphs = tester.state<GraphsPageState>(find.byType(GraphsPage));
+    final navigator = graphs.navKey.currentState!;
+    final root = Navigator.of(graphs.context);
+
+    void expectInTab(Finder page) {
+      expect(page, findsOneWidget);
+      expect(Navigator.of(tester.element(page)), same(navigator));
+      expect(root.canPop(), isFalse);
+      expect(find.byType(DesktopNav), findsOneWidget);
+    }
+
+    await tester.tapAt(
+      tester.getCenter(find.text('Bench press')),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    expectInTab(find.byType(ExerciseEditorPage));
+    navigator.pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('desktop-select-all')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('desktop-edit')));
+    await tester.pumpAndSettle();
+    expectInTab(find.byType(ExerciseEditorPage));
+    navigator.pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('desktop-clear-selection')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Global progress'));
+    await tester.pumpAndSettle();
+    expectInTab(find.byType(GlobalProgressPage));
+    navigator.pop();
+    await tester.pumpAndSettle();
+
+    await tester.tapAt(
+      tester.getCenter(find.text('Global progress')),
+      buttons: kSecondaryMouseButton,
+    );
+    await tester.pumpAndSettle();
+    expect(root.canPop(), isFalse);
+    expect(navigator.canPop(), isTrue);
+    navigator.pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Bench press'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) => widget is TextField && widget.readOnly,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expectInTab(find.byType(GraphNotesPage));
+    navigator.pop();
+    await tester.pumpAndSettle();
+    navigator.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('Search graphs...'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('desktop graphs settings can return after appearance', (
     tester,
   ) async {

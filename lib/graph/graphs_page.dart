@@ -175,7 +175,7 @@ class GraphsPageState extends State<GraphsPage>
 
   Future<void> _editGraphSummary(GraphExerciseSummary summary) async {
     if (summary.bodyWeight || !mounted) return;
-    await Navigator.of(context).push(
+    await navKey.currentState!.push(
       FlexPageRoute(
         builder: (context) => ExerciseEditorPage.edit(name: summary.name),
       ),
@@ -198,7 +198,10 @@ class GraphsPageState extends State<GraphsPage>
     if (mounted) setState(() => _selection.remove(summary.selectionKey));
   }
 
-  Future<void> _hideGlobalProgressAt(Offset position) async {
+  Future<void> _hideGlobalProgressAt(
+    BuildContext context,
+    Offset position,
+  ) async {
     final hide = await showDesktopContextMenu<bool>(context, position, [
       PopupMenuItem(
         value: true,
@@ -337,7 +340,7 @@ class GraphsPageState extends State<GraphsPage>
                             ),
                           ),
                         )
-                      : graphList(exerciseSets, showProgress);
+                      : graphList(context, exerciseSets, showProgress);
                 },
               ),
               search: AppSearch(
@@ -452,7 +455,11 @@ class GraphsPageState extends State<GraphsPage>
     );
   }
 
-  Widget graphList(List<GraphExerciseSummary> exerciseSets, bool showGlobal) {
+  Widget graphList(
+    BuildContext context,
+    List<GraphExerciseSummary> exerciseSets,
+    bool showGlobal,
+  ) {
     final desktop = isDesktopLayout(context);
     final preview = exerciseSets
         .where((summary) => summary.hasData)
@@ -482,7 +489,8 @@ class GraphsPageState extends State<GraphsPage>
       controller: _scroll,
       slivers: [
         const SliverToBoxAdapter(child: SizedBox(height: appSearchHeight + 8)),
-        if (showGlobal) SliverToBoxAdapter(child: _globalProgressTile(desktop)),
+        if (showGlobal)
+          SliverToBoxAdapter(child: _globalProgressTile(context, desktop)),
         if (showPeek)
           SliverToBoxAdapter(
             child: Consumer<Setting>(
@@ -516,7 +524,7 @@ class GraphsPageState extends State<GraphsPage>
     );
   }
 
-  Widget _globalProgressTile(bool desktop) {
+  Widget _globalProgressTile(BuildContext context, bool desktop) {
     final tile = Material(
       color: desktop
           ? Theme.of(context).colorScheme.surfaceContainerLow
@@ -553,7 +561,7 @@ class GraphsPageState extends State<GraphsPage>
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onSecondaryTapDown: (details) =>
-                  _hideGlobalProgressAt(details.globalPosition),
+                  _hideGlobalProgressAt(context, details.globalPosition),
               child: tile,
             ),
           )
