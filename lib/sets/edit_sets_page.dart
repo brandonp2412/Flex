@@ -4,14 +4,12 @@ import 'package:flex/sets/workout_unit_field.dart';
 import 'package:flex/sets/workout_number_field.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/app_confirmation.dart';
-import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/categories.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/editor_content.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/unsaved_changes.dart';
@@ -58,12 +56,10 @@ class _EditSetsPageState extends State<EditSetsPage>
 
   @override
   Widget build(BuildContext context) {
-    final desktop = isDesktopLayout(context);
     final l10n = context.l10n;
     return guardUnsavedChanges(
-      child: Scaffold(
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: true,
+      child: editorScaffold(
+        context,
         appBar: AppBar(
           title: Text(l10n.editSets(widget.ids.length)),
           actions: [
@@ -87,217 +83,203 @@ class _EditSetsPageState extends State<EditSetsPage>
             ),
           ],
         ),
-        body: EditorContent(
-          child: Form(
-            key: _key,
-            child: ListView(
-              padding: editorListPadding(context, hasFab: !desktop),
-              children: [
-                TextField(
-                  controller: _name,
-                  decoration: InputDecoration(
-                    labelText: l10n.nameLabel,
-                    hintText: _oldNames,
+        onSave: save,
+        body: editorFields(
+          context,
+          onSave: save,
+          formKey: _key,
+          children: [
+            TextField(
+              controller: _name,
+              decoration: InputDecoration(
+                labelText: l10n.nameLabel,
+                hintText: _oldNames,
+              ),
+              textCapitalization: TextCapitalization.sentences,
+              onChanged: (_) => markDirty(),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<bool>(
+                key: const Key('exercise-kind-selector'),
+                showSelectedIcon: false,
+                emptySelectionAllowed: true,
+                segments: [
+                  ButtonSegment(
+                    value: false,
+                    icon: const Icon(Icons.fitness_center),
+                    label: Text(l10n.strength),
                   ),
-                  textCapitalization: TextCapitalization.sentences,
+                  ButtonSegment(
+                    value: true,
+                    icon: const Icon(Icons.directions_run),
+                    label: Text(l10n.cardio),
+                  ),
+                ],
+                selected: _cardio == null ? const {} : {_cardio!},
+                onSelectionChanged: (selection) {
+                  if (selection.isEmpty) {
+                    markDirty();
+                    setState(() => _cardio = null);
+                  } else {
+                    _setCardio(selection.first);
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (_cardio == true) ...[
+              if (isWeightUnit(_unit))
+                WorkoutNumberField(
+                  controller: _weight,
+                  decoration: InputDecoration(
+                    labelText: l10n.weightLabel,
+                    hintText: _oldWeights,
+                  ),
+                  onChanged: (_) => markDirty(),
+                )
+              else
+                WorkoutNumberField(
+                  controller: _distance,
+                  decoration: InputDecoration(
+                    labelText: l10n.distanceLabel,
+                    hintText: _oldDist,
+                  ),
+                  onChanged: (_) => markDirty(),
+                  validator: (value) {
+                    if (value == null) return null;
+                    if (parseDisplayNumber(context, value) == null)
+                      return l10n.invalidNumber;
+                    return null;
+                  },
+                ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: WorkoutNumberField(
+                      controller: _minutes,
+                      decoration: InputDecoration(
+                        labelText: l10n.minutesLabel,
+                        hintText: _oldMin,
+                      ),
+                      integer: true,
+                      onChanged: (_) => markDirty(),
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  Expanded(
+                    child: WorkoutNumberField(
+                      controller: _seconds,
+                      decoration: InputDecoration(
+                        labelText: l10n.secondsLabel,
+                        hintText: _oldSec,
+                      ),
+                      integer: true,
+                      onChanged: (_) => markDirty(),
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              WorkoutNumberField(
+                controller: _incline,
+                decoration: InputDecoration(
+                  labelText: l10n.inclinePercent,
+                  hintText: _oldInc,
+                ),
+                onChanged: (_) => markDirty(),
+                validator: (value) {
+                  if (value == null) return null;
+                  if (double.tryParse(value) == null) return l10n.invalidNumber;
+                  return null;
+                },
+              ),
+            ],
+            if (_cardio == false || _cardio == null) ...[
+              WorkoutNumberField(
+                controller: _reps,
+                decoration: InputDecoration(
+                  labelText: l10n.repsLabel,
+                  hintText: _oldReps,
+                ),
+                onChanged: (_) => markDirty(),
+              ),
+              const SizedBox(height: 12),
+              WorkoutNumberField(
+                controller: _weight,
+                decoration: InputDecoration(
+                  labelText: switch (_unit) {
+                    null => l10n.weightLabel,
+                    _ when isWeightUnit(_unit) => l10n.weightLabel,
+                    'kcal' => l10n.amountWithUnit(_unit!),
+                    _ => l10n.distanceWithUnit(_unit!),
+                  },
+                  hintText: _oldWeights,
+                ),
+                onChanged: (_) => markDirty(),
+              ),
+            ],
+            const SizedBox(height: 12),
+            Selector<Setting, bool>(
+              builder: (context, showBodyWeight, child) => Visibility(
+                visible: showBodyWeight,
+                child: WorkoutNumberField(
+                  controller: _body,
+                  decoration: InputDecoration(
+                    labelText: l10n.bodyWeightLabel,
+                    hintText: _oldBody,
+                  ),
                   onChanged: (_) => markDirty(),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<bool>(
-                    key: const Key('exercise-kind-selector'),
-                    showSelectedIcon: false,
-                    emptySelectionAllowed: true,
-                    segments: [
-                      ButtonSegment(
-                        value: false,
-                        icon: const Icon(Icons.fitness_center),
-                        label: Text(l10n.strength),
-                      ),
-                      ButtonSegment(
-                        value: true,
-                        icon: const Icon(Icons.directions_run),
-                        label: Text(l10n.cardio),
-                      ),
-                    ],
-                    selected: _cardio == null ? const {} : {_cardio!},
-                    onSelectionChanged: (selection) {
-                      if (selection.isEmpty) {
-                        markDirty();
-                        setState(() => _cardio = null);
-                      } else {
-                        _setCardio(selection.first);
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (_cardio == true) ...[
-                  if (isWeightUnit(_unit))
-                    WorkoutNumberField(
-                      controller: _weight,
-                      decoration: InputDecoration(
-                        labelText: l10n.weightLabel,
-                        hintText: _oldWeights,
-                      ),
-                      onChanged: (_) => markDirty(),
-                    )
-                  else
-                    WorkoutNumberField(
-                      controller: _distance,
-                      decoration: InputDecoration(
-                        labelText: l10n.distanceLabel,
-                        hintText: _oldDist,
-                      ),
-                      onChanged: (_) => markDirty(),
-                      validator: (value) {
-                        if (value == null) return null;
-                        if (parseDisplayNumber(context, value) == null)
-                          return l10n.invalidNumber;
-                        return null;
-                      },
-                    ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: WorkoutNumberField(
-                          controller: _minutes,
-                          decoration: InputDecoration(
-                            labelText: l10n.minutesLabel,
-                            hintText: _oldMin,
-                          ),
-                          integer: true,
-                          onChanged: (_) => markDirty(),
-                          textInputAction: TextInputAction.next,
-                        ),
-                      ),
-                      const SizedBox(width: 8.0),
-                      Expanded(
-                        child: WorkoutNumberField(
-                          controller: _seconds,
-                          decoration: InputDecoration(
-                            labelText: l10n.secondsLabel,
-                            hintText: _oldSec,
-                          ),
-                          integer: true,
-                          onChanged: (_) => markDirty(),
-                          textInputAction: TextInputAction.next,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  WorkoutNumberField(
-                    controller: _incline,
-                    decoration: InputDecoration(
-                      labelText: l10n.inclinePercent,
-                      hintText: _oldInc,
-                    ),
-                    onChanged: (_) => markDirty(),
-                    validator: (value) {
-                      if (value == null) return null;
-                      if (double.tryParse(value) == null)
-                        return l10n.invalidNumber;
-                      return null;
-                    },
-                  ),
-                ],
-                if (_cardio == false || _cardio == null) ...[
-                  WorkoutNumberField(
-                    controller: _reps,
-                    decoration: InputDecoration(
-                      labelText: l10n.repsLabel,
-                      hintText: _oldReps,
-                    ),
-                    onChanged: (_) => markDirty(),
-                  ),
-                  const SizedBox(height: 12),
-                  WorkoutNumberField(
-                    controller: _weight,
-                    decoration: InputDecoration(
-                      labelText: switch (_unit) {
-                        null => l10n.weightLabel,
-                        _ when isWeightUnit(_unit) => l10n.weightLabel,
-                        'kcal' => l10n.amountWithUnit(_unit!),
-                        _ => l10n.distanceWithUnit(_unit!),
-                      },
-                      hintText: _oldWeights,
-                    ),
-                    onChanged: (_) => markDirty(),
-                  ),
-                ],
-                const SizedBox(height: 12),
-                Selector<Setting, bool>(
-                  builder: (context, showBodyWeight, child) => Visibility(
-                    visible: showBodyWeight,
-                    child: WorkoutNumberField(
-                      controller: _body,
-                      decoration: InputDecoration(
-                        labelText: l10n.bodyWeightLabel,
-                        hintText: _oldBody,
-                      ),
-                      onChanged: (_) => markDirty(),
-                    ),
-                  ),
-                  selector: (context, settings) => settings.showBodyWeight,
-                ),
-                const SizedBox(height: 12),
-                WorkoutUnitField(
-                  unit: _unit,
-                  onChanged: (value) {
-                    markDirty();
-                    setState(() => _unit = value);
-                  },
-                ),
-                const SizedBox(height: 12),
-                WorkoutCategoryField(
-                  initial: _category,
-                  hint: _oldCat,
-                  keepHidden: true,
-                  onChanged: (value) {
-                    markDirty();
-                    setState(() => _category = value);
-                  },
-                ),
-                Selector<Setting, String>(
-                  builder: (context, longDateFormat, child) {
-                    var subtitle = _oldCreated ?? "";
-
-                    if (longDateFormat == 'timeago' && _created != null)
-                      subtitle = formatRelativeTime(context, _created!);
-                    else if (longDateFormat != 'timeago' && _created != null)
-                      subtitle = formatDisplayDate(
-                        context,
-                        _created!,
-                        longDateFormat,
-                      );
-
-                    return ListTile(
-                      title: Text(l10n.createdDate),
-                      subtitle: Text(subtitle),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () => _selectDate(),
-                    );
-                  },
-                  selector: (context, settings) => settings.longDateFormat,
-                ),
-                if (desktop) ...[
-                  const SizedBox(height: 24),
-                  DesktopEditorSaveButton(onPressed: save),
-                ],
-              ],
-            ),
-          ),
-        ),
-        floatingActionButton: desktop
-            ? null
-            : AppFab(
-                onPressed: save,
-                label: Text(l10n.actionSave),
-                icon: const Icon(Icons.save),
               ),
+              selector: (context, settings) => settings.showBodyWeight,
+            ),
+            const SizedBox(height: 12),
+            WorkoutUnitField(
+              unit: _unit,
+              onChanged: (value) {
+                markDirty();
+                setState(() => _unit = value);
+              },
+            ),
+            const SizedBox(height: 12),
+            WorkoutCategoryField(
+              initial: _category,
+              hint: _oldCat,
+              keepHidden: true,
+              onChanged: (value) {
+                markDirty();
+                setState(() => _category = value);
+              },
+            ),
+            Selector<Setting, String>(
+              builder: (context, longDateFormat, child) {
+                var subtitle = _oldCreated ?? "";
+
+                if (longDateFormat == 'timeago' && _created != null)
+                  subtitle = formatRelativeTime(context, _created!);
+                else if (longDateFormat != 'timeago' && _created != null)
+                  subtitle = formatDisplayDate(
+                    context,
+                    _created!,
+                    longDateFormat,
+                  );
+
+                return ListTile(
+                  title: Text(l10n.createdDate),
+                  subtitle: Text(subtitle),
+                  trailing: const Icon(Icons.calendar_today),
+                  onTap: () => _selectDate(),
+                );
+              },
+              selector: (context, settings) => settings.longDateFormat,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,10 +1,8 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/editor_content.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
@@ -44,99 +42,80 @@ class _AddExercisePageState extends State<AddExercisePage>
 
   @override
   Widget build(BuildContext context) {
-    final desktop = isDesktopLayout(context);
     settings = context.watch<Setting>();
 
     return guardUnsavedChanges(
-      child: Scaffold(
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: true,
+      child: editorScaffold(
+        context,
         appBar: AppBar(title: Text(context.l10n.addExercise)),
-        body: EditorContent(
-          child: Form(
-            key: _key,
-            child: ListView(
-              padding: editorListPadding(context, hasFab: !desktop),
-              children: [
-                TextFormField(
-                  controller: _nameCtrl,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.nameLabel,
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                  autofocus: true,
-                  onChanged: (_) {
-                    markDirty();
-                    if (_duplicateName != null) {
-                      _duplicateName = null;
-                      _key.currentState!.validate();
-                    }
-                  },
-                  validator: (value) {
-                    if (value?.trim().isNotEmpty != true) {
-                      return context.l10n.requiredField;
-                    }
-                    if (value!.trim().toLowerCase() == _duplicateName) {
-                      return context.l10n.exerciseAlreadyExists;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  key: ValueKey(_unit),
-                  decoration: InputDecoration(
-                    labelText: context.l10n.unitLabel,
-                  ),
-                  initialValue: _unit,
-                  items: [
-                    ...strengthUnitMenuItems(context.l10n),
-                    ...cardioUnitMenuItems(context.l10n),
-                  ],
-                  onChanged: (String? newValue) {
-                    markDirty();
-                    setState(() {
-                      _unit = newValue!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                ListTile(
-                  title: Text(
-                    _cardio ? context.l10n.cardio : context.l10n.strength,
-                  ),
-                  leading: _cardio
-                      ? const Icon(Icons.sports_gymnastics)
-                      : const Icon(Icons.fitness_center),
-                  onTap: () => _setCardio(!_cardio),
-                  trailing: Switch(value: _cardio, onChanged: _setCardio),
-                ),
-                Visibility(
-                  visible: settings.showImages,
-                  child: AppImageField(
-                    path: _image,
-                    onPick: pick,
-                    onRemove: () {
-                      markDirty();
-                      setState(() => _image = null);
-                    },
-                  ),
-                ),
-                if (desktop) ...[
-                  const SizedBox(height: 24),
-                  DesktopEditorSaveButton(onPressed: save),
-                ],
-              ],
+        onSave: save,
+        body: editorFields(
+          context,
+          onSave: save,
+          formKey: _key,
+          children: [
+            TextFormField(
+              controller: _nameCtrl,
+              decoration: InputDecoration(labelText: context.l10n.nameLabel),
+              textCapitalization: TextCapitalization.sentences,
+              autofocus: true,
+              onChanged: (_) {
+                markDirty();
+                if (_duplicateName != null) {
+                  _duplicateName = null;
+                  _key.currentState!.validate();
+                }
+              },
+              validator: (value) {
+                if (value?.trim().isNotEmpty != true) {
+                  return context.l10n.requiredField;
+                }
+                if (value!.trim().toLowerCase() == _duplicateName) {
+                  return context.l10n.exerciseAlreadyExists;
+                }
+                return null;
+              },
             ),
-          ),
-        ),
-        floatingActionButton: desktop
-            ? null
-            : AppFab(
-                onPressed: save,
-                label: Text(context.l10n.actionSave),
-                icon: const Icon(Icons.save),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              key: ValueKey(_unit),
+              decoration: InputDecoration(labelText: context.l10n.unitLabel),
+              initialValue: _unit,
+              items: [
+                ...strengthUnitMenuItems(context.l10n),
+                ...cardioUnitMenuItems(context.l10n),
+              ],
+              onChanged: (String? newValue) {
+                markDirty();
+                setState(() {
+                  _unit = newValue!;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              title: Text(
+                _cardio ? context.l10n.cardio : context.l10n.strength,
               ),
+              leading: _cardio
+                  ? const Icon(Icons.sports_gymnastics)
+                  : const Icon(Icons.fitness_center),
+              onTap: () => _setCardio(!_cardio),
+              trailing: Switch(value: _cardio, onChanged: _setCardio),
+            ),
+            Visibility(
+              visible: settings.showImages,
+              child: AppImageField(
+                path: _image,
+                onPick: pick,
+                onRemove: () {
+                  markDirty();
+                  setState(() => _image = null);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

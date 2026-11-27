@@ -1,3 +1,4 @@
+import 'package:flex/app_message.dart';
 import 'package:flex/settings/setting_choice.dart';
 import 'package:flex/settings/setting_toggle.dart';
 import 'package:drift/drift.dart' hide Column;
@@ -96,17 +97,7 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
                 ),
               );
               if (!settings.notifications)
-                messengerKey.currentState!.showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.positiveMessagesEnabled),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    duration: const Duration(seconds: 4),
-                    persist: false,
-                  ),
-                );
+                showAppMessage(l10n.positiveMessagesEnabled);
             },
             trailing: Switch(
               value: settings.notifications,

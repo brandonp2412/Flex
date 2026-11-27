@@ -1,3 +1,4 @@
+import 'package:flex/app_message.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
@@ -40,17 +41,7 @@ class _TabSettingsState extends State<TabSettings> {
 
   void setTab(String name, bool enabled) {
     if (!enabled && _tabs.where((tab) => tab.enabled == true).length == 1) {
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.atLeastOneTab),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          duration: const Duration(seconds: 4),
-          persist: false,
-        ),
-      );
+      showAppMessage(context.l10n.atLeastOneTab);
       return;
     }
     final index = _tabs.indexWhere((tappedTab) => tappedTab.name == name);

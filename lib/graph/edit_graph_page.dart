@@ -1,13 +1,11 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_confirmation.dart';
-import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/categories.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/editor_content.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -42,176 +40,158 @@ class _EditGraphPageState extends State<EditGraphPage>
 
   @override
   Widget build(BuildContext context) {
-    final desktop = isDesktopLayout(context);
     return guardUnsavedChanges(
-      child: Scaffold(
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: true,
+      child: editorScaffold(
+        context,
         appBar: AppBar(
           title: Text(context.l10n.updateAllNamed(widget.name.toLowerCase())),
         ),
-        body: EditorContent(
-          child: Form(
-            key: key,
-            child: ListView(
-              padding: editorListPadding(context, hasFab: !desktop),
+        onSave: save,
+        body: editorFields(
+          context,
+          onSave: save,
+          formKey: key,
+          children: [
+            TextField(
+              controller: name,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(labelText: context.l10n.newName),
+              textCapitalization: TextCapitalization.sentences,
+              onChanged: (_) => markDirty(),
+            ),
+            const SizedBox(height: 12.0),
+            Row(
               children: [
-                TextField(
-                  controller: name,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(labelText: context.l10n.newName),
-                  textCapitalization: TextCapitalization.sentences,
-                  onChanged: (_) => markDirty(),
-                ),
-                const SizedBox(height: 12.0),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: minutes,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.restMinutes,
-                        ),
-                        keyboardType: TextInputType.number,
-                        onTap: () => selectAll(minutes),
-                        onChanged: (_) => markDirty(),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return null;
-                          if (int.tryParse(value) == null)
-                            return context.l10n.invalidNumber;
-                          return null;
-                        },
-                      ),
+                Expanded(
+                  child: TextFormField(
+                    controller: minutes,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.restMinutes,
                     ),
-                    const SizedBox(width: 8.0),
-                    Expanded(
-                      child: TextFormField(
-                        controller: seconds,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.restSeconds,
-                        ),
-                        keyboardType: TextInputType.number,
-                        onTap: () {
-                          selectAll(seconds);
-                        },
-                        onChanged: (_) => markDirty(),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return null;
-                          if (int.tryParse(value) == null)
-                            return context.l10n.invalidNumber;
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12.0),
-                Selector<Setting, bool>(
-                  selector: (p0, settings) => settings.showCategories,
-                  builder: (context, showCategories, child) {
-                    if (!showCategories) return const SizedBox();
-                    return StreamBuilder(
-                      stream: getCategoriesStream(),
-                      builder: (context, snapshot) {
-                        final categories = <String>{
-                          if (category != null && category!.isNotEmpty)
-                            category!,
-                          ...?snapshot.data,
-                        }.toList();
-                        return Column(
-                          children: [
-                            DropdownButtonFormField(
-                              decoration: InputDecoration(
-                                labelText: context.l10n.categoryLabel,
-                              ),
-                              initialValue: category,
-                              items: categories
-                                  .map(
-                                    (category) => DropdownMenuItem(
-                                      value: category,
-                                      child: Text(category),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                markDirty();
-                                setState(() {
-                                  category = value!;
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 12.0),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-                DropdownButtonFormField(
-                  decoration: InputDecoration(
-                    labelText: context.l10n.unitLabel,
+                    keyboardType: TextInputType.number,
+                    onTap: () => selectAll(minutes),
+                    onChanged: (_) => markDirty(),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return null;
+                      if (int.tryParse(value) == null)
+                        return context.l10n.invalidNumber;
+                      return null;
+                    },
                   ),
-                  initialValue: unit,
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text("")),
-                    ...strengthUnitMenuItems(context.l10n),
-                    ...cardioUnitMenuItems(context.l10n),
-                  ],
-                  onChanged: (value) {
-                    markDirty();
-                    setState(() {
-                      unit = value;
-                    });
-                  },
                 ),
-                if (cardio != null) ...[
-                  const SizedBox(height: 12.0),
-                  ListTile(
-                    leading: cardio!
-                        ? const Icon(Icons.sports_gymnastics)
-                        : const Icon(Icons.fitness_center),
-                    title: Text(
-                      cardio! ? context.l10n.cardio : context.l10n.strength,
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: TextFormField(
+                    controller: seconds,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.restSeconds,
                     ),
-                    onTap: () => _setCardio(!cardio!),
-                    trailing: Switch(value: cardio!, onChanged: _setCardio),
+                    keyboardType: TextInputType.number,
+                    onTap: () {
+                      selectAll(seconds);
+                    },
+                    onChanged: (_) => markDirty(),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return null;
+                      if (int.tryParse(value) == null)
+                        return context.l10n.invalidNumber;
+                      return null;
+                    },
                   ),
-                  const SizedBox(height: 12.0),
-                ] else
-                  const SizedBox(height: 12.0),
-                Selector<Setting, bool>(
-                  builder: (context, showImages, child) {
-                    return Visibility(
-                      visible: showImages,
-                      child: AppImageField(
-                        path: image,
-                        onPick: pick,
-                        onRemove: () {
-                          markDirty();
-                          setState(() => image = null);
-                        },
-                      ),
-                    );
-                  },
-                  selector: (context, settings) => settings.showImages,
                 ),
-                if (desktop) ...[
-                  const SizedBox(height: 24),
-                  DesktopEditorSaveButton(onPressed: save),
-                ],
               ],
             ),
-          ),
-        ),
-        floatingActionButton: desktop
-            ? null
-            : AppFab(
-                onPressed: save,
-                label: Text(context.l10n.actionSave),
-                icon: const Icon(Icons.save),
+            const SizedBox(height: 12.0),
+            Selector<Setting, bool>(
+              selector: (p0, settings) => settings.showCategories,
+              builder: (context, showCategories, child) {
+                if (!showCategories) return const SizedBox();
+                return StreamBuilder(
+                  stream: getCategoriesStream(),
+                  builder: (context, snapshot) {
+                    final categories = <String>{
+                      if (category != null && category!.isNotEmpty) category!,
+                      ...?snapshot.data,
+                    }.toList();
+                    return Column(
+                      children: [
+                        DropdownButtonFormField(
+                          decoration: InputDecoration(
+                            labelText: context.l10n.categoryLabel,
+                          ),
+                          initialValue: category,
+                          items: categories
+                              .map(
+                                (category) => DropdownMenuItem(
+                                  value: category,
+                                  child: Text(category),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            markDirty();
+                            setState(() {
+                              category = value!;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 12.0),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+            DropdownButtonFormField(
+              decoration: InputDecoration(labelText: context.l10n.unitLabel),
+              initialValue: unit,
+              items: [
+                const DropdownMenuItem(value: null, child: Text("")),
+                ...strengthUnitMenuItems(context.l10n),
+                ...cardioUnitMenuItems(context.l10n),
+              ],
+              onChanged: (value) {
+                markDirty();
+                setState(() {
+                  unit = value;
+                });
+              },
+            ),
+            if (cardio != null) ...[
+              const SizedBox(height: 12.0),
+              ListTile(
+                leading: cardio!
+                    ? const Icon(Icons.sports_gymnastics)
+                    : const Icon(Icons.fitness_center),
+                title: Text(
+                  cardio! ? context.l10n.cardio : context.l10n.strength,
+                ),
+                onTap: () => _setCardio(!cardio!),
+                trailing: Switch(value: cardio!, onChanged: _setCardio),
               ),
+              const SizedBox(height: 12.0),
+            ] else
+              const SizedBox(height: 12.0),
+            Selector<Setting, bool>(
+              builder: (context, showImages, child) {
+                return Visibility(
+                  visible: showImages,
+                  child: AppImageField(
+                    path: image,
+                    onPick: pick,
+                    onRemove: () {
+                      markDirty();
+                      setState(() => image = null);
+                    },
+                  ),
+                );
+              },
+              selector: (context, settings) => settings.showImages,
+            ),
+          ],
+        ),
       ),
     );
   }

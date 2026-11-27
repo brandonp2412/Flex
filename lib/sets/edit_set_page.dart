@@ -1,3 +1,4 @@
+import 'package:flex/app_message.dart';
 import 'package:flex/sets/workout_category_field.dart';
 import 'package:flex/sets/workout_editor_fields.dart';
 import 'package:flex/sets/workout_unit_field.dart';
@@ -8,7 +9,6 @@ import 'dart:math';
 import 'package:drift/drift.dart' hide Column, View;
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_confirmation.dart';
-import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/categories.dart';
@@ -137,18 +137,16 @@ class _EditSetPageState extends State<EditSetPage>
 
   @override
   Widget build(BuildContext context) {
-    final desktop = isDesktopLayout(context);
     final showBodyWeight = context.select<Setting, bool>(
       (settings) => settings.showBodyWeight,
     );
 
     return guardUnsavedChanges(
-      child: Scaffold(
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: true,
+      child: editorScaffold(
+        context,
+        onSave: save,
         appBar: buildAppBar(),
         body: buildBody(showBodyWeight),
-        floatingActionButton: desktop ? null : buildSaveButton(),
       ),
     );
   }
@@ -438,14 +436,6 @@ class _EditSetPageState extends State<EditSetPage>
     );
   }
 
-  Widget buildSaveButton() {
-    return AppFab(
-      onPressed: save,
-      label: Text(context.l10n.actionSave),
-      icon: const Icon(Icons.save),
-    );
-  }
-
   Selector<Setting, bool> imageField() {
     return Selector<Setting, bool>(
       builder: (context, showImages, child) {
@@ -663,18 +653,7 @@ class _EditSetPageState extends State<EditSetPage>
       if (best) {
         final random = Random();
         final randomMessage = messages[random.nextInt(messages.length)];
-        if (mounted)
-          messengerKey.currentState!.showSnackBar(
-            SnackBar(
-              content: Text(randomMessage),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              duration: const Duration(seconds: 4),
-              persist: false,
-            ),
-          );
+        if (mounted) showAppMessage(randomMessage);
       }
     }
 

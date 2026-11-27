@@ -72,18 +72,6 @@ class _FiltersState extends State<Filters> {
           child: StreamBuilder(
             stream: getCategoriesStream(),
             builder: (context, snapshot) {
-              String? reps;
-              if (widget.repsGtCtrl.text.isNotEmpty)
-                reps = '> ${widget.repsGtCtrl.text} ';
-              if (widget.repsLtCtrl.text.isNotEmpty)
-                reps = '${reps ?? ''}< ${widget.repsLtCtrl.text}';
-
-              String? weight;
-              if (widget.weightGtCtrl.text.isNotEmpty)
-                weight = '> ${widget.weightGtCtrl.text} ';
-              if (widget.weightLtCtrl.text.isNotEmpty)
-                weight = '${weight ?? ''}< ${widget.weightLtCtrl.text}';
-
               return SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -106,215 +94,35 @@ class _FiltersState extends State<Filters> {
                         Navigator.pop(context);
                       },
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.repeat),
-                      title: Text(context.l10n.repsLabel),
-                      subtitle: reps != null ? Text(reps) : null,
-                      onTap: () {
-                        Navigator.pop(context);
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(context.l10n.repsFilter),
-                            content: SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  TextField(
-                                    onChanged: (value) => widget.setStream(),
-                                    controller: widget.repsGtCtrl,
-                                    decoration: InputDecoration(
-                                      labelText: context.l10n.greaterThan,
-                                    ),
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
-                                  ),
-                                  TextField(
-                                    onChanged: (value) => widget.setStream(),
-                                    controller: widget.repsLtCtrl,
-                                    decoration: InputDecoration(
-                                      labelText: context.l10n.lessThan,
-                                    ),
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                child: Text(context.l10n.actionClear),
-                                onPressed: () async {
-                                  widget.repsGtCtrl.text = '';
-                                  widget.repsLtCtrl.text = '';
-                                  widget.setStream();
-                                  Navigator.pop(context);
-                                },
-                              ),
-                              TextButton(
-                                child: Text(context.l10n.actionOk),
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    _rangeTile(
+                      context,
+                      Icons.repeat,
+                      context.l10n.repsLabel,
+                      context.l10n.repsFilter,
+                      widget.repsGtCtrl,
+                      widget.repsLtCtrl,
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.scale),
-                      title: Text(context.l10n.weightLabel),
-                      subtitle: weight != null ? Text(weight) : null,
-                      onTap: () {
-                        Navigator.pop(context);
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(context.l10n.weightFilter),
-                            content: SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  TextField(
-                                    onChanged: (value) => widget.setStream(),
-                                    controller: widget.weightGtCtrl,
-                                    decoration: InputDecoration(
-                                      labelText: context.l10n.greaterThan,
-                                    ),
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
-                                  ),
-                                  TextField(
-                                    onChanged: (value) => widget.setStream(),
-                                    controller: widget.weightLtCtrl,
-                                    decoration: InputDecoration(
-                                      labelText: context.l10n.lessThan,
-                                    ),
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                          decimal: true,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                child: Text(context.l10n.actionClear),
-                                onPressed: () async {
-                                  widget.weightGtCtrl.text = '';
-                                  widget.weightLtCtrl.text = '';
-                                  widget.setStream();
-                                  Navigator.pop(context);
-                                },
-                              ),
-                              TextButton(
-                                child: Text(context.l10n.actionOk),
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    _rangeTile(
+                      context,
+                      Icons.scale,
+                      context.l10n.weightLabel,
+                      context.l10n.weightFilter,
+                      widget.weightGtCtrl,
+                      widget.weightLtCtrl,
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.calendar_today),
-                      title: Text(context.l10n.startDate),
-                      onLongPress: isDesktopLayout(context)
-                          ? null
-                          : () {
-                              widget.setStart(null);
-                              Navigator.pop(context);
-                            },
-                      trailing:
-                          isDesktopLayout(context) && widget.startDate != null
-                          ? IconButton(
-                              tooltip: context.l10n.actionClear,
-                              onPressed: () {
-                                widget.setStart(null);
-                                Navigator.pop(context);
-                              },
-                              icon: const Icon(Icons.close),
-                            )
-                          : null,
-                      subtitle: Selector<Setting, String>(
-                        selector: (p0, settings) => settings.shortDateFormat,
-                        builder: (context, shortDateFormat, child) =>
-                            widget.startDate != null
-                            ? Text(
-                                DateFormat(
-                                  shortDateFormat,
-                                  Localizations.localeOf(
-                                    context,
-                                  ).toLanguageTag(),
-                                ).format(widget.startDate!),
-                              )
-                            : Text(shortDateFormat),
-                      ),
-                      onTap: () async {
-                        Navigator.pop(context);
-                        final DateTime? pickedDate = await showDatePicker(
-                          context: context,
-                          initialDate: widget.startDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                        );
-                        if (pickedDate != null)
-                          widget.setStart(pickedDate.toLocal());
-                      },
+                    _dateTile(
+                      context,
+                      Icons.calendar_today,
+                      context.l10n.startDate,
+                      widget.startDate,
+                      widget.setStart,
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.calendar_month),
-                      title: Text(context.l10n.endDate),
-                      subtitle: Selector<Setting, String>(
-                        selector: (p0, settings) => settings.shortDateFormat,
-                        builder: (context, shortDateFormat, child) =>
-                            widget.endDate != null
-                            ? Text(
-                                DateFormat(
-                                  shortDateFormat,
-                                  Localizations.localeOf(
-                                    context,
-                                  ).toLanguageTag(),
-                                ).format(widget.endDate!),
-                              )
-                            : Text(shortDateFormat),
-                      ),
-                      onTap: () async {
-                        Navigator.pop(context);
-                        final DateTime? pickedDate = await showDatePicker(
-                          context: context,
-                          initialDate: widget.endDate,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                        );
-                        if (pickedDate != null)
-                          widget.setEnd(pickedDate.toLocal());
-                      },
-                      onLongPress: isDesktopLayout(context)
-                          ? null
-                          : () {
-                              widget.setEnd(null);
-                              Navigator.pop(context);
-                            },
-                      trailing:
-                          isDesktopLayout(context) && widget.endDate != null
-                          ? IconButton(
-                              tooltip: context.l10n.actionClear,
-                              onPressed: () {
-                                widget.setEnd(null);
-                                Navigator.pop(context);
-                              },
-                              icon: const Icon(Icons.close),
-                            )
-                          : null,
+                    _dateTile(
+                      context,
+                      Icons.calendar_month,
+                      context.l10n.endDate,
+                      widget.endDate,
+                      widget.setEnd,
                     ),
                   ],
                 ),
@@ -342,6 +150,115 @@ class _FiltersState extends State<Filters> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _rangeTile(
+    BuildContext dialogContext,
+    IconData icon,
+    String label,
+    String title,
+    TextEditingController greater,
+    TextEditingController less,
+  ) {
+    final summary = [
+      if (greater.text.isNotEmpty) '> ${greater.text}',
+      if (less.text.isNotEmpty) '< ${less.text}',
+    ].join(' ');
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(label),
+      subtitle: summary.isEmpty ? null : Text(summary),
+      onTap: () {
+        Navigator.pop(dialogContext);
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  for (final (controller, label) in [
+                    (greater, context.l10n.greaterThan),
+                    (less, context.l10n.lessThan),
+                  ])
+                    TextField(
+                      controller: controller,
+                      onChanged: (_) => widget.setStream(),
+                      decoration: InputDecoration(labelText: label),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  greater.clear();
+                  less.clear();
+                  widget.setStream();
+                  Navigator.pop(context);
+                },
+                child: Text(context.l10n.actionClear),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(context.l10n.actionOk),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _dateTile(
+    BuildContext dialogContext,
+    IconData icon,
+    String label,
+    DateTime? date,
+    Function(DateTime?) update,
+  ) {
+    final desktop = isDesktopLayout(dialogContext);
+    void clear() {
+      update(null);
+      Navigator.pop(dialogContext);
+    }
+
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(label),
+      onLongPress: desktop ? null : clear,
+      trailing: desktop && date != null
+          ? IconButton(
+              tooltip: dialogContext.l10n.actionClear,
+              onPressed: clear,
+              icon: const Icon(Icons.close),
+            )
+          : null,
+      subtitle: Selector<Setting, String>(
+        selector: (_, settings) => settings.shortDateFormat,
+        builder: (context, format, child) => Text(
+          date == null
+              ? format
+              : DateFormat(
+                  format,
+                  Localizations.localeOf(context).toLanguageTag(),
+                ).format(date),
+        ),
+      ),
+      onTap: () async {
+        Navigator.pop(dialogContext);
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: date,
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+        );
+        if (picked != null && mounted) update(picked.toLocal());
+      },
     );
   }
 }

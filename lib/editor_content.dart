@@ -1,5 +1,7 @@
 import 'package:flex/app_fab.dart';
 import 'package:flex/responsive.dart';
+import 'package:flex/l10n/l10n.dart';
+import 'package:flex/desktop_editor_save_button.dart';
 import 'package:flutter/material.dart';
 
 export 'package:flex/desktop_editor_save_button.dart';
@@ -28,3 +30,52 @@ EdgeInsets editorListPadding(BuildContext context, {bool hasFab = true}) =>
                 MediaQuery.paddingOf(context).bottom
           : 24 + MediaQuery.paddingOf(context).bottom,
     );
+
+Widget editorScaffold(
+  BuildContext context, {
+  required PreferredSizeWidget appBar,
+  required Widget body,
+  required VoidCallback onSave,
+}) => Scaffold(
+  floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
+  resizeToAvoidBottomInset: true,
+  appBar: appBar,
+  body: body,
+  floatingActionButton: isDesktopLayout(context)
+      ? null
+      : AppFab(
+          onPressed: onSave,
+          label: Text(context.l10n.actionSave),
+          icon: const Icon(Icons.save),
+        ),
+);
+
+Widget editorFields(
+  BuildContext context, {
+  required List<Widget> children,
+  required VoidCallback onSave,
+  GlobalKey<FormState>? formKey,
+  double maxWidth = 720,
+  bool formOutside = false,
+}) {
+  final desktop = isDesktopLayout(context);
+  final list = ListView(
+    padding: editorListPadding(context, hasFab: !desktop),
+    children: [
+      ...children,
+      if (desktop) ...[
+        const SizedBox(height: 24),
+        DesktopEditorSaveButton(onPressed: onSave),
+      ],
+    ],
+  );
+  final content = EditorContent(
+    maxWidth: maxWidth,
+    child: formKey == null || formOutside
+        ? list
+        : Form(key: formKey, child: list),
+  );
+  return formOutside && formKey != null
+      ? Form(key: formKey, child: content)
+      : content;
+}

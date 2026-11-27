@@ -1,3 +1,4 @@
+import 'package:flex/app_message.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
@@ -181,17 +182,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final tabs = state.tabs.split(',');
 
     if (tabs.length == 1) {
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.cannotHideAllTabs),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          duration: const Duration(seconds: 4),
-          persist: false,
-        ),
-      );
+      showAppMessage(context.l10n.cannotHideAllTabs);
       return;
     }
 
@@ -251,18 +242,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await db.settings.update().write(
       SettingsCompanion(tabs: Value(tabs.join(','))),
     );
-    if (context.mounted)
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.removedTab(label)),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          duration: const Duration(seconds: 4),
-          persist: false,
-        ),
-      );
+    if (context.mounted) showAppMessage(context.l10n.removedTab(label));
   }
 
   @override

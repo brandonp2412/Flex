@@ -514,6 +514,24 @@ Stream<List<ExerciseSetView>> watchWorkoutExerciseSets(
   );
 }
 
+ExerciseSetsCompanion _setValues(
+  ExerciseSetView set,
+  int exerciseId,
+  double? bodyWeightKg, {
+  Value<int?> workoutId = const Value.absent(),
+}) => ExerciseSetsCompanion(
+  exerciseId: Value(exerciseId),
+  workoutId: workoutId,
+  timestamp: Value(set.created),
+  reps: Value(set.reps),
+  loadKg: Value(storedExerciseLoad(set)),
+  durationMs: Value((set.duration * 60000).round()),
+  distanceMetres: Value(distanceMetres(set.unit, set.distance)),
+  incline: Value(set.incline?.toDouble()),
+  bodyWeightKg: Value(bodyWeightKg),
+  notes: Value(set.notes),
+);
+
 /// Inserts one exercise set into exercise_sets only.
 Future<ExerciseSetView> insertExerciseSet(
   AppDatabase database, {
@@ -530,19 +548,11 @@ Future<ExerciseSetView> insertExerciseSet(
       (await getLatestBodyWeight(database))?.weightKg;
 
   final id = await database.exerciseSets.insertOne(
-    ExerciseSetsCompanion.insert(
-      exerciseId: exerciseId,
+    _setValues(
+      exerciseSet,
+      exerciseId,
+      storedWeightKg,
       workoutId: Value(workoutId),
-      timestamp: exerciseSet.created,
-      reps: Value(exerciseSet.reps),
-      loadKg: Value(storedExerciseLoad(exerciseSet)),
-      durationMs: Value((exerciseSet.duration * 60000).round()),
-      distanceMetres: Value(
-        distanceMetres(exerciseSet.unit, exerciseSet.distance),
-      ),
-      incline: Value(exerciseSet.incline?.toDouble()),
-      bodyWeightKg: Value(storedWeightKg),
-      notes: Value(exerciseSet.notes),
     ),
   );
   return (await getExerciseSetById(database, id))!;
@@ -558,23 +568,13 @@ Future<void> updateExerciseSet(
 }) {
   return (database.exerciseSets.update()..where((set) => set.id.equals(id)))
       .write(
-        ExerciseSetsCompanion(
-          exerciseId: Value(exerciseId),
-          timestamp: Value(exerciseSet.created),
-          reps: Value(exerciseSet.reps),
-          loadKg: Value(storedExerciseLoad(exerciseSet)),
-          durationMs: Value((exerciseSet.duration * 60000).round()),
-          distanceMetres: Value(
-            distanceMetres(exerciseSet.unit, exerciseSet.distance),
-          ),
-          incline: Value(exerciseSet.incline?.toDouble()),
-          bodyWeightKg: Value(
-            bodyWeightKg ??
-                (exerciseSet.bodyWeight == 0
-                    ? null
-                    : toKg(exerciseSet.unit, exerciseSet.bodyWeight)),
-          ),
-          notes: Value(exerciseSet.notes),
+        _setValues(
+          exerciseSet,
+          exerciseId,
+          bodyWeightKg ??
+              (exerciseSet.bodyWeight == 0
+                  ? null
+                  : toKg(exerciseSet.unit, exerciseSet.bodyWeight)),
         ),
       );
 }

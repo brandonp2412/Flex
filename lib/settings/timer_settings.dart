@@ -132,52 +132,38 @@ List<Widget> getTimerSettings(
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(labelText: l10n.restMinutes),
-                      controller: minCtrl,
-                      keyboardType: TextInputType.number,
-                      onTap: () => selectAll(minCtrl),
-                      onChanged: (value) => db.settings.update().write(
-                        SettingsCompanion(
-                          timerDuration: Value(
+              _durationFields(
+                context,
+                minCtrl,
+                secCtrl,
+                minutesLabel: l10n.restMinutes,
+                gap: 8,
+                onMinutes: (minutes) => db.settings.update().write(
+                  SettingsCompanion(
+                    timerDuration: Value(
+                      Duration(
+                        minutes: minutes,
+                        seconds:
                             Duration(
-                              minutes: int.tryParse(value) ?? 0,
-                              seconds:
-                                  Duration(
-                                    milliseconds: settings.timerDuration,
-                                  ).inSeconds %
-                                  60,
-                            ).inMilliseconds,
-                          ),
-                        ),
-                      ),
+                              milliseconds: settings.timerDuration,
+                            ).inSeconds %
+                            60,
+                      ).inMilliseconds,
                     ),
                   ),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(labelText: l10n.secondsLabel),
-                      controller: secCtrl,
-                      keyboardType: TextInputType.number,
-                      onTap: () => selectAll(secCtrl),
-                      onChanged: (value) => db.settings.update().write(
-                        SettingsCompanion(
-                          timerDuration: Value(
-                            Duration(
-                              seconds: int.tryParse(value) ?? 0,
-                              minutes: Duration(
-                                milliseconds: settings.timerDuration,
-                              ).inMinutes.floor(),
-                            ).inMilliseconds,
-                          ),
-                        ),
-                      ),
+                ),
+                onSeconds: (seconds) => db.settings.update().write(
+                  SettingsCompanion(
+                    timerDuration: Value(
+                      Duration(
+                        minutes: Duration(
+                          milliseconds: settings.timerDuration,
+                        ).inMinutes,
+                        seconds: seconds,
+                      ).inMilliseconds,
                     ),
                   ),
-                ],
+                ),
               ),
             ],
           ),
@@ -319,18 +305,8 @@ class _TimerSettingsState extends State<TimerSettings> {
     }
   }
 
-  Future<void> _removeCustomTimer(String exerciseName) async {
-    await (db.exercises.update()
-          ..where((exercise) => exercise.name.equals(exerciseName)))
-        .write(const ExercisesCompanion(defaultRestDurationMs: Value(null)));
-    if (!mounted) return;
-
-    _minuteFields.remove(exerciseName)?.dispose();
-    _secondFields.remove(exerciseName)?.dispose();
-    setState(() {
-      _customExercises.removeWhere((e) => e.name == exerciseName);
-    });
-  }
+  Future<void> _removeCustomTimer(String exerciseName) =>
+      _updateExerciseRestTime(exerciseName, null, null);
 
   Widget _buildPerExerciseSection() {
     return Padding(
@@ -400,50 +376,22 @@ class _TimerSettingsState extends State<TimerSettings> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              labelText: context.l10n.minutesLabel,
-                            ),
-                            controller: minController,
-                            keyboardType: TextInputType.number,
-                            onTap: () => selectAll(minController),
-                            onChanged: (value) {
-                              final minutes = int.tryParse(value) ?? 0;
-                              final seconds =
-                                  int.tryParse(secController.text) ?? 0;
-                              _updateExerciseRestTime(
-                                exerciseName,
-                                minutes,
-                                seconds,
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              labelText: context.l10n.secondsLabel,
-                            ),
-                            controller: secController,
-                            keyboardType: TextInputType.number,
-                            onTap: () => selectAll(secController),
-                            onChanged: (value) {
-                              final minutes =
-                                  int.tryParse(minController.text) ?? 0;
-                              final seconds = int.tryParse(value) ?? 0;
-                              _updateExerciseRestTime(
-                                exercise.name,
-                                minutes,
-                                seconds,
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                    _durationFields(
+                      context,
+                      minController,
+                      secController,
+                      minutesLabel: context.l10n.minutesLabel,
+                      gap: 12,
+                      onMinutes: (minutes) => _updateExerciseRestTime(
+                        exerciseName,
+                        minutes,
+                        int.tryParse(secController.text) ?? 0,
+                      ),
+                      onSeconds: (seconds) => _updateExerciseRestTime(
+                        exerciseName,
+                        int.tryParse(minController.text) ?? 0,
+                        seconds,
+                      ),
                     ),
                   ],
                 ),
@@ -507,4 +455,35 @@ class _TimerSettingsState extends State<TimerSettings> {
     _player.dispose();
     super.dispose();
   }
+}
+
+Widget _durationFields(
+  BuildContext context,
+  TextEditingController minutes,
+  TextEditingController seconds, {
+  required String minutesLabel,
+  required double gap,
+  required ValueChanged<int> onMinutes,
+  required ValueChanged<int> onSeconds,
+}) {
+  Widget field(
+    TextEditingController controller,
+    String label,
+    ValueChanged<int> onChanged,
+  ) => Expanded(
+    child: TextField(
+      decoration: InputDecoration(labelText: label),
+      controller: controller,
+      keyboardType: TextInputType.number,
+      onTap: () => selectAll(controller),
+      onChanged: (value) => onChanged(int.tryParse(value) ?? 0),
+    ),
+  );
+  return Row(
+    children: [
+      field(minutes, minutesLabel, onMinutes),
+      SizedBox(width: gap),
+      field(seconds, context.l10n.secondsLabel, onSeconds),
+    ],
+  );
 }

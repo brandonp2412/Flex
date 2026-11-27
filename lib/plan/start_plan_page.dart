@@ -1,3 +1,4 @@
+import 'package:flex/app_message.dart';
 import 'package:flex/sets/workout_unit_field.dart';
 import 'package:flex/sets/workout_number_field.dart';
 import 'dart:math';
@@ -738,18 +739,7 @@ class _StartPlanPageState extends State<StartPlanPage>
 
       final random = Random();
       final randomMessage = messages[random.nextInt(messages.length)];
-      if (mounted && random.nextDouble() < 0.3)
-        messengerKey.currentState!.showSnackBar(
-          SnackBar(
-            content: Text(randomMessage),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            duration: const Duration(seconds: 4),
-            persist: false,
-          ),
-        );
+      if (mounted && random.nextDouble() < 0.3) showAppMessage(randomMessage);
     } finally {
       _saving = false;
     }
@@ -806,17 +796,7 @@ class _StartPlanPageState extends State<StartPlanPage>
     final weightSet = await getLatestBodyWeight(db);
     if (!mounted) return;
     if (weightSet == null) {
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.noWeightEnteredYet),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          duration: const Duration(seconds: 4),
-          persist: false,
-        ),
-      );
+      showAppMessage(context.l10n.noWeightEnteredYet);
       return;
     }
     _weight.text = toString(displayBodyWeight(_unit, weightSet.weightKg));

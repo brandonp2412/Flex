@@ -1,5 +1,5 @@
+import 'package:flex/app_message.dart';
 import 'package:drift/drift.dart' hide Column;
-import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/day_selector.dart';
@@ -82,147 +82,133 @@ class _EditPlanPageState extends State<EditPlanPage>
     final colors = Theme.of(context).colorScheme;
 
     return guardUnsavedChanges(
-      child: Scaffold(
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: true,
+      child: editorScaffold(
+        context,
         appBar: AppBar(title: Text(title)),
-        body: EditorContent(
+        onSave: save,
+        body: editorFields(
+          context,
+          onSave: save,
           maxWidth: 1040,
-          child: ListView(
-            padding: editorListPadding(context, hasFab: !desktop),
-            children: [
-              if (desktop)
-                Text(
-                  context.l10n.planDetails,
+          children: [
+            if (desktop)
+              Text(
+                context.l10n.planDetails,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            if (desktop) const SizedBox(height: 12),
+            Container(
+              padding: desktop ? const EdgeInsets.all(20) : EdgeInsets.zero,
+              decoration: desktop
+                  ? BoxDecoration(
+                      color: colors.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(20),
+                    )
+                  : null,
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: context.l10n.titleOptional,
+                    ),
+                    controller: _titleCtrl,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (_) => markDirty(),
+                  ),
+                  const SizedBox(height: 16),
+                  DaySelector(daySwitches: _days, onChanged: markDirty),
+                ],
+              ),
+            ),
+            SizedBox(height: desktop ? 24 : 8),
+            if (desktop)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  context.l10n.exercisesLabel,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
-              if (desktop) const SizedBox(height: 12),
-              Container(
-                padding: desktop ? const EdgeInsets.all(20) : EdgeInsets.zero,
-                decoration: desktop
-                    ? BoxDecoration(
-                        color: colors.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(20),
-                      )
+              ),
+            SearchBar(
+              controller: _searchCtrl,
+              focusNode: _node,
+              onTap: () => _node.requestFocus(),
+              leading: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Icon(Icons.search),
+              ),
+              textCapitalization: TextCapitalization.sentences,
+              hintText: context.l10n.searchExercises,
+              onChanged: (value) => setState(() {
+                _search = value;
+              }),
+            ),
+            const SizedBox(height: 10),
+            Material(
+              color: desktop ? colors.surfaceContainerLow : Colors.transparent,
+              borderRadius: desktop ? BorderRadius.circular(14) : null,
+              child: ListTile(
+                leading: IconButton(
+                  tooltip: context.l10n.addExercise,
+                  icon: const Icon(Icons.add_rounded),
+                  onPressed: addExercise,
+                ),
+                title: Text(
+                  _search.isEmpty
+                      ? context.l10n.addExercise
+                      : context.l10n.addNamed(_search),
+                ),
+                trailing: desktop
+                    ? const Icon(Icons.chevron_right_rounded)
                     : null,
-                child: Column(
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        labelText: context.l10n.titleOptional,
-                      ),
-                      controller: _titleCtrl,
-                      textCapitalization: TextCapitalization.sentences,
-                      onChanged: (_) => markDirty(),
-                    ),
-                    const SizedBox(height: 16),
-                    DaySelector(daySwitches: _days, onChanged: markDirty),
-                  ],
-                ),
+                onTap: addExercise,
               ),
-              SizedBox(height: desktop ? 24 : 8),
-              if (desktop)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    context.l10n.exercisesLabel,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+            ),
+            const SizedBox(height: 6),
+            if (_loadError)
+              const SizedBox(height: 260, child: AppErrorState())
+            else if (_loading)
+              const SizedBox.shrink()
+            else if (exercises.isEmpty)
+              SizedBox(
+                height: 260,
+                child: AppEmptyState(
+                  icon: Icons.search_off_rounded,
+                  title: context.l10n.noExercisesFound,
+                  message: _search.isEmpty
+                      ? context.l10n.addExerciseToPlan
+                      : context.l10n.nothingMatchesExerciseSearch(_search),
+                  actionLabel: _search.isEmpty
+                      ? context.l10n.addExercise
+                      : context.l10n.addNamed(_search),
+                  actionIcon: Icons.add_rounded,
+                  onAction: addExercise,
                 ),
-              SearchBar(
-                controller: _searchCtrl,
-                focusNode: _node,
-                onTap: () => _node.requestFocus(),
-                leading: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Icon(Icons.search),
+              )
+            else
+              for (final pe in exercises)
+                ExerciseTile(
+                  planExercise: pe.planExercise,
+                  exerciseName: pe.exerciseName,
+                  onChange: (value) {
+                    final id = _exercises.indexWhere(
+                      (exercise) =>
+                          exercise.planExercise.exerciseId.value ==
+                          pe.planExercise.exerciseId.value,
+                    );
+                    if (id == -1) return;
+                    setState(() {
+                      _exercises[id] = pe.copyWithPlanExercise(value);
+                      dirty = true;
+                    });
+                  },
                 ),
-                textCapitalization: TextCapitalization.sentences,
-                hintText: context.l10n.searchExercises,
-                onChanged: (value) => setState(() {
-                  _search = value;
-                }),
-              ),
-              const SizedBox(height: 10),
-              Material(
-                color: desktop
-                    ? colors.surfaceContainerLow
-                    : Colors.transparent,
-                borderRadius: desktop ? BorderRadius.circular(14) : null,
-                child: ListTile(
-                  leading: IconButton(
-                    tooltip: context.l10n.addExercise,
-                    icon: const Icon(Icons.add_rounded),
-                    onPressed: addExercise,
-                  ),
-                  title: Text(
-                    _search.isEmpty
-                        ? context.l10n.addExercise
-                        : context.l10n.addNamed(_search),
-                  ),
-                  trailing: desktop
-                      ? const Icon(Icons.chevron_right_rounded)
-                      : null,
-                  onTap: addExercise,
-                ),
-              ),
-              const SizedBox(height: 6),
-              if (_loadError)
-                const SizedBox(height: 260, child: AppErrorState())
-              else if (_loading)
-                const SizedBox.shrink()
-              else if (exercises.isEmpty)
-                SizedBox(
-                  height: 260,
-                  child: AppEmptyState(
-                    icon: Icons.search_off_rounded,
-                    title: context.l10n.noExercisesFound,
-                    message: _search.isEmpty
-                        ? context.l10n.addExerciseToPlan
-                        : context.l10n.nothingMatchesExerciseSearch(_search),
-                    actionLabel: _search.isEmpty
-                        ? context.l10n.addExercise
-                        : context.l10n.addNamed(_search),
-                    actionIcon: Icons.add_rounded,
-                    onAction: addExercise,
-                  ),
-                )
-              else
-                for (final pe in exercises)
-                  ExerciseTile(
-                    planExercise: pe.planExercise,
-                    exerciseName: pe.exerciseName,
-                    onChange: (value) {
-                      final id = _exercises.indexWhere(
-                        (exercise) =>
-                            exercise.planExercise.exerciseId.value ==
-                            pe.planExercise.exerciseId.value,
-                      );
-                      if (id == -1) return;
-                      setState(() {
-                        _exercises[id] = pe.copyWithPlanExercise(value);
-                        dirty = true;
-                      });
-                    },
-                  ),
-              if (desktop) ...[
-                const SizedBox(height: 24),
-                DesktopEditorSaveButton(onPressed: save),
-              ],
-            ],
-          ),
+          ],
         ),
-        floatingActionButton: desktop
-            ? null
-            : AppFab(
-                onPressed: save,
-                label: Text(context.l10n.actionSave),
-                icon: const Icon(Icons.save),
-              ),
       ),
     );
   }
@@ -294,32 +280,12 @@ class _EditPlanPageState extends State<EditPlanPage>
       if (_days[i]) selected.add(weekdays[i]);
 
     if (selected.isEmpty && _titleCtrl.text.isEmpty) {
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.selectDays),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          duration: const Duration(seconds: 4),
-          persist: false,
-        ),
-      );
+      showAppMessage(context.l10n.selectDays);
       return;
     }
 
     if (_exercises.where((draft) => draft.planExercise.enabled.value).isEmpty) {
-      messengerKey.currentState!.showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.selectExercises),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          duration: const Duration(seconds: 4),
-          persist: false,
-        ),
-      );
+      showAppMessage(context.l10n.selectExercises);
       return;
     }
 

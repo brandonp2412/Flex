@@ -1,11 +1,9 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flex/app_fab.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/editor_content.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -45,7 +43,6 @@ class _WeightPageState extends State<WeightPage>
 
   @override
   Widget build(BuildContext context) {
-    final desktop = isDesktopLayout(context);
     final displayUnit = _unit ?? 'kg';
     final lastWeightText = switch (_previousWeight) {
       _ when !_weightLoaded => '',
@@ -55,9 +52,8 @@ class _WeightPageState extends State<WeightPage>
     };
 
     return guardUnsavedChanges(
-      child: Scaffold(
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        resizeToAvoidBottomInset: true,
+      child: editorScaffold(
+        context,
         appBar: AppBar(
           title: Text(context.l10n.enterWeight),
           actions: [
@@ -69,87 +65,71 @@ class _WeightPageState extends State<WeightPage>
               ),
           ],
         ),
-        body: Form(
-          key: _key,
-          child: EditorContent(
-            child: ListView(
-              padding: editorListPadding(context, hasFab: !desktop),
-              children: [
-                TextFormField(
-                  controller: _ctrl,
-                  onChanged: (_) => markDirty(),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: context.l10n.weightLabel,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return context.l10n.requiredField;
-                    }
-                    if (parseDisplayNumber(context, value) == null) {
-                      return context.l10n.invalidNumber;
-                    }
-                    return null;
-                  },
-                  autofocus: true,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: context.l10n.unitLabel,
-                  ),
-                  initialValue: _unit,
-                  items: strengthUnitMenuItems(context.l10n),
-                  onChanged: (String? newValue) {
-                    markDirty();
-                    setState(() {
-                      _unit = newValue!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  key: ValueKey(lastWeightText),
-                  initialValue: lastWeightText,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.previousWeight,
-                  ),
-                  enabled: false,
-                ),
-                const SizedBox(height: 12),
-                Selector<Setting, bool>(
-                  builder: (context, showImages, child) {
-                    return Visibility(
-                      visible: showImages,
-                      child: AppImageField(
-                        path: _image,
-                        onPick: pick,
-                        onRemove: () {
-                          markDirty();
-                          setState(() => _image = null);
-                        },
-                      ),
-                    );
-                  },
-                  selector: (context, settings) => settings.showImages,
-                ),
-                if (desktop) ...[
-                  const SizedBox(height: 24),
-                  DesktopEditorSaveButton(onPressed: _save),
-                ],
-              ],
-            ),
-          ),
-        ),
-        floatingActionButton: desktop
-            ? null
-            : AppFab(
-                onPressed: _save,
-                label: Text(context.l10n.actionSave),
-                icon: const Icon(Icons.save),
+        onSave: _save,
+        body: editorFields(
+          context,
+          onSave: _save,
+          formKey: _key,
+          formOutside: true,
+          children: [
+            TextFormField(
+              controller: _ctrl,
+              onChanged: (_) => markDirty(),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
               ),
+              decoration: InputDecoration(labelText: context.l10n.weightLabel),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return context.l10n.requiredField;
+                }
+                if (parseDisplayNumber(context, value) == null) {
+                  return context.l10n.invalidNumber;
+                }
+                return null;
+              },
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(labelText: context.l10n.unitLabel),
+              initialValue: _unit,
+              items: strengthUnitMenuItems(context.l10n),
+              onChanged: (String? newValue) {
+                markDirty();
+                setState(() {
+                  _unit = newValue!;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              key: ValueKey(lastWeightText),
+              initialValue: lastWeightText,
+              decoration: InputDecoration(
+                labelText: context.l10n.previousWeight,
+              ),
+              enabled: false,
+            ),
+            const SizedBox(height: 12),
+            Selector<Setting, bool>(
+              builder: (context, showImages, child) {
+                return Visibility(
+                  visible: showImages,
+                  child: AppImageField(
+                    path: _image,
+                    onPick: pick,
+                    onRemove: () {
+                      markDirty();
+                      setState(() => _image = null);
+                    },
+                  ),
+                );
+              },
+              selector: (context, settings) => settings.showImages,
+            ),
+          ],
+        ),
       ),
     );
   }
