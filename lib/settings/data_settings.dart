@@ -1,3 +1,4 @@
+import 'package:flex/settings/setting_toggle.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -91,9 +92,7 @@ List<Widget> getDataSettings(
   BuildContext context,
 ) {
   final l10n = context.l10n;
-  final normalizedTerm = term.trim().toLowerCase();
-  bool matches(Iterable<String> values) =>
-      values.join(' ').toLowerCase().contains(normalizedTerm);
+  bool matches(Iterable<String> values) => settingMatches(term, values);
   return [
     if (matches([l10n.automaticBackup, l10n.automaticBackupNotificationBody]) &&
         !kIsWeb &&

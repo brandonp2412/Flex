@@ -1,3 +1,4 @@
+import 'package:flex/database/categories.dart';
 import 'package:csv/csv.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/data_portability/graph_csv_import_exception.dart';
@@ -161,7 +162,7 @@ Future<GraphCsvImportResult> _importV2(
     )) {
       final sourceId = row.integer('id', required: true)!;
       final name = row.string('name', required: true);
-      final categoryId = await _ensureCategory(
+      final categoryId = await ensureCategoryId(
         database,
         row.nullableString('category'),
       );
@@ -407,17 +408,4 @@ String? _legacyBodyWeightUnit(
     result = weight.unit;
   }
   return result ?? fallback;
-}
-
-Future<int?> _ensureCategory(AppDatabase database, String? category) async {
-  final name = category?.trim();
-  if (name == null || name.isEmpty) return null;
-  await database.categories.insertOne(
-    CategoriesCompanion.insert(name: name),
-    mode: InsertMode.insertOrIgnore,
-  );
-  return (await (database.categories.select()
-            ..where((row) => row.name.equals(name)))
-          .getSingle())
-      .id;
 }

@@ -1,3 +1,4 @@
+import 'package:flex/settings/setting_toggle.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
@@ -15,9 +16,7 @@ List<Widget> getPlanSettings(
   TextEditingController warmup,
 ) {
   final l10n = context.l10n;
-  final normalizedTerm = term.trim().toLowerCase();
-  bool matches(Iterable<String> values) =>
-      values.join(' ').toLowerCase().contains(normalizedTerm);
+  bool matches(Iterable<String> values) => settingMatches(term, values);
   return [
     if (matches([l10n.warmupSets, l10n.warmupSetsDescription]))
       Padding(

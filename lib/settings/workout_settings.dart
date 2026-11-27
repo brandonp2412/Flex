@@ -12,53 +12,51 @@ import 'package:flutter/material.dart';
 ({List<Widget> tracking, List<Widget> history, List<Widget> graphs})
 getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
   final l10n = context.l10n;
-  final normalizedTerm = term.trim().toLowerCase();
-  bool matches(Iterable<String> values) =>
-      values.join(' ').toLowerCase().contains(normalizedTerm);
+  bool matches(Iterable<String> values) => settingMatches(term, values);
   return (
     history: [
-      if (matches([l10n.groupHistory, l10n.groupHistoryDescription]))
+      ...matchingToggles(term, [
         SettingToggle(
-          title: Text(l10n.groupHistory),
-          subtitle: Text(l10n.groupHistoryDescription),
+          label: l10n.groupHistory,
           description: l10n.groupHistoryDescription,
+          showDescription: true,
           value: settings.groupHistory,
           icon: Icons.view_agenda,
           outlinedIcon: Icons.view_agenda_outlined,
           update: (value) => SettingsCompanion(groupHistory: Value(value)),
         ),
-      if (matches([l10n.showUnits, l10n.showUnitsDescription]))
         SettingToggle(
-          title: Text(l10n.showUnits),
-          subtitle: Text(l10n.showUnitsDescription),
+          label: l10n.showUnits,
           description: l10n.showUnitsDescription,
+          showDescription: true,
           value: settings.showUnits,
           icon: Icons.scale,
           outlinedIcon: Icons.scale_outlined,
           update: (value) => SettingsCompanion(showUnits: Value(value)),
         ),
+      ]),
     ],
     tracking: [
-      if (matches([l10n.showBodyWeight, l10n.showBodyWeightDescription]))
+      ...matchingToggles(term, [
         SettingToggle(
-          title: Text(l10n.showBodyWeight),
-          subtitle: Text(l10n.showBodyWeightDescription),
+          label: l10n.showBodyWeight,
           description: l10n.showBodyWeightDescription,
+          showDescription: true,
           value: settings.showBodyWeight,
           icon: Icons.monitor_weight,
           outlinedIcon: Icons.monitor_weight_outlined,
           update: (value) => SettingsCompanion(showBodyWeight: Value(value)),
         ),
-      if (matches([l10n.showCategories, l10n.showCategoriesDescription]))
         SettingToggle(
-          title: Text(l10n.showCategories),
-          subtitle: Text(l10n.showCategoriesDescription),
+          label: l10n.showCategories,
           description: l10n.showCategoriesDescription,
+          showDescription: true,
           value: settings.showCategories,
           icon: Icons.category,
           outlinedIcon: Icons.category_outlined,
           update: (value) => SettingsCompanion(showCategories: Value(value)),
         ),
+      ]),
       if (matches([l10n.manageCategories, l10n.manageCategoriesDescription]))
         ListTile(
           leading: const Icon(Icons.category),
@@ -68,16 +66,17 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
             context,
           ).push(FlexPageRoute(builder: (_) => const CategoryManagementPage())),
         ),
-      if (matches([l10n.showNotes, l10n.showNotesDescription]))
+      ...matchingToggles(term, [
         SettingToggle(
-          title: Text(l10n.showNotes),
-          subtitle: Text(l10n.showNotesDescription),
+          label: l10n.showNotes,
           description: l10n.showNotesDescription,
+          showDescription: true,
           value: settings.showNotes,
           icon: Icons.note_alt,
           outlinedIcon: Icons.note_alt_outlined,
           update: (value) => SettingsCompanion(showNotes: Value(value)),
         ),
+      ]),
       if (matches([
         l10n.positiveReinforcement,
         l10n.positiveNotificationsDescription,
@@ -105,45 +104,40 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
             ),
           ),
         ),
-      if (matches([
-        l10n.durationEstimation,
-        l10n.durationEstimationDescription,
-      ]))
+      ...matchingToggles(term, [
         SettingToggle(
-          title: Text(l10n.durationEstimation),
-          subtitle: Text(l10n.durationEstimationDescription),
+          label: l10n.durationEstimation,
           description: l10n.durationEstimationDescription,
+          showDescription: true,
           value: settings.durationEstimation,
           icon: Icons.schedule,
           outlinedIcon: Icons.schedule_outlined,
           update: (value) =>
               SettingsCompanion(durationEstimation: Value(value)),
         ),
+      ]),
     ],
     graphs: [
-      if (matches([
-        l10n.showGraphXAxisToggle,
-        l10n.showGraphXAxisToggleDescription,
-      ]))
+      ...matchingToggles(term, [
         SettingToggle(
-          title: Text(l10n.showGraphXAxisToggle),
-          subtitle: Text(l10n.showGraphXAxisToggleDescription),
+          label: l10n.showGraphXAxisToggle,
           description: l10n.showGraphXAxisToggleDescription,
+          showDescription: true,
           value: settings.showGraphXAxis,
           icon: Icons.show_chart,
           outlinedIcon: Icons.show_chart_outlined,
           update: (value) => SettingsCompanion(showGraphXAxis: Value(value)),
         ),
-      if (matches([l10n.showGraphLimit, l10n.showGraphLimitDescription]))
         SettingToggle(
-          title: Text(l10n.showGraphLimit),
-          subtitle: Text(l10n.showGraphLimitDescription),
+          label: l10n.showGraphLimit,
           description: l10n.showGraphLimitDescription,
+          showDescription: true,
           value: settings.showGraphLimit,
           icon: Icons.tune,
           outlinedIcon: Icons.tune_outlined,
           update: (value) => SettingsCompanion(showGraphLimit: Value(value)),
         ),
+      ]),
       if (matches([
         l10n.defaultGraphMetric,
         l10n.bestWeight,
@@ -204,20 +198,18 @@ getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
           },
           update: (value) => SettingsCompanion(defaultGraphLimit: Value(value)),
         ),
-      if (matches([
-        l10n.defaultTimeBasedXAxis,
-        l10n.defaultTimeBasedXAxisDescription,
-      ]))
+      ...matchingToggles(term, [
         SettingToggle(
-          title: Text(l10n.defaultTimeBasedXAxis),
-          subtitle: Text(l10n.defaultTimeBasedXAxisDescription),
+          label: l10n.defaultTimeBasedXAxis,
           description: l10n.defaultTimeBasedXAxisDescription,
+          showDescription: true,
           value: settings.defaultGraphTimeBasedXAxis,
           icon: Icons.timeline,
           outlinedIcon: Icons.timeline_outlined,
           update: (value) =>
               SettingsCompanion(defaultGraphTimeBasedXAxis: Value(value)),
         ),
+      ]),
     ],
   );
 }

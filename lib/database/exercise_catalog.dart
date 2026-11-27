@@ -1,20 +1,6 @@
+import 'package:flex/database/categories.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/database/database.dart';
-
-Future<int?> _categoryId(AppDatabase database, String? name) async {
-  final trimmed = name?.trim();
-  if (trimmed == null || trimmed.isEmpty) return null;
-  await database
-      .into(database.categories)
-      .insert(
-        CategoriesCompanion.insert(name: trimmed),
-        mode: InsertMode.insertOrIgnore,
-      );
-  return (await (database.categories.select()
-            ..where((category) => category.name.equals(trimmed)))
-          .getSingle())
-      .id;
-}
 
 Future<Exercise?> getExerciseByName(AppDatabase database, String name) {
   return (database.exercises.select()..where(
@@ -24,20 +10,17 @@ Future<Exercise?> getExerciseByName(AppDatabase database, String name) {
       .getSingleOrNull();
 }
 
-Future<List<String>> getExerciseNames(AppDatabase database) {
-  return (database.exercises.select()
-        ..where((exercise) => exercise.archived.equals(false))
-        ..orderBy([(exercise) => OrderingTerm.asc(exercise.name)]))
-      .map((exercise) => exercise.name)
-      .get();
-}
+SimpleSelectStatement<$ExercisesTable, Exercise> _activeExercises(
+  AppDatabase database,
+) => database.exercises.select()
+  ..where((exercise) => exercise.archived.equals(false))
+  ..orderBy([(exercise) => OrderingTerm.asc(exercise.name)]);
 
-Stream<List<Exercise>> watchExerciseCatalog(AppDatabase database) {
-  return (database.exercises.select()
-        ..where((exercise) => exercise.archived.equals(false))
-        ..orderBy([(exercise) => OrderingTerm.asc(exercise.name)]))
-      .watch();
-}
+Future<List<String>> getExerciseNames(AppDatabase database) =>
+    _activeExercises(database).map((exercise) => exercise.name).get();
+
+Stream<List<Exercise>> watchExerciseCatalog(AppDatabase database) =>
+    _activeExercises(database).watch();
 
 List<Exercise> filterExerciseCatalog(
   Iterable<Exercise> exercises,
@@ -76,7 +59,7 @@ Future<Exercise> createExerciseDefinition(
   String? notes,
 }) async {
   final trimmedName = name.trim();
-  final id = await _categoryId(database, category);
+  final id = await ensureCategoryId(database, category);
   return database.exercises.insertReturning(
     ExercisesCompanion.insert(
       name: trimmedName,
@@ -111,7 +94,7 @@ Future<Exercise> syncExerciseDefinition(
       defaultRestDurationMs: defaultRestDurationMs,
     );
   }
-  final categoryId = await _categoryId(database, category);
+  final categoryId = await ensureCategoryId(database, category);
   await (database.exercises.update()
         ..where((row) => row.id.equals(existing.id)))
       .write(
@@ -182,6 +165,24 @@ Future<void> _mergePlanExerciseReferences(
   }
 }
 
+Future<void> _moveExerciseReferences(
+  AppDatabase database,
+  int sourceId,
+  int targetId,
+) async {
+  await _mergePlanExerciseReferences(
+    database,
+    sourceId: sourceId,
+    targetId: targetId,
+  );
+  await (database.exerciseSets.update()
+        ..where((row) => row.exerciseId.equals(sourceId)))
+      .write(ExerciseSetsCompanion(exerciseId: Value(targetId)));
+}
+
+Future<void> _deleteExercise(AppDatabase database, int id) =>
+    (database.exercises.delete()..where((row) => row.id.equals(id))).go();
+
 Future<void> updateExerciseDefinition(
   AppDatabase database, {
   required int exerciseId,
@@ -193,7 +194,7 @@ Future<void> updateExerciseDefinition(
   int? defaultRestDurationMs,
 }) async {
   final trimmedName = name.trim();
-  final categoryId = await _categoryId(database, category);
+  final categoryId = await ensureCategoryId(database, category);
   final target =
       await (database.exercises.select()
             ..where((row) => row.name.equals(trimmedName)))
@@ -216,30 +217,16 @@ Future<void> updateExerciseDefinition(
   }
 
   await database.transaction(() async {
-    await _mergePlanExerciseReferences(
-      database,
-      sourceId: exerciseId,
-      targetId: target.id,
-    );
-    await (database.exerciseSets.update()
-          ..where((row) => row.exerciseId.equals(exerciseId)))
-        .write(ExerciseSetsCompanion(exerciseId: Value(target.id)));
+    await _moveExerciseReferences(database, exerciseId, target.id);
     await (database.exercises.update()
           ..where((row) => row.id.equals(target.id)))
         .write(
-          ExercisesCompanion(
+          definition.copyWith(
             name: Value(target.name),
-            kind: Value(cardio ? 'cardio' : 'strength'),
-            displayUnit: Value(displayUnit),
-            categoryId: Value(categoryId),
-            image: Value(image),
-            defaultRestDurationMs: Value(defaultRestDurationMs),
             archived: const Value(false),
           ),
         );
-    await (database.exercises.delete()
-          ..where((row) => row.id.equals(exerciseId)))
-        .go();
+    await _deleteExercise(database, exerciseId);
   });
 }
 
@@ -287,17 +274,8 @@ Future<void> mergeExerciseGraphs(
 
     for (final source in exercises) {
       if (source.id == keepExerciseId) continue;
-      await _mergePlanExerciseReferences(
-        database,
-        sourceId: source.id,
-        targetId: keepExerciseId,
-      );
-      await (database.exerciseSets.update()
-            ..where((row) => row.exerciseId.equals(source.id)))
-          .write(ExerciseSetsCompanion(exerciseId: Value(keepExerciseId)));
-      await (database.exercises.delete()
-            ..where((row) => row.id.equals(source.id)))
-          .go();
+      await _moveExerciseReferences(database, source.id, keepExerciseId);
+      await _deleteExercise(database, source.id);
     }
 
     // Rename after removing source rows to satisfy the unique name index.

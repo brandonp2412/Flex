@@ -6,24 +6,26 @@ import 'package:flutter/material.dart';
 class SettingToggle extends StatelessWidget {
   const SettingToggle({
     super.key,
-    required this.title,
+    required this.label,
     required this.description,
     required this.value,
     required this.icon,
     required this.outlinedIcon,
     this.update,
     this.onChanged,
-    this.subtitle,
+    this.showDescription = false,
   });
 
-  final Widget title;
+  final String label;
   final String description;
   final bool value;
   final IconData icon;
   final IconData outlinedIcon;
   final SettingsCompanion Function(bool)? update;
   final ValueChanged<bool>? onChanged;
-  final Widget? subtitle;
+  final bool showDescription;
+
+  bool matches(String term) => settingMatches(term, [label, description]);
 
   @override
   Widget build(BuildContext context) {
@@ -38,8 +40,8 @@ class SettingToggle extends StatelessWidget {
     return Tooltip(
       message: description,
       child: ListTile(
-        title: title,
-        subtitle: subtitle,
+        title: Text(label, textAlign: TextAlign.start),
+        subtitle: showDescription ? Text(description) : null,
         leading: Icon(value ? icon : outlinedIcon),
         onTap: () => change(!value),
         trailing: Switch(value: value, onChanged: change),
@@ -47,3 +49,9 @@ class SettingToggle extends StatelessWidget {
     );
   }
 }
+
+bool settingMatches(String term, Iterable<String> values) =>
+    values.join(' ').toLowerCase().contains(term.trim().toLowerCase());
+
+List<Widget> matchingToggles(String term, List<SettingToggle> toggles) =>
+    toggles.where((toggle) => toggle.matches(term)).toList();

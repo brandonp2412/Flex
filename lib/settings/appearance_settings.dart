@@ -15,8 +15,7 @@ List<Widget> getAppearanceSettings(
 ) {
   final l10n = context.l10n;
   final normalizedTerm = term.trim().toLowerCase();
-  bool matches(Iterable<String> values) =>
-      values.join(' ').toLowerCase().contains(normalizedTerm);
+  bool matches(Iterable<String> values) => settingMatches(term, values);
   final localeTerms = [
     l10n.settingsLanguage,
     l10n.settingsLanguageDescription,
@@ -96,9 +95,9 @@ List<Widget> getAppearanceSettings(
           ),
         ),
       ),
-    if (matches([l10n.pureBlackAmoled, l10n.pureBlackAmoledDescription]))
+    ...matchingToggles(term, [
       SettingToggle(
-        title: Text(l10n.pureBlackAmoled, textAlign: TextAlign.start),
+        label: l10n.pureBlackAmoled,
         description: l10n.pureBlackAmoledDescription,
         value: settings.themeMode == 'ThemeMode.amoled',
         icon: Icons.contrast,
@@ -107,11 +106,12 @@ List<Widget> getAppearanceSettings(
           themeMode: Value(value ? 'ThemeMode.amoled' : 'ThemeMode.dark'),
         ),
       ),
+    ]),
     if (matches([l10n.systemColorScheme, l10n.systemColorSchemeDescription]))
       Padding(
         padding: const EdgeInsets.only(top: 8.0),
         child: SettingToggle(
-          title: Text(l10n.systemColorScheme, textAlign: TextAlign.start),
+          label: l10n.systemColorScheme,
           description: l10n.systemColorSchemeDescription,
           value: settings.systemColors,
           icon: Icons.color_lens,
@@ -180,33 +180,32 @@ List<Widget> getAppearanceSettings(
           ],
         ),
       ),
-    if (matches([l10n.showImages, l10n.showImagesDescription]))
+    ...matchingToggles(term, [
       SettingToggle(
-        title: Text(l10n.showImages, textAlign: TextAlign.start),
+        label: l10n.showImages,
         description: l10n.showImagesDescription,
         value: settings.showImages,
         icon: Icons.image,
         outlinedIcon: Icons.image_outlined,
         update: (value) => SettingsCompanion(showImages: Value(value)),
       ),
-    if (matches([l10n.showGlobalProgress, l10n.showGlobalProgressDescription]))
       SettingToggle(
-        title: Text(l10n.showGlobalProgress, textAlign: TextAlign.start),
+        label: l10n.showGlobalProgress,
         description: l10n.showGlobalProgressDescription,
         value: settings.showGlobalProgress,
         icon: Icons.public,
         outlinedIcon: Icons.public_outlined,
         update: (value) => SettingsCompanion(showGlobalProgress: Value(value)),
       ),
-    if (matches([l10n.peekGraph, l10n.peekGraphDescription]))
       SettingToggle(
-        title: Text(l10n.peekGraph, textAlign: TextAlign.start),
+        label: l10n.peekGraph,
         description: l10n.peekGraphDescription,
         value: settings.peekGraph,
         icon: Icons.visibility,
         outlinedIcon: Icons.visibility_outlined,
         update: (value) => SettingsCompanion(peekGraph: Value(value)),
       ),
+    ]),
     if (matches([
       l10n.chartGridlines,
       l10n.chartShading,

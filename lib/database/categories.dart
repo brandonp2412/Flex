@@ -11,34 +11,35 @@ class Categories extends Table {
   TextColumn get name => text().unique()();
 }
 
-/// Adds [name] if it is not already available.
-Future<void> createCategory(String name) {
-  return db
-      .into(db.categories)
-      .insert(
-        CategoriesCompanion.insert(name: name.trim()),
-        mode: InsertMode.insertOrIgnore,
-      );
+Future<void> createCategory(String name, {AppDatabase? database}) async {
+  final target = database ?? db;
+  await target.categories.insertOne(
+    CategoriesCompanion.insert(name: name.trim()),
+    mode: InsertMode.insertOrIgnore,
+  );
 }
 
-/// Removes [category] and clears it from every workout entry using it.
-Future<void> deleteCategory(Category category) {
-  return db.transaction(() async {
-    await (db.exercises.update()
-          ..where((exercise) => exercise.categoryId.equals(category.id)))
-        .write(const ExercisesCompanion(categoryId: Value(null)));
-    await (db.categories.delete()
-          ..where((entry) => entry.id.equals(category.id)))
-        .go();
-  });
+Future<int?> ensureCategoryId(AppDatabase database, String? name) async {
+  final trimmed = name?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  await createCategory(trimmed, database: database);
+  return (await (database.categories.select()
+            ..where((category) => category.name.equals(trimmed)))
+          .getSingle())
+      .id;
 }
 
-/// Moves entries using [source] to [target], then removes [source].
-Future<void> mergeCategory(Category source, Category target) {
+Future<void> deleteCategory(Category category) =>
+    _replaceCategory(category, null);
+
+Future<void> mergeCategory(Category source, Category target) =>
+    _replaceCategory(source, target.id);
+
+Future<void> _replaceCategory(Category source, int? targetId) {
   return db.transaction(() async {
     await (db.exercises.update()
           ..where((exercise) => exercise.categoryId.equals(source.id)))
-        .write(ExercisesCompanion(categoryId: Value(target.id)));
+        .write(ExercisesCompanion(categoryId: Value(targetId)));
     await (db.categories.delete()..where((entry) => entry.id.equals(source.id)))
         .go();
   });

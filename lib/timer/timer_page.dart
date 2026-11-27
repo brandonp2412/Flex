@@ -1,5 +1,4 @@
-import 'package:flex/database/database.dart';
-import 'package:flex/platform_page_route.dart';
+import 'package:flex/tab_navigator.dart';
 import 'package:flex/timer/timer_page_widget.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flutter/material.dart';
@@ -28,26 +27,15 @@ class TimerPageState extends State<TimerPage>
     super.build(context);
     final timerState = context.watch<TimerState>();
 
-    return NavigatorPopHandler(
-      onPopWithResult: (result) {
-        if (_navKey.currentState!.canPop() == false) return;
-        final settings = context.read<Setting>();
-        final index = settings.tabs.split(',').indexOf('TimerPage');
-        final tabController = widget.tabController;
-        if (tabController == null || tabController.index == index) {
-          _navKey.currentState!.pop();
-        }
-      },
-      child: Navigator(
-        key: _navKey,
-        onGenerateRoute: (settings) => FlexPageRoute(
-          builder: (context) => TimerPageWidget(
-            timerState: timerState,
-            total: widget.total,
-            progress: widget.progress,
-          ),
-          settings: settings,
-        ),
+    return tabNavigator(
+      context,
+      navigatorKey: _navKey,
+      tabName: 'TimerPage',
+      tabController: widget.tabController,
+      builder: (context) => TimerPageWidget(
+        timerState: timerState,
+        total: widget.total,
+        progress: widget.progress,
       ),
     );
   }

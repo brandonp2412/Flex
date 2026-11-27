@@ -23,13 +23,11 @@ List<Widget> getTimerSettings(
   BuildContext context,
 ) {
   final l10n = context.l10n;
-  final normalizedTerm = term.trim().toLowerCase();
-  bool matches(Iterable<String> values) =>
-      values.join(' ').toLowerCase().contains(normalizedTerm);
+  bool matches(Iterable<String> values) => settingMatches(term, values);
   return [
-    if (matches([l10n.restTimers, l10n.restTimersDescription]))
+    ...matchingToggles(term, [
       SettingToggle(
-        title: Text(l10n.restTimers, textAlign: TextAlign.start),
+        label: l10n.restTimers,
         description: l10n.restTimersDescription,
         value: settings.restTimers,
         icon: Icons.timer,
@@ -49,9 +47,8 @@ List<Widget> getTimerSettings(
           );
         },
       ),
-    if (matches([l10n.vibrate, l10n.vibrateDescription]))
       SettingToggle(
-        title: Text(l10n.vibrate, textAlign: TextAlign.start),
+        label: l10n.vibrate,
         description: l10n.vibrateDescription,
         value: settings.vibrate,
         icon: Icons.vibration,
@@ -71,27 +68,24 @@ List<Widget> getTimerSettings(
           }
         },
       ),
-    if (matches([l10n.enableSound, l10n.enableSoundDescription]))
       SettingToggle(
-        title: Text(l10n.enableSound, textAlign: TextAlign.start),
+        label: l10n.enableSound,
         description: l10n.enableSoundDescription,
         value: settings.enableSound,
         icon: Icons.music_note,
         outlinedIcon: Icons.music_note_outlined,
         update: (value) => SettingsCompanion(enableSound: Value(value)),
       ),
-    if (matches([l10n.keepRinging, l10n.keepRingingDescription]))
       SettingToggle(
-        title: Text(l10n.keepRinging, textAlign: TextAlign.start),
+        label: l10n.keepRinging,
         description: l10n.keepRingingDescription,
         value: settings.keepRinging,
         icon: Icons.notifications_active,
         outlinedIcon: Icons.notifications_none,
         update: (value) => SettingsCompanion(keepRinging: Value(value)),
       ),
-    if (matches([l10n.keepScreenOn, l10n.keepScreenOnDescription]))
       SettingToggle(
-        title: Text(l10n.keepScreenOn, textAlign: TextAlign.start),
+        label: l10n.keepScreenOn,
         description: l10n.keepScreenOnDescription,
         value: settings.keepScreenOn,
         icon: Icons.light_mode,
@@ -103,6 +97,7 @@ List<Widget> getTimerSettings(
           context.read<TimerState>().setKeepScreenOn(value);
         },
       ),
+    ]),
     if (matches([
       l10n.restMinutes,
       l10n.secondsLabel,

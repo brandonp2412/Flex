@@ -12,7 +12,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
-import 'package:flex/database/categories.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/database/exercise_set_repository.dart';
@@ -213,32 +212,10 @@ class _EditSetPageState extends State<EditSetPage>
                 if (showNotes) ...[notesField(), const SizedBox(height: 12.0)],
                 dateSelector(),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<bool>(
-                    key: const Key('exercise-kind-selector'),
-                    showSelectedIcon: false,
-                    segments: [
-                      ButtonSegment(
-                        value: false,
-                        icon: const Icon(Icons.fitness_center),
-                        label: Text(context.l10n.strength),
-                      ),
-                      ButtonSegment(
-                        value: true,
-                        icon: const Icon(Icons.directions_run),
-                        label: Text(context.l10n.cardio),
-                      ),
-                    ],
-                    selected: {_cardio},
-                    onSelectionChanged: (selection) {
-                      markDirty();
-                      setState(() {
-                        _cardio = selection.first;
-                      });
-                    },
-                  ),
-                ),
+                exerciseKindSelector(context, _cardio, (value) {
+                  markDirty();
+                  setState(() => _cardio = value!);
+                }),
                 if (showImages) ...[const SizedBox(height: 12), imageField()],
                 if (isDesktopLayout(context)) ...[
                   const SizedBox(height: 24),
@@ -405,22 +382,8 @@ class _EditSetPageState extends State<EditSetPage>
     );
   }
 
-  Widget dateSelector() {
-    return Selector<Setting, String>(
-      builder: (context, longDateFormat, child) => ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(context.l10n.createdDate),
-        subtitle: Text(
-          longDateFormat == 'timeago'
-              ? formatRelativeTime(context, _created)
-              : formatDisplayDate(context, _created, longDateFormat),
-        ),
-        trailing: const Icon(Icons.calendar_today),
-        onTap: () => selectDate(),
-      ),
-      selector: (context, settings) => settings.longDateFormat,
-    );
-  }
+  Widget dateSelector() =>
+      workoutDateField(context, _created, selectDate, compact: true);
 
   Selector<Setting, bool> imageField() {
     return Selector<Setting, bool>(
@@ -567,7 +530,6 @@ class _EditSetPageState extends State<EditSetPage>
           category: Value(_category),
         );
 
-    if (_category != null) await createCategory(_category!);
     final exercise = await syncExerciseDefinition(
       db,
       name: _name,
@@ -617,26 +579,15 @@ class _EditSetPageState extends State<EditSetPage>
     }
     if (!mounted) return;
     final timer = context.read<TimerState>();
-    if (restMs != null)
-      timer.startTimer(
-        _name,
-        Duration(milliseconds: restMs!),
-        settings.alarmSound,
-        settings.vibrate,
-        settings.enableSound,
-        'history',
-        settings.keepRinging,
-      );
-    else
-      timer.startTimer(
-        _name,
-        Duration(milliseconds: settings.timerDuration),
-        settings.alarmSound,
-        settings.vibrate,
-        settings.enableSound,
-        'history',
-        settings.keepRinging,
-      );
+    timer.startTimer(
+      _name,
+      Duration(milliseconds: restMs ?? settings.timerDuration),
+      settings.alarmSound,
+      settings.vibrate,
+      settings.enableSound,
+      'history',
+      settings.keepRinging,
+    );
     if (!mounted) return;
     return _popAfterSave();
   }

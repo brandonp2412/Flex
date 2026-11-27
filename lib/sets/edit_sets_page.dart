@@ -6,7 +6,6 @@ import 'package:flex/sets/workout_number_field.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/constants.dart';
-import 'package:flex/database/categories.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/database/exercise_set_repository.dart';
@@ -95,35 +94,10 @@ class _EditSetsPageState extends State<EditSetsPage>
               onChanged: (_) => markDirty(),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: SegmentedButton<bool>(
-                key: const Key('exercise-kind-selector'),
-                showSelectedIcon: false,
-                emptySelectionAllowed: true,
-                segments: [
-                  ButtonSegment(
-                    value: false,
-                    icon: const Icon(Icons.fitness_center),
-                    label: Text(l10n.strength),
-                  ),
-                  ButtonSegment(
-                    value: true,
-                    icon: const Icon(Icons.directions_run),
-                    label: Text(l10n.cardio),
-                  ),
-                ],
-                selected: _cardio == null ? const {} : {_cardio!},
-                onSelectionChanged: (selection) {
-                  if (selection.isEmpty) {
-                    markDirty();
-                    setState(() => _cardio = null);
-                  } else {
-                    _setCardio(selection.first);
-                  }
-                },
-              ),
-            ),
+            exerciseKindSelector(context, _cardio, (value) {
+              markDirty();
+              setState(() => _cardio = value);
+            }, allowEmpty: true),
             const SizedBox(height: 12),
             if (_cardio == true) ...[
               if (isWeightUnit(_unit))
@@ -229,39 +203,11 @@ class _EditSetsPageState extends State<EditSetsPage>
                 setState(() => _category = value);
               },
             ),
-            Selector<Setting, String>(
-              builder: (context, longDateFormat, child) {
-                var subtitle = _oldCreated ?? "";
-
-                if (longDateFormat == 'timeago' && _created != null)
-                  subtitle = formatRelativeTime(context, _created!);
-                else if (longDateFormat != 'timeago' && _created != null)
-                  subtitle = formatDisplayDate(
-                    context,
-                    _created!,
-                    longDateFormat,
-                  );
-
-                return ListTile(
-                  title: Text(l10n.createdDate),
-                  subtitle: Text(subtitle),
-                  trailing: const Icon(Icons.calendar_today),
-                  onTap: () => _selectDate(),
-                );
-              },
-              selector: (context, settings) => settings.longDateFormat,
-            ),
+            workoutDateField(context, _created, _selectDate, hint: _oldCreated),
           ],
         ),
       ),
     );
-  }
-
-  void _setCardio(bool value) {
-    markDirty();
-    setState(() {
-      _cardio = value;
-    });
   }
 
   @override
@@ -280,61 +226,31 @@ class _EditSetsPageState extends State<EditSetsPage>
 
     ExerciseSetQuery(db, ids: widget.ids).get().then((allSets) {
       final exerciseSets = allSets.take(3).toList();
-      if (exerciseSets.isEmpty) return;
+      if (!mounted || exerciseSets.isEmpty) return;
       setState(() {
         _cardio = exerciseSets.first.cardio;
         final units = exerciseSets
             .map((exerciseSet) => exerciseSet.unit)
             .toSet();
         _unit = units.length == 1 ? units.single : null;
-        _oldNames = exerciseSets
-            .map((exerciseSet) => exerciseSet.name)
-            .join(', ');
-        _oldReps = exerciseSets
-            .map((exerciseSet) => exerciseSet.reps)
-            .join(', ');
-        _oldWeights = exerciseSets
-            .map((exerciseSet) => exerciseSet.weight)
-            .join(', ');
-        _oldBody = exerciseSets
-            .map((exerciseSet) => exerciseSet.bodyWeight)
-            .join(', ');
-        if (settings.longDateFormat == 'timeago')
-          _oldCreated = exerciseSets
-              .map(
-                (exerciseSet) =>
-                    formatRelativeTime(context, exerciseSet.created),
-              )
-              .join(', ');
-        else
-          _oldCreated = exerciseSets
-              .map(
-                (exerciseSet) => formatDisplayDate(
-                  context,
-                  exerciseSet.created,
-                  settings.longDateFormat,
-                ),
-              )
-              .join(', ');
-        _oldDist = exerciseSets
-            .map((exerciseSet) => exerciseSet.distance)
-            .join(', ');
-        _oldMin = exerciseSets
-            .map((exerciseSet) => exerciseSet.duration.floor())
-            .join(', ');
-        _oldSec = exerciseSets
-            .map((exerciseSet) => ((exerciseSet.duration * 60) % 60).floor())
-            .join(', ');
-        final incs = exerciseSets
-            .map((exerciseSet) => exerciseSet.incline)
-            .whereType<int>()
-            .join(', ');
-        _oldInc = incs.isEmpty ? null : incs;
-        final cats = exerciseSets
-            .map((exerciseSet) => exerciseSet.category)
-            .whereType<String>()
-            .join(', ');
-        _oldCat = cats.isEmpty ? null : cats;
+        String? hint(Object? Function(ExerciseSetView) value) {
+          final text = exerciseSets.map(value).nonNulls.join(', ');
+          return text.isEmpty ? null : text;
+        }
+
+        _oldNames = hint((set) => set.name);
+        _oldReps = hint((set) => set.reps);
+        _oldWeights = hint((set) => set.weight);
+        _oldBody = hint((set) => set.bodyWeight);
+        _oldCreated = hint(
+          (set) =>
+              formatWorkoutDate(context, set.created, settings.longDateFormat),
+        );
+        _oldDist = hint((set) => set.distance);
+        _oldMin = hint((set) => set.duration.floor());
+        _oldSec = hint((set) => ((set.duration * 60) % 60).floor());
+        _oldInc = hint((set) => set.incline);
+        _oldCat = hint((set) => set.category);
       });
     });
   }
@@ -349,7 +265,6 @@ class _EditSetsPageState extends State<EditSetsPage>
         : parseDisplayNumber(context, _body.text);
     final applyInput = _input.snapshot(context, partial: true);
     final preferredStrengthUnit = context.read<Setting>().strengthUnit;
-    if (_category != null) await createCategory(_category!);
     final selected = await ExerciseSetQuery(db, ids: widget.ids).get();
 
     final changesExercise =

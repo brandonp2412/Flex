@@ -79,26 +79,34 @@ final defaultSettings = SettingsCompanion.insert(
   showNotes: const Value(false),
 );
 
-List<DropdownMenuItem<String>> strengthUnitMenuItems(AppLocalizations l10n) => [
-  DropdownMenuItem(value: 'kg', child: Text(l10n.kilogramsUnit)),
-  DropdownMenuItem(value: 'lb', child: Text(l10n.poundsUnit)),
-  DropdownMenuItem(value: 'stone', child: Text(l10n.stoneUnit)),
+Map<String, String> strengthUnitLabels(AppLocalizations l10n) => {
+  'kg': l10n.kilogramsUnit,
+  'lb': l10n.poundsUnit,
+  'stone': l10n.stoneUnit,
+};
+
+Map<String, String> cardioUnitLabels(
+  AppLocalizations l10n, {
+  bool distanceOnly = false,
+}) => {
+  'km': l10n.kilometersUnit,
+  'mi': l10n.milesUnit,
+  'm': l10n.metersUnit,
+  if (!distanceOnly) 'kcal': l10n.kilocaloriesUnit,
+};
+
+List<DropdownMenuItem<String>> _unitItems(Map<String, String> labels) => [
+  for (final entry in labels.entries)
+    DropdownMenuItem(value: entry.key, child: Text(entry.value)),
 ];
 
+List<DropdownMenuItem<String>> strengthUnitMenuItems(AppLocalizations l10n) =>
+    _unitItems(strengthUnitLabels(l10n));
 List<DropdownMenuItem<String>> cardioDistanceUnitMenuItems(
   AppLocalizations l10n,
-) => [
-  DropdownMenuItem(value: 'km', child: Text(l10n.kilometersUnit)),
-  DropdownMenuItem(value: 'mi', child: Text(l10n.milesUnit)),
-  DropdownMenuItem(value: 'm', child: Text(l10n.metersUnit)),
-];
-
-List<DropdownMenuItem<String>> cardioUnitMenuItems(AppLocalizations l10n) => [
-  DropdownMenuItem(value: 'km', child: Text(l10n.kilometersUnit)),
-  DropdownMenuItem(value: 'mi', child: Text(l10n.milesUnit)),
-  DropdownMenuItem(value: 'm', child: Text(l10n.metersUnit)),
-  DropdownMenuItem(value: 'kcal', child: Text(l10n.kilocaloriesUnit)),
-];
+) => _unitItems(cardioUnitLabels(l10n, distanceOnly: true));
+List<DropdownMenuItem<String>> cardioUnitMenuItems(AppLocalizations l10n) =>
+    _unitItems(cardioUnitLabels(l10n));
 
 String displayMeasurementUnit(AppLocalizations l10n, String unit) =>
     unit == 'stone' ? l10n.stoneUnitShort : unit;

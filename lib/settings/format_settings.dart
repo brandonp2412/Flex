@@ -1,8 +1,9 @@
+import 'package:flex/settings/setting_toggle.dart';
+import 'package:flex/settings/setting_choice.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
-import 'package:flex/main.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 
@@ -39,9 +40,11 @@ List<Widget> getFormatSettings(
   Setting settings,
 ) {
   final l10n = context.l10n;
-  final normalizedTerm = term.trim().toLowerCase();
-  bool matches(Iterable<String> values) =>
-      values.join(' ').toLowerCase().contains(normalizedTerm);
+  bool matches(Iterable<String> values) => settingMatches(term, values);
+  final now = DateTime.now();
+  final currentLong = settings.longDateFormat == 'timeago'
+      ? formatRelativeTime(context, now)
+      : formatDisplayDate(context, now, settings.longDateFormat);
   return [
     if (matches([
       l10n.strengthUnit,
@@ -50,22 +53,12 @@ List<Widget> getFormatSettings(
       l10n.poundsUnit,
       l10n.stoneUnit,
     ]))
-      Padding(
-        padding: settingsPadding,
-        child: DropdownButtonFormField<String>(
-          isExpanded: true,
-          decoration: InputDecoration(labelText: l10n.strengthUnit),
-          initialValue: settings.strengthUnit,
-          items: [
-            DropdownMenuItem(value: "last-entry", child: Text(l10n.lastEntry)),
-            ...strengthUnitMenuItems(l10n),
-          ],
-          onChanged: (value) {
-            db.settings.update().write(
-              SettingsCompanion(strengthUnit: Value(value!)),
-            );
-          },
-        ),
+      SettingChoice<String>(
+        label: l10n.strengthUnit,
+        value: settings.strengthUnit,
+        choices: {'last-entry': l10n.lastEntry, ...strengthUnitLabels(l10n)},
+        isExpanded: true,
+        update: (value) => SettingsCompanion(strengthUnit: Value(value)),
       ),
     if (matches([
       l10n.cardioUnit,
@@ -75,94 +68,41 @@ List<Widget> getFormatSettings(
       l10n.metersUnit,
       l10n.kilocaloriesUnit,
     ]))
-      Padding(
-        padding: settingsPadding,
-        child: DropdownButtonFormField<String>(
-          isExpanded: true,
-          decoration: InputDecoration(labelText: l10n.cardioUnit),
-          initialValue: settings.cardioUnit,
-          items: [
-            DropdownMenuItem(value: "last-entry", child: Text(l10n.lastEntry)),
-            ...cardioUnitMenuItems(l10n),
-          ],
-          onChanged: (value) {
-            db.settings.update().write(
-              SettingsCompanion(cardioUnit: Value(value!)),
-            );
-          },
-        ),
+      SettingChoice<String>(
+        label: l10n.cardioUnit,
+        value: settings.cardioUnit,
+        choices: {'last-entry': l10n.lastEntry, ...cardioUnitLabels(l10n)},
+        isExpanded: true,
+        update: (value) => SettingsCompanion(cardioUnit: Value(value)),
       ),
     if (matches([
       l10n.longDateFormat(''),
       l10n.longDateFormatDescription,
       ...long,
     ]))
-      Padding(
-        padding: settingsPadding,
-        child: Tooltip(
-          message: l10n.longDateFormatDescription,
-          child: Builder(
-            builder: (context) {
-              var format = formatRelativeTime(context, DateTime.now());
-
-              if (settings.longDateFormat != 'timeago') {
-                format = formatDisplayDate(
-                  context,
-                  DateTime.now(),
-                  settings.longDateFormat,
-                );
-              }
-
-              return DropdownButtonFormField<String>(
-                isExpanded: true,
-                initialValue: settings.longDateFormat,
-                menuMaxHeight: 300,
-                items: long.map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (value) => db.settings.update().write(
-                  SettingsCompanion(longDateFormat: Value(value!)),
-                ),
-                decoration: InputDecoration(
-                  labelText: l10n.longDateFormat(format),
-                ),
-              );
-            },
-          ),
-        ),
+      SettingChoice<String>(
+        label: l10n.longDateFormat(currentLong),
+        value: settings.longDateFormat,
+        choices: {for (final value in long) value: value},
+        description: l10n.longDateFormatDescription,
+        isExpanded: true,
+        menuMaxHeight: 300,
+        update: (value) => SettingsCompanion(longDateFormat: Value(value)),
       ),
     if (matches([
       l10n.shortDateFormat(''),
       l10n.shortDateFormatDescription,
       ...short,
     ]))
-      Padding(
-        padding: settingsPadding,
-        child: Tooltip(
-          message: l10n.shortDateFormatDescription,
-          child: DropdownButtonFormField<String>(
-            isExpanded: true,
-            initialValue: settings.shortDateFormat,
-            items: short.map((String value) {
-              return DropdownMenuItem<String>(value: value, child: Text(value));
-            }).toList(),
-            onChanged: (value) => db.settings.update().write(
-              SettingsCompanion(shortDateFormat: Value(value!)),
-            ),
-            decoration: InputDecoration(
-              labelText: l10n.shortDateFormat(
-                formatDisplayDate(
-                  context,
-                  DateTime.now(),
-                  settings.shortDateFormat,
-                ),
-              ),
-            ),
-          ),
+      SettingChoice<String>(
+        label: l10n.shortDateFormat(
+          formatDisplayDate(context, now, settings.shortDateFormat),
         ),
+        value: settings.shortDateFormat,
+        choices: {for (final value in short) value: value},
+        description: l10n.shortDateFormatDescription,
+        isExpanded: true,
+        update: (value) => SettingsCompanion(shortDateFormat: Value(value)),
       ),
   ];
 }

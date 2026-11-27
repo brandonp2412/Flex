@@ -1,12 +1,11 @@
+import 'package:flex/tab_navigator.dart';
 import 'dart:collection';
 
 import 'package:flex/database/database.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flex/sets/history_day.dart';
 import 'package:flex/sets/history_day_group.dart';
 import 'package:flex/sets/history_page_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 export 'package:flex/sets/history_day.dart';
 export 'package:flex/sets/history_day_group.dart';
@@ -60,21 +59,12 @@ class HistoryPageState extends State<HistoryPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return NavigatorPopHandler(
-      onPopWithResult: (result) {
-        if (_navKey.currentState!.canPop() == false) return;
-        final settings = context.read<Setting>();
-        final historyIndex = settings.tabs.split(',').indexOf('HistoryPage');
-        if (widget.tabController.index == historyIndex)
-          _navKey.currentState!.pop();
-      },
-      child: Navigator(
-        key: _navKey,
-        onGenerateRoute: (settings) => FlexPageRoute(
-          builder: (context) => HistoryPageWidget(navigatorKey: _navKey),
-          settings: settings,
-        ),
-      ),
+    return tabNavigator(
+      context,
+      navigatorKey: _navKey,
+      tabName: 'HistoryPage',
+      tabController: widget.tabController,
+      builder: (context) => HistoryPageWidget(navigatorKey: _navKey),
     );
   }
 }

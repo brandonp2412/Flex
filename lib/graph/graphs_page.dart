@@ -1,7 +1,8 @@
+import 'package:flex/tab_navigator.dart';
 import 'graph_tile.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/app_confirmation.dart';
-import 'package:flex/app_fab.dart';
+import 'package:flex/search_list_scaffold.dart';
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
@@ -109,21 +110,12 @@ class GraphsPageState extends State<GraphsPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return NavigatorPopHandler(
-      onPopWithResult: (result) {
-        if (navKey.currentState!.canPop() == false) return;
-        final settings = context.read<Setting>();
-        final graphsIndex = settings.tabs.split(',').indexOf('GraphsPage');
-        if (widget.tabController.index == graphsIndex)
-          Navigator.of(navKey.currentContext!).pop();
-      },
-      child: Navigator(
-        key: navKey,
-        onGenerateRoute: (settings) => FlexPageRoute(
-          builder: (context) => graphsPage(),
-          settings: settings,
-        ),
-      ),
+    return tabNavigator(
+      context,
+      navigatorKey: navKey,
+      tabName: 'GraphsPage',
+      tabController: widget.tabController,
+      builder: (context) => graphsPage(),
     );
   }
 
@@ -285,30 +277,15 @@ class GraphsPageState extends State<GraphsPage>
     );
   }
 
-  Scaffold graphsPage() {
-    final desktop = isDesktopLayout(context);
-    return Scaffold(
-      floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-      resizeToAvoidBottomInset: false,
-      appBar: desktop
-          ? AppBar(
-              title: Text(context.l10n.navGraphs),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: FilledButton.icon(
-                    onPressed: () => navKey.currentState!.push(
-                      FlexPageRoute(
-                        builder: (context) => const ExerciseEditorPage.add(),
-                      ),
-                    ),
-                    icon: const Icon(Icons.add_rounded),
-                    label: Text(context.l10n.addExercise),
-                  ),
-                ),
-              ],
-            )
-          : null,
+  Widget graphsPage() {
+    void add() => navKey.currentState!.push(
+      FlexPageRoute(builder: (context) => const ExerciseEditorPage.add()),
+    );
+    return SearchListScaffold(
+      title: context.l10n.navGraphs,
+      addLabel: context.l10n.addExercise,
+      onAdd: add,
+      scroll: _scroll,
       body: ResponsiveContent(
         maxWidth: dataMaxWidth,
         desktopPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
@@ -326,141 +303,100 @@ class GraphsPageState extends State<GraphsPage>
               _category,
             );
             applyGraphSortToNewestFirstSummaries(exerciseSets, _sort);
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: Column(
-                    children: [
-                      Selector<Setting, bool>(
-                        selector: (context, settings) =>
-                            settings.showGlobalProgress,
-                        builder: (context, showGlobal, child) {
-                          final progressTerms =
-                              '${context.l10n.globalProgress} ${context.l10n.navGraphs}'
-                                  .toLowerCase();
-                          final showProgress =
-                              showGlobal &&
-                              _category == null &&
-                              progressTerms.contains(_search.toLowerCase());
-                          final showEmpty =
-                              exerciseSets.isEmpty && !showProgress;
-                          return Expanded(
-                            child: showEmpty
-                                ? Padding(
-                                    padding: const EdgeInsets.only(
-                                      top: appSearchHeight,
-                                    ),
-                                    child: AppEmptyState(
-                                      icon: Icons.search_off_rounded,
-                                      title: context.l10n.noGraphsFound,
-                                      message: _search.trim().isEmpty
-                                          ? context
-                                                .l10n
-                                                .completeSetForFirstGraph
-                                          : context.l10n
-                                                .nothingMatchesGraphSearch(
-                                                  _search.trim(),
-                                                ),
-                                      actionLabel: _search.trim().isEmpty
-                                          ? context.l10n.addExercise
-                                          : context.l10n.addNamed(
-                                              _search.trim(),
-                                            ),
-                                      actionIcon: Icons.add_rounded,
-                                      onAction: () =>
-                                          Navigator.of(context).push(
-                                            FlexPageRoute(
-                                              builder: (context) =>
-                                                  ExerciseEditorPage.add(
-                                                    name: _search,
-                                                  ),
-                                            ),
-                                          ),
-                                    ),
-                                  )
-                                : graphList(exerciseSets, showGlobal),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: AppSearch(
-                    hintText: context.l10n.searchGraphs,
-                    controller: _selection,
-                    filter: GraphsFilters(
-                      category: _category,
-                      setCategory: (value) {
-                        setState(() {
-                          _category = value;
-                        });
-                      },
-                      sort: _sort,
-                      setSort: (value) {
-                        setState(() {
-                          _sort = value;
-                        });
-                      },
-                    ),
-                    onShare: onShare,
-                    onMerge: _openMergeGraphs,
-                    onChange: (value) {
-                      setState(() {
-                        _search = value;
-                      });
-                    },
-                    onDelete: () async => onDelete(),
-                    onSelectAll: () async {
-                      setState(() {
-                        _selection.addAll(
-                          exerciseSets.map(
-                            (exerciseSet) => exerciseSet.selectionKey,
+            return searchListBody(
+              list: Selector<Setting, bool>(
+                selector: (context, settings) => settings.showGlobalProgress,
+                builder: (context, showGlobal, child) {
+                  final showProgress =
+                      showGlobal &&
+                      _category == null &&
+                      '${context.l10n.globalProgress} ${context.l10n.navGraphs}'
+                          .toLowerCase()
+                          .contains(_search.toLowerCase());
+                  return exerciseSets.isEmpty && !showProgress
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: appSearchHeight),
+                          child: AppEmptyState(
+                            icon: Icons.search_off_rounded,
+                            title: context.l10n.noGraphsFound,
+                            message: _search.trim().isEmpty
+                                ? context.l10n.completeSetForFirstGraph
+                                : context.l10n.nothingMatchesGraphSearch(
+                                    _search.trim(),
+                                  ),
+                            actionLabel: _search.trim().isEmpty
+                                ? context.l10n.addExercise
+                                : context.l10n.addNamed(_search.trim()),
+                            actionIcon: Icons.add_rounded,
+                            onAction: () => Navigator.of(context).push(
+                              FlexPageRoute(
+                                builder: (context) =>
+                                    ExerciseEditorPage.add(name: _search),
+                              ),
+                            ),
                           ),
-                        );
-                      });
-                      final total = await _countSelectedGraphRecords();
-                      if (!mounted) return;
-                      setState(() => _total = total);
-                    },
-                    onEdit: () async {
-                      final key = _selection.first;
-                      final summary = (await _stream.first).firstWhere(
-                        (entry) => entry.selectionKey == key,
-                      );
-                      if (summary.bodyWeight || !context.mounted) return;
-                      await Navigator.of(context).push(
-                        FlexPageRoute(
-                          builder: (context) =>
-                              ExerciseEditorPage.edit(name: summary.name),
-                        ),
-                      );
-                    },
-                    confirmText: context.l10n.deleteGraphRecordsConfirmation(
-                      _total,
-                    ),
-                  ),
+                        )
+                      : graphList(exerciseSets, showGlobal);
+                },
+              ),
+              search: AppSearch(
+                hintText: context.l10n.searchGraphs,
+                controller: _selection,
+                filter: GraphsFilters(
+                  category: _category,
+                  setCategory: (value) {
+                    setState(() {
+                      _category = value;
+                    });
+                  },
+                  sort: _sort,
+                  setSort: (value) {
+                    setState(() {
+                      _sort = value;
+                    });
+                  },
                 ),
-              ],
+                onShare: onShare,
+                onMerge: _openMergeGraphs,
+                onChange: (value) {
+                  setState(() {
+                    _search = value;
+                  });
+                },
+                onDelete: () async => onDelete(),
+                onSelectAll: () async {
+                  setState(() {
+                    _selection.addAll(
+                      exerciseSets.map(
+                        (exerciseSet) => exerciseSet.selectionKey,
+                      ),
+                    );
+                  });
+                  final total = await _countSelectedGraphRecords();
+                  if (!mounted) return;
+                  setState(() => _total = total);
+                },
+                onEdit: () async {
+                  final key = _selection.first;
+                  final summary = (await _stream.first).firstWhere(
+                    (entry) => entry.selectionKey == key,
+                  );
+                  if (summary.bodyWeight || !context.mounted) return;
+                  await Navigator.of(context).push(
+                    FlexPageRoute(
+                      builder: (context) =>
+                          ExerciseEditorPage.edit(name: summary.name),
+                    ),
+                  );
+                },
+                confirmText: context.l10n.deleteGraphRecordsConfirmation(
+                  _total,
+                ),
+              ),
             );
           },
         ),
       ),
-      floatingActionButton: desktop
-          ? null
-          : AppFab(
-              onPressed: () => navKey.currentState!.push(
-                FlexPageRoute(
-                  builder: (context) => const ExerciseEditorPage.add(),
-                ),
-              ),
-              label: Text(context.l10n.actionAdd),
-              scroll: _scroll,
-              icon: const Icon(Icons.add),
-            ),
     );
   }
 

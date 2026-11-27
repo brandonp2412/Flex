@@ -1,10 +1,9 @@
+import 'package:flex/tab_navigator.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/plan/plans_navigator_observer.dart';
 import 'package:flex/plan/plans_page_widget.dart';
 import 'package:flex/plan/start_plan_page.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 bool matchesPlanSearch(
   Plan plan,
@@ -57,21 +56,13 @@ class PlansPageState extends State<PlansPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return NavigatorPopHandler(
-      onPopWithResult: (result) {
-        if (navKey.currentState!.canPop() == false) return;
-        final settings = context.read<Setting>();
-        final index = settings.tabs.split(',').indexOf('PlansPage');
-        if (widget.tabController.index == index) navKey.currentState!.pop();
-      },
-      child: Navigator(
-        key: navKey,
-        observers: [_routeObserver],
-        onGenerateRoute: (settings) => FlexPageRoute(
-          builder: (context) => PlansPageWidget(navKey: navKey),
-          settings: settings,
-        ),
-      ),
+    return tabNavigator(
+      context,
+      navigatorKey: navKey,
+      tabName: 'PlansPage',
+      tabController: widget.tabController,
+      observers: [_routeObserver],
+      builder: (context) => PlansPageWidget(navKey: navKey),
     );
   }
 }

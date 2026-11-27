@@ -11,23 +11,36 @@ class SettingChoice<T extends Object> extends StatelessWidget {
     required this.value,
     required this.choices,
     required this.update,
+    this.description,
+    this.isExpanded = false,
+    this.menuMaxHeight,
   });
   final String label;
   final T value;
   final Map<T, String> choices;
   final SettingsCompanion Function(T) update;
+  final String? description;
+  final bool isExpanded;
+  final double? menuMaxHeight;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: settingsPadding,
-    child: DropdownButtonFormField<T>(
+  Widget build(BuildContext context) {
+    final field = DropdownButtonFormField<T>(
       decoration: InputDecoration(labelText: label),
       initialValue: value,
+      isExpanded: isExpanded,
+      menuMaxHeight: menuMaxHeight,
       items: [
         for (final entry in choices.entries)
           DropdownMenuItem(value: entry.key, child: Text(entry.value)),
       ],
       onChanged: (value) => db.settings.update().write(update(value!)),
-    ),
-  );
+    );
+    return Padding(
+      padding: settingsPadding,
+      child: description == null
+          ? field
+          : Tooltip(message: description!, child: field),
+    );
+  }
 }
