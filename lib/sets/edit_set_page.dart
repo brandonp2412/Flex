@@ -22,7 +22,6 @@ import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/sets/keyboard_close_observer.dart';
-import 'package:flex/stepper_field.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flex/unsaved_changes.dart';
 import 'package:flex/utils.dart';
@@ -246,10 +245,10 @@ class _EditSetPageState extends State<EditSetPage>
   }
 
   Widget buildRepsField() {
-    return StepperField(
+    return WorkoutNumberField(
       controller: _input.reps,
       focusNode: _repsNode,
-      labelText: context.l10n.repsLabel,
+      decoration: InputDecoration(labelText: context.l10n.repsLabel),
       step: 1,
       onChanged: (value) {
         markDirty();
@@ -262,13 +261,15 @@ class _EditSetPageState extends State<EditSetPage>
   }
 
   Widget buildWeightField() {
-    return StepperField(
+    return WorkoutNumberField(
       controller: _input.weight,
-      labelText: switch (_unit) {
-        _ when isWeightUnit(_unit) => context.l10n.weightWithUnit(_unit),
-        'kcal' => context.l10n.amountWithUnit(_unit),
-        _ => context.l10n.distanceWithUnit(_unit),
-      },
+      decoration: InputDecoration(
+        labelText: switch (_unit) {
+          _ when isWeightUnit(_unit) => context.l10n.weightWithUnit(_unit),
+          'kcal' => context.l10n.amountWithUnit(_unit),
+          _ => context.l10n.distanceWithUnit(_unit),
+        },
+      ),
       step: weightStep(_name, _unit),
       onFieldSubmitted: (value) => save(),
       onChanged: (value) {
@@ -300,7 +301,7 @@ class _EditSetPageState extends State<EditSetPage>
 
   Widget buildDistanceField() {
     if (isWeightUnit(_unit)) return buildWeightField();
-    return TextFormField(
+    return WorkoutNumberField(
       controller: _input.distance,
       focusNode: _distNode,
       decoration: InputDecoration(
@@ -308,34 +309,18 @@ class _EditSetPageState extends State<EditSetPage>
             ? context.l10n.amountWithUnit(_unit)
             : context.l10n.distanceWithUnit(_unit),
       ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      onTap: () => selectAll(_input.distance),
       onChanged: (_) => markDirty(),
-      onFieldSubmitted: (value) => selectAll(_input.minutes),
+      onFieldSubmitted: (_) => selectAll(_input.minutes),
       textInputAction: TextInputAction.next,
-      validator: (value) {
-        if (value == null || value.isEmpty) return null;
-        if (parseDisplayNumber(context, value) == null)
-          return context.l10n.invalidNumber;
-        return null;
-      },
     );
   }
 
-  Widget buildInclineField() {
-    return TextFormField(
-      controller: _input.incline,
-      decoration: InputDecoration(labelText: context.l10n.inclinePercent),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      onTap: () => selectAll(_input.incline),
-      onChanged: (_) => markDirty(),
-      validator: (value) {
-        if (value == null || value.isEmpty) return null;
-        if (int.tryParse(value) == null) return context.l10n.invalidNumber;
-        return null;
-      },
-    );
-  }
+  Widget buildInclineField() => WorkoutNumberField(
+    controller: _input.incline,
+    decoration: InputDecoration(labelText: context.l10n.inclinePercent),
+    onChanged: (_) => markDirty(),
+    validator: wholeNumberValidator(context),
+  );
 
   Widget bodyFields(bool showBodyWeight) {
     return Visibility(

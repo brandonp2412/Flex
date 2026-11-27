@@ -22,7 +22,6 @@ import 'package:flex/plan/start_plan_dock_location.dart';
 import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
-import 'package:flex/stepper_field.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/foundation.dart';
@@ -321,10 +320,10 @@ class _StartPlanPageState extends State<StartPlanPage>
 
   List<Widget> strengthFields() {
     return [
-      StepperField(
+      WorkoutNumberField(
         controller: _input.reps,
         focusNode: _repsFocus,
-        labelText: context.l10n.repsLabel,
+        decoration: InputDecoration(labelText: context.l10n.repsLabel),
         step: 1,
         textInputAction: TextInputAction.next,
         onFieldSubmitted: (_) => _focusAndSelect(_weightFocus, _input.weight),
@@ -397,15 +396,17 @@ class _StartPlanPageState extends State<StartPlanPage>
     ];
   }
 
-  StepperField _weightField() {
+  WorkoutNumberField _weightField() {
     final exerciseName = _currentExercise?.name ?? '';
     final showNotes = context.read<Setting>().showNotes;
     final hasNextField = _cardio || showNotes;
 
-    return StepperField(
+    return WorkoutNumberField(
       controller: _input.weight,
       focusNode: _weightFocus,
-      labelText: context.l10n.weightWithUnit(_unit),
+      decoration: InputDecoration(
+        labelText: context.l10n.weightWithUnit(_unit),
+      ),
       step: weightStep(exerciseName, _unit),
       suffixIcon: Selector<Setting, bool>(
         selector: (context, settings) => settings.showBodyWeight,

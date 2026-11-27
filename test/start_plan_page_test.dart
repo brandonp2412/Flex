@@ -9,7 +9,7 @@ import 'package:flex/plan/start_plan_page.dart';
 import 'package:flex/plan/start_list.dart';
 import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/sets/edit_set_page.dart';
-import 'package:flex/stepper_field.dart';
+import 'package:flex/sets/workout_number_field.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,7 +19,8 @@ import 'support/test_app.dart';
 
 Finder textFieldWithLabel(String label) => find.descendant(
   of: find.byWidgetPredicate(
-    (widget) => widget is StepperField && widget.labelText == label,
+    (widget) =>
+        widget is WorkoutNumberField && widget.decoration.labelText == label,
   ),
   matching: find.byType(EditableText),
 );

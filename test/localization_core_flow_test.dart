@@ -1,7 +1,7 @@
 import 'package:flex/app_fab.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
-import 'package:flex/stepper_field.dart';
+import 'package:flex/sets/workout_number_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -95,9 +95,9 @@ void main() {
       Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(8),
-          child: StepperField(
+          child: WorkoutNumberField(
             controller: controller,
-            labelText: l10n.weightWithUnit('kg'),
+            decoration: InputDecoration(labelText: l10n.weightWithUnit('kg')),
             step: 2.5,
             suffixIcon: IconButton(
               tooltip: l10n.useBodyWeight,
