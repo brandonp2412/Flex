@@ -1,4 +1,5 @@
 import 'package:flex/app_message.dart';
+import 'package:flex/data_action_tile.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -101,50 +102,25 @@ class ImportData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: () {
-        showModalBottomSheet(
-          useRootNavigator: true,
-          context: context,
-          builder: (context) {
-            return SafeArea(
-              child: Wrap(
-                children: <Widget>[
-                  ListTile(
-                    leading: const Icon(Icons.insights),
-                    title: Text(context.l10n.navGraphs),
-                    onTap: () => importGraphs(context),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.fitness_center_outlined),
-                    title: Text(context.l10n.externalWorkoutCsv),
-                    onTap: () => importOtherAppCsv(context),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.event),
-                    title: Text(context.l10n.navPlans),
-                    onTap: () => importPlans(context),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.storage),
-                    title: Text(context.l10n.backupLabel),
-                    onTap: () => importDatabase(context),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-      leading: const Icon(Icons.upload_outlined),
-      title: Text(context.l10n.importData),
-      trailing: const Icon(Icons.chevron_right_rounded),
+    final l10n = context.l10n;
+    return DataActionTile(
+      icon: Icons.upload_outlined,
+      label: l10n.importData,
+      actions: [
+        (Icons.insights, l10n.navGraphs, () => _importCsv(_CsvKind.graphs)),
+        (
+          Icons.fitness_center_outlined,
+          l10n.externalWorkoutCsv,
+          () => _importCsv(_CsvKind.external),
+        ),
+        (Icons.event, l10n.navPlans, () => _importCsv(_CsvKind.plans)),
+        (Icons.storage, l10n.backupLabel, _importDatabase),
+      ],
     );
   }
 
-  Future<void> importDatabase(BuildContext context) async {
+  Future<void> _importDatabase() async {
     final l10n = ctx.l10n;
-    Navigator.pop(context);
     talker.info('Starting Flex database import');
 
     try {
@@ -268,18 +244,8 @@ class ImportData extends StatelessWidget {
     throw ImportValidationException(l10n.databaseImportWebUnsupported);
   }
 
-  Future<void> importOtherAppCsv(BuildContext context) =>
-      _importCsv(context, _CsvKind.external);
-
-  Future<void> importGraphs(BuildContext context) =>
-      _importCsv(context, _CsvKind.graphs);
-
-  Future<void> importPlans(BuildContext context) =>
-      _importCsv(context, _CsvKind.plans);
-
-  Future<void> _importCsv(BuildContext context, _CsvKind kind) async {
+  Future<void> _importCsv(_CsvKind kind) async {
     final l10n = ctx.l10n;
-    Navigator.pop(context);
     final external = kind == _CsvKind.external;
     final plans = kind == _CsvKind.plans;
     try {
