@@ -12,6 +12,7 @@ import 'package:flex/sets/history_page.dart';
 import 'package:flex/settings/settings_page.dart';
 import 'package:flex/timer/timer_page.dart';
 import 'package:flex/timer/timer_state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,6 +28,18 @@ Future<void> appWrapper(
   WidgetTester tester, {
   required String localeIdentifier,
 }) async {
+  if (kIsWeb &&
+      const bool.fromEnvironment('SCREENSHOT_WEB_ANDROID_INSETS') &&
+      tester.view.devicePixelRatio > 1) {
+    final scale = tester.view.devicePixelRatio;
+    final phone = tester.view.physicalSize.width / scale < 600;
+    final padding = FakeViewPadding(
+      top: 24 * scale,
+      bottom: (phone ? 24 : 32) * scale,
+    );
+    tester.view.padding = padding;
+    tester.view.viewPadding = padding;
+  }
   await app.db.settings.update().write(
     SettingsCompanion(
       themeMode: Value(ThemeMode.dark.toString()),

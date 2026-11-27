@@ -45,97 +45,8 @@ jobs:
 
   generate-screenshots:
     if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - device_type: phoneScreenshots
-            profile: pixel_6
-            screen_size: 1080x2160
-          - device_type: sevenInchScreenshots
-            profile: Nexus 7
-            screen_size: 1920x1080
-          - device_type: tenInchScreenshots
-            profile: Nexus 10
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          persist-credentials: false
-
-      - name: Setup Java
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
-        with:
-          distribution: "zulu"
-          java-version: "21"
-
-      - name: Setup Flutter from submodule
-        run: |
-          git submodule update --init --recursive flutter
-          chmod +x flutter/bin/*
-          echo "$PWD/flutter/bin" >> "$GITHUB_PATH"
-          flutter/bin/flutter config --no-analytics
-
-      - name: Get Flutter dependencies
-        run: flutter pub get --enforce-lockfile
-
-      - name: Decode Android keystore
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/keystore.jks
-
-      - name: Configure Android signing
-        env:
-          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        run: |
-          echo "storePassword=$ANDROID_STORE_PASSWORD" > android/key.properties
-          echo "keyPassword=$ANDROID_KEY_PASSWORD" >> android/key.properties
-          echo "keyAlias=$ANDROID_KEY_ALIAS" >> android/key.properties
-          echo "storeFile=keystore.jks" >> android/key.properties
-
-      - name: Install pinned Android NDK with recovery
-        run: bash ./scripts/ensure-ci-ndk.sh 28.2.13676358
-
-      # Compile before launching the emulator: simultaneous Gradle compilation and
-      # software-rendered Android caused VM-service connection timeouts on CI.
-      - name: Build screenshot profile APK
-        run: flutter build apk --profile --target=integration_test/screenshot_test.dart
-
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Generate ${{ matrix.device_type }}
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
-        env:
-          FLEX_DEVICE_TYPE: ${{ matrix.device_type }}
-          SCREENSHOT_SCREEN_SIZE: ${{ matrix.screen_size }}
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          profile: ${{ matrix.profile }}
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: ./scripts/ci-screenshots.sh
-
-      - name: Upload ${{ matrix.device_type }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: screenshots-${{ matrix.device_type }}
-          path: fastlane/metadata/android/en-US/images/${{ matrix.device_type }}
-          if-no-files-found: error
-          retention-days: 7
-
-  generate-desktop-screenshots:
-    if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -147,25 +58,65 @@ jobs:
           chmod +x flutter/bin/*
           echo "$PWD/flutter/bin" >> "$GITHUB_PATH"
           flutter/bin/flutter config --no-analytics
-          flutter/bin/flutter config --enable-web
 
-      - name: Get Flutter dependencies
-        run: flutter pub get --enforce-lockfile
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Capture desktop screenshots
-        timeout-minutes: 20
-        run: ./scripts/screenshots-chrome.sh desktop
+      - name: Build screenshot fixtures
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter build web --release --no-wasm-dry-run --no-web-resources-cdn --dart-define=SCREENSHOT_WEB_ANDROID_INSETS=true --target=integration_test/screenshot_test.dart
 
-      - name: Upload browser failure screenshot
+      - name: Install Chromium
+        run: |
+          python -m pip install patchright==1.64.4
+          python -m patchright install --with-deps chromium
+
+      - name: Capture all screenshot profiles
+        run: |
+          python scripts/capture-screenshots.py --web build/web --output "$RUNNER_TEMP/flex-screenshots"
+          for device in phoneScreenshots sevenInchScreenshots tenInchScreenshots; do
+            cp "$RUNNER_TEMP/flex-screenshots/$device/"*.png "fastlane/metadata/android/en-US/images/$device/"
+          done
+          for number in {1..8}; do
+            cp "$RUNNER_TEMP/flex-screenshots/desktop/${number}_en-US.png" "fastlane/screenshots/desktop-${number}_en-US.png"
+          done
+
+      - name: Upload browser diagnostics
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: desktop-failure
-          path: fastlane/screenshots/desktop-debug.png
+          name: screenshot-failure
+          path: ${{ runner.temp }}/flex-screenshots/*-debug.png
           if-no-files-found: ignore
           retention-days: 3
 
-      - name: Upload desktop screenshots
+      - name: Upload phoneScreenshots
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: screenshots-phoneScreenshots
+          path: fastlane/metadata/android/en-US/images/phoneScreenshots
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload sevenInchScreenshots
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: screenshots-sevenInchScreenshots
+          path: fastlane/metadata/android/en-US/images/sevenInchScreenshots
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload tenInchScreenshots
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: screenshots-tenInchScreenshots
+          path: fastlane/metadata/android/en-US/images/tenInchScreenshots
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload desktop
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: screenshots-desktop
@@ -175,7 +126,7 @@ jobs:
 
   version-bump:
     if: ${{ always() && github.event_name == 'workflow_dispatch' && needs.quality-checks.result == 'success' }}
-    needs: [quality-checks, generate-screenshots, generate-desktop-screenshots]
+    needs: [quality-checks, generate-screenshots]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -231,7 +182,7 @@ jobs:
             test -s "$image"
             cp "$image" "fastlane/metadata/android/en-US/images/desktop/${number}_en-US.png"
           done
-          if [[ "${{ needs.generate-screenshots.result }}" != success || "${{ needs.generate-desktop-screenshots.result }}" != success ]]; then
+          if [[ "${{ needs.generate-screenshots.result }}" != success ]]; then
             echo "::warning::Screenshot generation failed; using previously committed images where necessary."
           fi
 
