@@ -17,6 +17,7 @@ import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/sets/edit_sets_page.dart';
 import 'package:flex/sets/group_history.dart';
 import 'package:flex/sets/history_grouping_cache.dart';
+import 'package:flex/sets/history_filters.dart';
 import 'package:flex/sets/history_list.dart';
 import 'package:flex/sets/history_page.dart';
 import 'package:flex/utils.dart';
@@ -36,19 +37,13 @@ class HistoryPageWidget extends StatefulWidget {
 class _HistoryPageWidgetState extends State<HistoryPageWidget> {
   late Stream<List<ExerciseSetView>> stream;
 
-  final repsGt = TextEditingController();
-  final repsLt = TextEditingController();
-  final weightGt = TextEditingController();
-  final weightLt = TextEditingController();
+  final _filters = HistoryFilters();
   final scroll = ScrollController();
   final _selection = <int>{};
   final _historyGroups = HistoryGroupingCache();
 
   String search = '';
   int limit = 100;
-  DateTime? startDate;
-  DateTime? endDate;
-  String? category;
 
   @override
   Widget build(BuildContext context) {
@@ -112,38 +107,9 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
                 hintText: context.l10n.searchHistory,
                 controller: _selection,
                 filter: Filters(
-                  repsGtCtrl: repsGt,
-                  repsLtCtrl: repsLt,
-                  weightGtCtrl: weightGt,
-                  weightLtCtrl: weightLt,
-                  setStream: () {
-                    setState(() {
-                      limit = 100;
-                    });
-                    setStream();
-                  },
-                  endDate: endDate,
-                  startDate: startDate,
-                  setEnd: (value) {
-                    setState(() {
-                      endDate = value;
-                      limit = 100;
-                    });
-                    setStream();
-                  },
-                  setStart: (value) {
-                    setState(() {
-                      startDate = value;
-                      limit = 100;
-                    });
-                    setStream();
-                  },
-                  category: category,
-                  setCategory: (value) {
-                    setState(() {
-                      category = value;
-                      limit = 100;
-                    });
+                  filters: _filters,
+                  onChanged: () {
+                    limit = 100;
                     setStream();
                   },
                 ),
@@ -247,10 +213,7 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
 
   @override
   void dispose() {
-    repsGt.dispose();
-    repsLt.dispose();
-    weightGt.dispose();
-    weightLt.dispose();
+    _filters.dispose();
     scroll.dispose();
     super.dispose();
   }
@@ -261,18 +224,8 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
     setStream();
   }
 
-  ExerciseSetQuery _filteredQuery({int? rowLimit}) => ExerciseSetQuery(
-    db,
-    search: search,
-    category: category,
-    startDate: startDate,
-    endDate: endDate,
-    repsGt: parseDisplayNumber(context, repsGt.text),
-    repsLt: parseDisplayNumber(context, repsLt.text),
-    weightGt: parseDisplayNumber(context, weightGt.text),
-    weightLt: parseDisplayNumber(context, weightLt.text),
-    limit: rowLimit,
-  );
+  ExerciseSetQuery _filteredQuery({int? rowLimit}) =>
+      _filters.query(db, context, search: search, limit: rowLimit);
 
   Future<void> selectAllFiltered() async {
     final ids = await _filteredQuery().getIds();

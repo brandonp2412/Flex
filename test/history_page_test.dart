@@ -504,4 +504,47 @@ void main() {
       expect(find.byTooltip('Delete selected'), findsNothing);
     },
   );
+  testWidgets('HistoryPage clears category and numeric filters together', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    for (final (name, category, reps) in [
+      ('Light bench', 'Chest', 2.0),
+      ('Heavy bench', 'Chest', 8.0),
+      ('Squat', 'Legs', 10.0),
+    ]) {
+      await insertExerciseSetFixture(
+        harness.database,
+        name,
+        category: category,
+        reps: reps,
+        weight: 50,
+      );
+    }
+    await pumpHistoryPage(tester, harness);
+    final filter = find.byTooltip('Filter');
+    await tester.tap(filter);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Chest').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Squat'), findsNothing);
+    await tester.tap(filter);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reps'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.bySemanticsLabel('Greater than'), '5');
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(find.text('Heavy bench'), findsOneWidget);
+    expect(find.text('Light bench'), findsNothing);
+    await tester.tap(filter);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Clear'));
+    await tester.pumpAndSettle();
+    for (final name in ['Light bench', 'Heavy bench', 'Squat']) {
+      expect(find.text(name), findsOneWidget);
+    }
+  });
 }

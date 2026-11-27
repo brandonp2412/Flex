@@ -261,19 +261,6 @@ class _EditSetsPageState extends State<EditSetsPage>
       final restMs = _restMs ?? original.restMs;
       final category = _category ?? original.category;
 
-      final exercise = changesExercise
-          ? await syncExerciseDefinition(
-              db,
-              name: name,
-              cardio: cardio,
-              displayUnit: unit,
-              category: category,
-              image: original.image,
-              defaultRestDurationMs: restMs,
-            )
-          : await getExerciseByName(db, original.name);
-      if (exercise == null) continue;
-
       final originalBodyWeightKg = original.bodyWeight == 0
           ? null
           : loadKg(original.unit, original.bodyWeight) ?? original.bodyWeight;
@@ -294,6 +281,11 @@ class _EditSetsPageState extends State<EditSetsPage>
         bodyWeight: bodyWeight ?? original.bodyWeight,
         category: Value(category),
       );
+
+      final exercise = changesExercise
+          ? await syncExerciseDefinition(db, updated)
+          : await getExerciseByName(db, original.name);
+      if (exercise == null) continue;
 
       await updateExerciseSet(
         db,

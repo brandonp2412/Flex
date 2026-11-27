@@ -54,6 +54,23 @@ Future<String?> getExerciseCategoryName(
       ?.name;
 }
 
+Future<ExercisesCompanion> _definition(
+  AppDatabase database, {
+  required String name,
+  required bool cardio,
+  required String displayUnit,
+  String? category,
+  String? image,
+  int? defaultRestDurationMs,
+}) async => ExercisesCompanion.insert(
+  name: name.trim(),
+  kind: cardio ? 'cardio' : 'strength',
+  displayUnit: displayUnit,
+  categoryId: Value(await ensureCategoryId(database, category)),
+  image: Value(image),
+  defaultRestDurationMs: Value(defaultRestDurationMs),
+);
+
 Future<Exercise> createExerciseDefinition(
   AppDatabase database, {
   required String name,
@@ -63,59 +80,41 @@ Future<Exercise> createExerciseDefinition(
   String? image,
   int? defaultRestDurationMs,
   String? notes,
-}) async {
-  final trimmedName = name.trim();
-  final id = await ensureCategoryId(database, category);
-  return database.exercises.insertReturning(
-    ExercisesCompanion.insert(
-      name: trimmedName,
-      kind: cardio ? 'cardio' : 'strength',
-      displayUnit: displayUnit,
-      categoryId: Value(id),
-      image: Value(image),
-      defaultRestDurationMs: Value(defaultRestDurationMs),
-      notes: Value(notes),
-    ),
-  );
-}
+}) async => database.exercises.insertReturning(
+  (await _definition(
+    database,
+    name: name,
+    cardio: cardio,
+    displayUnit: displayUnit,
+    category: category,
+    image: image,
+    defaultRestDurationMs: defaultRestDurationMs,
+  )).copyWith(notes: Value(notes)),
+);
+
+Future<Exercise> upsertExerciseDefinition(
+  AppDatabase database,
+  ExercisesCompanion definition,
+) => database.exercises.insertReturning(
+  definition,
+  onConflict: DoUpdate((_) => definition, target: [database.exercises.name]),
+);
 
 Future<Exercise> syncExerciseDefinition(
-  AppDatabase database, {
-  required String name,
-  required bool cardio,
-  required String displayUnit,
-  String? category,
-  String? image,
-  int? defaultRestDurationMs,
-}) async {
-  final existing = await getExerciseByName(database, name);
-  if (existing == null) {
-    return createExerciseDefinition(
-      database,
-      name: name,
-      cardio: cardio,
-      displayUnit: displayUnit,
-      category: category,
-      image: image,
-      defaultRestDurationMs: defaultRestDurationMs,
-    );
-  }
-  final categoryId = await ensureCategoryId(database, category);
-  await (database.exercises.update()
-        ..where((row) => row.id.equals(existing.id)))
-      .write(
-        ExercisesCompanion(
-          kind: Value(cardio ? 'cardio' : 'strength'),
-          displayUnit: Value(displayUnit),
-          categoryId: Value(categoryId),
-          image: Value(image),
-          defaultRestDurationMs: Value(defaultRestDurationMs),
-        ),
-      );
-  return (database.exercises.select()
-        ..where((row) => row.id.equals(existing.id)))
-      .getSingle();
-}
+  AppDatabase database,
+  ExerciseSetView set,
+) async => upsertExerciseDefinition(
+  database,
+  (await _definition(
+    database,
+    name: set.name,
+    cardio: set.cardio,
+    displayUnit: set.unit,
+    category: set.category,
+    image: set.image,
+    defaultRestDurationMs: set.restMs,
+  )).copyWith(archived: const Value(false)),
+);
 
 Future<void> _mergePlanExerciseReferences(
   AppDatabase database, {
@@ -199,21 +198,19 @@ Future<void> updateExerciseDefinition(
   String? image,
   int? defaultRestDurationMs,
 }) async {
-  final trimmedName = name.trim();
-  final categoryId = await ensureCategoryId(database, category);
+  final definition = await _definition(
+    database,
+    name: name,
+    cardio: cardio,
+    displayUnit: displayUnit,
+    category: category,
+    image: image,
+    defaultRestDurationMs: defaultRestDurationMs,
+  );
   final target = await getExerciseByName(
     database,
-    trimmedName,
+    definition.name.value,
     includeArchived: true,
-  );
-
-  final definition = ExercisesCompanion(
-    name: Value(trimmedName),
-    kind: Value(cardio ? 'cardio' : 'strength'),
-    displayUnit: Value(displayUnit),
-    categoryId: Value(categoryId),
-    image: Value(image),
-    defaultRestDurationMs: Value(defaultRestDurationMs),
   );
 
   if (target == null || target.id == exerciseId) {

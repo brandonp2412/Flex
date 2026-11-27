@@ -36,6 +36,14 @@ void main() {
       await target.plans.insertOne(
         PlansCompanion.insert(id: const Value(7), days: 'Monday'),
       );
+      final existingId = await target.exercises.insertOne(
+        ExercisesCompanion.insert(
+          name: 'Bench press',
+          kind: 'strength',
+          displayUnit: 'kg',
+          archived: const Value(true),
+        ),
+      );
       final categoryId = await source.categories.insertOne(
         CategoriesCompanion.insert(name: 'Power'),
       );
@@ -94,6 +102,8 @@ void main() {
       expect(result.bodyWeights, 1);
 
       final exercise = await target.exercises.select().getSingle();
+      expect(exercise.id, existingId);
+      expect(exercise.archived, isFalse);
       expect(exercise.name, 'Bench press');
       expect(exercise.displayUnit, 'lb');
       expect(exercise.image, '/images/bench.jpg');

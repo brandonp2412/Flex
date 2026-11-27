@@ -1,15 +1,15 @@
-import 'package:flex/database/categories.dart';
+import 'package:flex/category_filter_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 import 'constants.dart';
 
-class GraphsFilters extends StatefulWidget {
+class GraphsFilters extends StatelessWidget {
   final String? category;
-  final Function(String?) setCategory;
+  final ValueChanged<String?> setCategory;
 
   final GraphSort sort;
-  final Function(GraphSort) setSort;
+  final ValueChanged<GraphSort> setSort;
 
   const GraphsFilters({
     super.key,
@@ -19,14 +19,8 @@ class GraphsFilters extends StatefulWidget {
     required this.setSort,
   });
 
-  @override
-  createState() => _GraphsFiltersState();
-}
-
-class _GraphsFiltersState extends State<GraphsFilters> {
   int get count =>
-      (widget.category != null ? 1 : 0) +
-      (widget.sort != GraphSort.dateDesc ? 1 : 0);
+      (category != null ? 1 : 0) + (sort != GraphSort.dateDesc ? 1 : 0);
 
   @override
   Widget build(BuildContext context) {
@@ -34,85 +28,67 @@ class _GraphsFiltersState extends State<GraphsFilters> {
       count: count,
       isLabelVisible: count > 0,
       backgroundColor: Theme.of(context).colorScheme.primary,
-      child: StreamBuilder(
-        stream: getCategoriesStream(),
-        builder: (context, snapshot) {
-          return PopupMenuButton(
-            tooltip: context.l10n.filter,
-            icon: const Icon(Icons.filter_list),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                enabled: false,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<GraphSort>(
-                      decoration: InputDecoration(
-                        labelText: context.l10n.sortBy,
-                      ),
-                      initialValue: widget.sort,
-                      items: [
-                        DropdownMenuItem(
-                          value: GraphSort.dateDesc,
-                          child: Text(context.l10n.dateNewest),
-                        ),
-                        DropdownMenuItem(
-                          value: GraphSort.dateAsc,
-                          child: Text(context.l10n.dateOldest),
-                        ),
-                        DropdownMenuItem(
-                          value: GraphSort.name,
-                          child: Text(context.l10n.nameLabel),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value == null) return;
-                        widget.setSort(value);
-                        Navigator.pop(context);
-                      },
+      child: PopupMenuButton(
+        tooltip: context.l10n.filter,
+        icon: const Icon(Icons.filter_list),
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            enabled: false,
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                DropdownButtonFormField<GraphSort>(
+                  decoration: InputDecoration(labelText: context.l10n.sortBy),
+                  initialValue: sort,
+                  items: [
+                    DropdownMenuItem(
+                      value: GraphSort.dateDesc,
+                      child: Text(context.l10n.dateNewest),
+                    ),
+                    DropdownMenuItem(
+                      value: GraphSort.dateAsc,
+                      child: Text(context.l10n.dateOldest),
+                    ),
+                    DropdownMenuItem(
+                      value: GraphSort.name,
+                      child: Text(context.l10n.nameLabel),
                     ),
                   ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setSort(value);
+                    Navigator.pop(context);
+                  },
                 ),
-              ),
-              PopupMenuItem(
-                enabled: false,
-                child: Column(
-                  children: [
-                    SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        labelText: context.l10n.categoryLabel,
-                      ),
-                      initialValue: widget.category,
-                      items: snapshot.data
-                          ?.map(
-                            (category) => DropdownMenuItem(
-                              value: category,
-                              child: Text(category),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        widget.setCategory(value);
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            enabled: false,
+            child: Column(
+              children: [
+                SizedBox(height: 8),
+                CategoryFilterField(
+                  category: category,
+                  onChanged: (value) {
+                    setCategory(value);
+                    Navigator.pop(context);
+                  },
                 ),
-              ),
-              PopupMenuItem(
-                onTap: () {
-                  widget.setCategory(null);
-                  widget.setSort(GraphSort.dateDesc);
-                },
-                child: ListTile(
-                  leading: const Icon(Icons.clear),
-                  title: Text(context.l10n.actionClear),
-                ),
-              ),
-            ],
-          );
-        },
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            onTap: () {
+              setCategory(null);
+              setSort(GraphSort.dateDesc);
+            },
+            child: ListTile(
+              leading: const Icon(Icons.clear),
+              title: Text(context.l10n.actionClear),
+            ),
+          ),
+        ],
       ),
     );
   }

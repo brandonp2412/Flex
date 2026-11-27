@@ -505,15 +505,7 @@ class _EditSetPageState extends State<EditSetPage>
           category: Value(_category),
         );
 
-    final exercise = await syncExerciseDefinition(
-      db,
-      name: _name,
-      cardio: _cardio,
-      displayUnit: _unit,
-      category: _category,
-      image: _image,
-      defaultRestDurationMs: restMs,
-    );
+    final exercise = await syncExerciseDefinition(db, exerciseSet);
     if (!mounted) return;
 
     final settings = context.read<Setting>();

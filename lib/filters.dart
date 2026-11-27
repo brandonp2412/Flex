@@ -1,4 +1,5 @@
-import 'package:flex/database/categories.dart';
+import 'package:flex/category_filter_field.dart';
+import 'package:flex/sets/history_filters.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/database/database.dart';
@@ -7,46 +8,18 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class Filters extends StatefulWidget {
-  final TextEditingController repsGtCtrl;
-  final TextEditingController repsLtCtrl;
-  final TextEditingController weightGtCtrl;
-  final TextEditingController weightLtCtrl;
-  final String? category;
-  final Function(String?) setCategory;
-  final DateTime? startDate;
-  final DateTime? endDate;
-  final Function(DateTime?) setStart;
-  final Function(DateTime?) setEnd;
-  final Function setStream;
+  final HistoryFilters filters;
+  final VoidCallback onChanged;
 
-  const Filters({
-    super.key,
-    required this.repsGtCtrl,
-    required this.repsLtCtrl,
-    required this.weightGtCtrl,
-    required this.weightLtCtrl,
-    required this.setStart,
-    required this.setEnd,
-    required this.setStream,
-    required this.startDate,
-    required this.endDate,
-    required this.category,
-    required this.setCategory,
-  });
+  const Filters({super.key, required this.filters, required this.onChanged});
 
   @override
   createState() => _FiltersState();
 }
 
 class _FiltersState extends State<Filters> {
-  int get filtersCount =>
-      (widget.startDate != null ? 1 : 0) +
-      (widget.endDate != null ? 1 : 0) +
-      (widget.category != null ? 1 : 0) +
-      (widget.weightGtCtrl.text.isNotEmpty ? 1 : 0) +
-      (widget.weightLtCtrl.text.isNotEmpty ? 1 : 0) +
-      (widget.repsLtCtrl.text.isNotEmpty ? 1 : 0) +
-      (widget.repsGtCtrl.text.isNotEmpty ? 1 : 0);
+  HistoryFilters get filters => widget.filters;
+  int get filtersCount => filters.count;
 
   @override
   Widget build(BuildContext context) {
@@ -69,78 +42,58 @@ class _FiltersState extends State<Filters> {
         title: Text(context.l10n.filters),
         content: SizedBox(
           width: double.maxFinite,
-          child: StreamBuilder(
-            stream: getCategoriesStream(),
-            builder: (context, snapshot) {
-              return SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField(
-                      decoration: InputDecoration(
-                        labelText: context.l10n.categoryLabel,
-                      ),
-                      initialValue: widget.category,
-                      items: snapshot.data
-                          ?.map(
-                            (category) => DropdownMenuItem(
-                              value: category,
-                              child: Text(category),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        widget.setCategory(value);
-                        Navigator.pop(context);
-                      },
-                    ),
-                    _rangeTile(
-                      context,
-                      Icons.repeat,
-                      context.l10n.repsLabel,
-                      context.l10n.repsFilter,
-                      widget.repsGtCtrl,
-                      widget.repsLtCtrl,
-                    ),
-                    _rangeTile(
-                      context,
-                      Icons.scale,
-                      context.l10n.weightLabel,
-                      context.l10n.weightFilter,
-                      widget.weightGtCtrl,
-                      widget.weightLtCtrl,
-                    ),
-                    _dateTile(
-                      context,
-                      Icons.calendar_today,
-                      context.l10n.startDate,
-                      widget.startDate,
-                      widget.setStart,
-                    ),
-                    _dateTile(
-                      context,
-                      Icons.calendar_month,
-                      context.l10n.endDate,
-                      widget.endDate,
-                      widget.setEnd,
-                    ),
-                  ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CategoryFilterField(
+                  category: filters.category,
+                  onChanged: (value) {
+                    filters.category = value;
+                    widget.onChanged();
+                    Navigator.pop(context);
+                  },
                 ),
-              );
-            },
+                _rangeTile(
+                  context,
+                  Icons.repeat,
+                  context.l10n.repsLabel,
+                  context.l10n.repsFilter,
+                  filters.repsGt,
+                  filters.repsLt,
+                ),
+                _rangeTile(
+                  context,
+                  Icons.scale,
+                  context.l10n.weightLabel,
+                  context.l10n.weightFilter,
+                  filters.weightGt,
+                  filters.weightLt,
+                ),
+                _dateTile(
+                  context,
+                  Icons.calendar_today,
+                  context.l10n.startDate,
+                  filters.startDate,
+                  (date) => filters.startDate = date,
+                ),
+                _dateTile(
+                  context,
+                  Icons.calendar_month,
+                  context.l10n.endDate,
+                  filters.endDate,
+                  (date) => filters.endDate = date,
+                ),
+              ],
+            ),
           ),
         ),
         actions: <Widget>[
           TextButton(
             child: Text(context.l10n.actionClear),
-            onPressed: () async {
-              widget.repsGtCtrl.text = '';
-              widget.repsLtCtrl.text = '';
-              widget.weightGtCtrl.text = '';
-              widget.weightLtCtrl.text = '';
-              widget.setStart(null);
-              widget.setEnd(null);
-              widget.setCategory(null);
+            onPressed: () {
+              filters.clear();
+              widget.onChanged();
               Navigator.pop(context);
             },
           ),
@@ -184,7 +137,7 @@ class _FiltersState extends State<Filters> {
                   ])
                     TextField(
                       controller: controller,
-                      onChanged: (_) => widget.setStream(),
+                      onChanged: (_) => widget.onChanged(),
                       decoration: InputDecoration(labelText: label),
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
@@ -198,7 +151,7 @@ class _FiltersState extends State<Filters> {
                 onPressed: () {
                   greater.clear();
                   less.clear();
-                  widget.setStream();
+                  widget.onChanged();
                   Navigator.pop(context);
                 },
                 child: Text(context.l10n.actionClear),
@@ -219,11 +172,12 @@ class _FiltersState extends State<Filters> {
     IconData icon,
     String label,
     DateTime? date,
-    Function(DateTime?) update,
+    ValueChanged<DateTime?> update,
   ) {
     final desktop = isDesktopLayout(dialogContext);
     void clear() {
       update(null);
+      widget.onChanged();
       Navigator.pop(dialogContext);
     }
 
@@ -257,7 +211,10 @@ class _FiltersState extends State<Filters> {
           firstDate: DateTime(2000),
           lastDate: DateTime(2100),
         );
-        if (picked != null && mounted) update(picked.toLocal());
+        if (picked != null && mounted) {
+          update(picked.toLocal());
+          widget.onChanged();
+        }
       },
     );
   }

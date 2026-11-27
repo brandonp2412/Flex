@@ -163,12 +163,6 @@ Future<GraphCsvImportResult> _importV2(
         database,
         row.nullableString('category'),
       );
-      final existing = await getExerciseByName(
-        database,
-        name,
-        includeArchived: true,
-      );
-
       final companion = ExercisesCompanion(
         name: Value(name),
         kind: Value(row.string('kind', required: true)),
@@ -184,15 +178,10 @@ Future<GraphCsvImportResult> _importV2(
         archived: Value(row.boolean('archived')),
       );
 
-      final targetId = existing == null
-          ? await database.exercises.insertOne(companion)
-          : existing.id;
-      if (existing != null) {
-        await (database.exercises.update()
-              ..where((exercise) => exercise.id.equals(existing.id)))
-            .write(companion);
-      }
-      exerciseIds[sourceId] = targetId;
+      exerciseIds[sourceId] = (await upsertExerciseDefinition(
+        database,
+        companion,
+      )).id;
       exerciseCount++;
     }
 
@@ -325,26 +314,12 @@ Future<GraphCsvImportResult> _importLegacy(
       final name = row.string('name', required: true);
       if (exerciseIds.containsKey(name)) continue;
 
-      final existing = await getExerciseByName(
-        database,
-        name,
-        includeArchived: true,
-      );
       final kind = row.boolean('cardio') ? 'cardio' : 'strength';
       final unit = row.string('unit', fallback: kind == 'cardio' ? 'km' : 'kg');
-
-      if (existing == null) {
-        exerciseIds[name] = await database.exercises.insertOne(
-          ExercisesCompanion.insert(name: name, kind: kind, displayUnit: unit),
-        );
-      } else {
-        exerciseIds[name] = existing.id;
-        await (database.exercises.update()
-              ..where((exercise) => exercise.id.equals(existing.id)))
-            .write(
-              ExercisesCompanion(kind: Value(kind), displayUnit: Value(unit)),
-            );
-      }
+      exerciseIds[name] = (await upsertExerciseDefinition(
+        database,
+        ExercisesCompanion.insert(name: name, kind: kind, displayUnit: unit),
+      )).id;
     }
 
     for (final row in realRows.where((row) => !row.boolean('hidden'))) {

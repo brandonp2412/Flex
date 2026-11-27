@@ -268,4 +268,34 @@ void main() {
     expect(draft.planExercise.enabled.value, isTrue);
     expect(draft.exerciseName, exercise.name);
   });
+  test('logging an archived exercise revives its existing identity', () async {
+    final exercise = await createExerciseDefinition(
+      db,
+      name: 'Archived lift',
+      cardio: false,
+      displayUnit: 'kg',
+      notes: 'Keep me',
+    );
+    await (db.exercises.update()..where((row) => row.id.equals(exercise.id)))
+        .write(
+          const ExercisesCompanion(
+            archived: Value(true),
+            graphLimit: Value(42),
+          ),
+        );
+    final result = await syncExerciseDefinition(
+      db,
+      ExerciseSetView(
+        name: ' Archived lift ',
+        cardio: false,
+        unit: 'lb',
+        created: DateTime.now(),
+      ),
+    );
+    expect(result.id, exercise.id);
+    expect(result.archived, isFalse);
+    expect(result.notes, 'Keep me');
+    expect(result.graphLimit, 42);
+    expect(result.displayUnit, 'lb');
+  });
 }
