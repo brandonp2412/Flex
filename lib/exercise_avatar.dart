@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flex/image_field.dart';
 
 import 'package:flutter/material.dart';
 
@@ -18,9 +18,8 @@ class ExerciseAvatar extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: image != null
-        ? Image.file(
-            File(image!),
-            cacheWidth: 64,
+        ? Image(
+            image: appImageProvider(image!, 64),
             errorBuilder: (context, error, stackTrace) =>
                 const Icon(Icons.error),
           )

@@ -2037,5 +2037,8 @@
   "previousPerformance": "Раніше {date} · {sets}",
   "chartGridlines": "Лінії сітки графіка",
   "chartShading": "Затінення графіка",
-  "externalWorkoutCsv": "Імпортувати CSV тренувань"
+  "externalWorkoutCsv": "Імпортувати CSV тренувань",
+  "importingBackup": "Імпорт резервної копії…",
+  "backupImported": "Резервну копію імпортовано.",
+  "invalidBackupFile": "Виберіть ZIP-копію Flex або базу даних SQLite."
 }

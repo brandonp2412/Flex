@@ -18,6 +18,8 @@ import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
 import 'package:flex/settings/backup_archive.dart';
+import 'package:flex/settings/restore_web_backup_stub.dart'
+    if (dart.library.js_interop) 'package:flex/settings/restore_web_backup.dart';
 import 'package:flex/storage/app_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -124,11 +126,65 @@ class ImportData extends StatelessWidget {
     talker.info('Starting Flex database import');
 
     try {
-      if (kIsWeb) {
-        await _importDatabaseWeb(l10n);
-      } else {
-        await _importDatabaseNative(l10n);
+      final result = await pickBackupFile();
+      if (result.isEmpty || !ctx.mounted) return;
+
+      final navigator = Navigator.of(ctx, rootNavigator: true);
+      final progress = DialogRoute<void>(
+        context: ctx,
+        barrierDismissible: false,
+        builder: (_) => PopScope(
+          canPop: false,
+          child: AlertDialog(
+            title: Text(l10n.importingBackup),
+            content: const LinearProgressIndicator(),
+          ),
+        ),
+      );
+      navigator.push(progress);
+      AppDatabase? restoredWebDatabase;
+      try {
+        final file = result.single;
+        if (kIsWeb) {
+          final Uint8List bytes;
+          try {
+            bytes = await file.readAsBytes();
+          } catch (_) {
+            throw ImportValidationException(l10n.couldNotReadFileData);
+          }
+          restoredWebDatabase = await restoreWebBackup(file.name, bytes, l10n);
+        } else {
+          await _importDatabaseNative(File(file.path!), l10n);
+        }
+      } finally {
+        if (progress.isActive) navigator.removeRoute(progress);
       }
+
+      if (restoredWebDatabase != null) {
+        final previous = db;
+        db = restoredWebDatabase;
+        dbVersion.value++;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          messengerKey.currentState?.showSnackBar(
+            SnackBar(content: Text(l10n.backupImported)),
+          );
+        });
+        try {
+          await previous.close();
+        } catch (error, stack) {
+          talker.handle(
+            error,
+            stack,
+            'Failed to close previous browser database',
+          );
+        }
+        return;
+      }
+      if (!ctx.mounted) return;
+      messengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text(l10n.backupImported)),
+      );
+      await _finishDatabaseImport();
     } catch (e, stackTrace) {
       talker.handle(e, stackTrace, 'Failed to import Flex database');
       if (!ctx.mounted) return;
@@ -136,11 +192,10 @@ class ImportData extends StatelessWidget {
     }
   }
 
-  Future<void> _importDatabaseNative(AppLocalizations l10n) async {
-    final result = await FilePicker.pickFiles();
-    if (result.isEmpty) return;
-
-    final selectedFile = File(result.single.path!);
+  Future<void> _importDatabaseNative(
+    File selectedFile,
+    AppLocalizations l10n,
+  ) async {
     if (!await selectedFile.exists()) {
       throw ImportValidationException(l10n.selectedFileDoesNotExist);
     }
@@ -150,12 +205,17 @@ class ImportData extends StatelessWidget {
     final tempDirectory = await getTemporaryDirectory();
     final workDir = await tempDirectory.createTemp('flex-import-');
     try {
-      final sourceFile = await prepareBackupDatabase(
-        selectedFile: selectedFile,
-        workingDirectory: workDir,
-        storageDirectory: storageDir,
-      );
-      validateBackupDatabaseFile(sourceFile);
+      final File sourceFile;
+      try {
+        sourceFile = await prepareBackupDatabase(
+          selectedFile: selectedFile,
+          workingDirectory: workDir,
+          storageDirectory: storageDir,
+        );
+        validateBackupDatabaseFile(sourceFile);
+      } on FormatException {
+        throw ImportValidationException(l10n.invalidBackupFile);
+      }
 
       final candidateFile = File(
         p.join(workDir.path, 'candidate-$backupDbName'),
@@ -208,7 +268,9 @@ class ImportData extends StatelessWidget {
     } finally {
       await workDir.delete(recursive: true);
     }
+  }
 
+  Future<void> _finishDatabaseImport() async {
     // Permission state belongs to this Android install, not to the imported
     // database. Force a fresh, single checklist for the imported settings.
     await (db.settings.update()).write(
@@ -229,19 +291,6 @@ class ImportData extends StatelessWidget {
       ctx,
       rootNavigator: true,
     ).pushNamedAndRemoveUntil('/', (_) => false);
-  }
-
-  Future<void> _importDatabaseWeb(AppLocalizations l10n) async {
-    final result = await FilePicker.pickFiles();
-    if (result.isEmpty) return;
-
-    try {
-      await result.single.readAsBytes();
-    } catch (_) {
-      throw ImportValidationException(l10n.couldNotReadFileData);
-    }
-
-    throw ImportValidationException(l10n.databaseImportWebUnsupported);
   }
 
   Future<void> _importCsv(_CsvKind kind) async {

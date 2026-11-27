@@ -2028,5 +2028,8 @@
   "previousPerformance": "ก่อนหน้านี้ {date} · {sets}",
   "chartGridlines": "เส้นตารางกราฟ",
   "chartShading": "การแรเงากราฟ",
-  "externalWorkoutCsv": "นำเข้า CSV การออกกำลังกาย"
+  "externalWorkoutCsv": "นำเข้า CSV การออกกำลังกาย",
+  "importingBackup": "กำลังนำเข้าข้อมูลสำรอง…",
+  "backupImported": "นำเข้าข้อมูลสำรองแล้ว",
+  "invalidBackupFile": "เลือกไฟล์สำรอง ZIP ของ Flex หรือฐานข้อมูล SQLite"
 }

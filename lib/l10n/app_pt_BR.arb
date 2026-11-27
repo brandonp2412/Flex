@@ -512,5 +512,8 @@
   "previousPerformance": "Anteriormente {date} · {sets}",
   "chartGridlines": "Linhas de grade do gráfico",
   "chartShading": "Sombreamento do gráfico",
-  "externalWorkoutCsv": "Importar CSV de treinos"
+  "externalWorkoutCsv": "Importar CSV de treinos",
+  "importingBackup": "Importando backup…",
+  "backupImported": "Backup importado.",
+  "invalidBackupFile": "Escolha um backup ZIP do Flex ou um banco de dados SQLite."
 }

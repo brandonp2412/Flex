@@ -512,5 +512,8 @@
   "previousPerformance": "之前 {date} · {sets}",
   "chartGridlines": "圖表格線",
   "chartShading": "圖表區域填色",
-  "externalWorkoutCsv": "匯入訓練 CSV"
+  "externalWorkoutCsv": "匯入訓練 CSV",
+  "importingBackup": "正在匯入備份…",
+  "backupImported": "備份已匯入。",
+  "invalidBackupFile": "請選擇 Flex ZIP 備份或 SQLite 資料庫。"
 }

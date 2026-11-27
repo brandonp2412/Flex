@@ -512,5 +512,8 @@
   "previousPerformance": "Zuletzt {date} · {sets}",
   "chartGridlines": "Rasterlinien im Diagramm",
   "chartShading": "Flächenschattierung im Diagramm",
-  "externalWorkoutCsv": "Trainings-CSV importieren"
+  "externalWorkoutCsv": "Trainings-CSV importieren",
+  "importingBackup": "Sicherung wird importiert …",
+  "backupImported": "Sicherung importiert.",
+  "invalidBackupFile": "Wähle eine Flex-ZIP-Sicherung oder eine SQLite-Datenbank."
 }

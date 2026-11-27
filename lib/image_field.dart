@@ -3,6 +3,15 @@ import 'dart:io';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
+ImageProvider appImageProvider(String path, int cacheWidth) =>
+    ResizeImage.resizeIfNeeded(
+      cacheWidth,
+      null,
+      path.startsWith('data:')
+          ? MemoryImage(UriData.parse(path).contentAsBytes())
+          : FileImage(File(path)),
+    );
+
 class AppImageField extends StatelessWidget {
   const AppImageField({
     super.key,
@@ -39,9 +48,8 @@ class AppImageField extends StatelessWidget {
         const SizedBox(height: 8),
         InkWell(
           onTap: onPick,
-          child: Image.file(
-            File(path!),
-            cacheWidth: 400,
+          child: Image(
+            image: appImageProvider(path!, 400),
             errorBuilder: (context, error, stackTrace) => TextButton.icon(
               onPressed: onPick,
               icon: const Icon(Icons.error_outline),

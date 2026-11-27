@@ -22,6 +22,7 @@ dependencies:
   sqlite3: ^3.9.2
   archive: ^4.7.1
   file_picker: ^13.4.1
+  file_picker_web: ^4.2.2
   share_plus: ^13.3.0
   audioplayers: ^6.5.0
   package_info_plus: ^10.2.1
@@ -33,6 +34,7 @@ dependencies:
       url: https://github.com/insertjokehere/flutter_msvcredist.git
       ref: main
   timeago: ^3.2.2
+  web: ^1.1.2
   sqlite3_web: ^0.9.7
   drift_dev: ^2.35.3
   drafter: ^0.3.0

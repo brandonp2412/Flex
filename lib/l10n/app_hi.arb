@@ -2028,5 +2028,8 @@
   "previousPerformance": "पहले {date} · {sets}",
   "chartGridlines": "चार्ट की ग्रिड रेखाएँ",
   "chartShading": "चार्ट का छायांकन",
-  "externalWorkoutCsv": "वर्कआउट CSV आयात करें"
+  "externalWorkoutCsv": "वर्कआउट CSV आयात करें",
+  "importingBackup": "बैकअप इंपोर्ट हो रहा है…",
+  "backupImported": "बैकअप इंपोर्ट हो गया।",
+  "invalidBackupFile": "Flex का ZIP बैकअप या SQLite डेटाबेस चुनें।"
 }

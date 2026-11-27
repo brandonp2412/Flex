@@ -2028,5 +2028,8 @@
   "previousPerformance": "Sebelumnya {date} · {sets}",
   "chartGridlines": "Garis kisi grafik",
   "chartShading": "Arsiran grafik",
-  "externalWorkoutCsv": "Impor CSV latihan"
+  "externalWorkoutCsv": "Impor CSV latihan",
+  "importingBackup": "Mengimpor cadangan…",
+  "backupImported": "Cadangan berhasil diimpor.",
+  "invalidBackupFile": "Pilih cadangan ZIP Flex atau basis data SQLite."
 }

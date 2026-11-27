@@ -512,5 +512,8 @@
   "previousPerformance": "Önce {date} · {sets}",
   "chartGridlines": "Grafik ızgara çizgileri",
   "chartShading": "Grafik gölgelendirmesi",
-  "externalWorkoutCsv": "Antrenman CSV'sini içe aktar"
+  "externalWorkoutCsv": "Antrenman CSV'sini içe aktar",
+  "importingBackup": "Yedek içe aktarılıyor…",
+  "backupImported": "Yedek içe aktarıldı.",
+  "invalidBackupFile": "Bir Flex ZIP yedeği veya SQLite veritabanı seçin."
 }

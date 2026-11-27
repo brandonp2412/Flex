@@ -2028,5 +2028,8 @@
   "previousPerformance": "Sebelum ini {date} · {sets}",
   "chartGridlines": "Garis grid carta",
   "chartShading": "Lorekan carta",
-  "externalWorkoutCsv": "Import CSV senaman"
+  "externalWorkoutCsv": "Import CSV senaman",
+  "importingBackup": "Mengimport sandaran…",
+  "backupImported": "Sandaran telah diimport.",
+  "invalidBackupFile": "Pilih sandaran ZIP Flex atau pangkalan data SQLite."
 }

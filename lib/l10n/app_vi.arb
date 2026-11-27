@@ -2028,5 +2028,8 @@
   "previousPerformance": "Trước đây {date} · {sets}",
   "chartGridlines": "Đường lưới biểu đồ",
   "chartShading": "Tô bóng biểu đồ",
-  "externalWorkoutCsv": "Nhập CSV buổi tập"
+  "externalWorkoutCsv": "Nhập CSV buổi tập",
+  "importingBackup": "Đang nhập bản sao lưu…",
+  "backupImported": "Đã nhập bản sao lưu.",
+  "invalidBackupFile": "Chọn bản sao lưu ZIP của Flex hoặc cơ sở dữ liệu SQLite."
 }

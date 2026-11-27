@@ -2028,5 +2028,8 @@
   "previousPerformance": "پہلے {date} · {sets}",
   "chartGridlines": "چارٹ کی گرڈ لائنیں",
   "chartShading": "چارٹ کی شیڈنگ",
-  "externalWorkoutCsv": "ورزشوں کی CSV درآمد کریں"
+  "externalWorkoutCsv": "ورزشوں کی CSV درآمد کریں",
+  "importingBackup": "بیک اپ درآمد ہو رہا ہے…",
+  "backupImported": "بیک اپ درآمد ہو گیا۔",
+  "invalidBackupFile": "Flex کا ZIP بیک اپ یا SQLite ڈیٹابیس منتخب کریں۔"
 }

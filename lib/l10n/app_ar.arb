@@ -2028,5 +2028,8 @@
   "previousPerformance": "سابقاً {date} · {sets}",
   "chartGridlines": "خطوط شبكة الرسم البياني",
   "chartShading": "تظليل الرسم البياني",
-  "externalWorkoutCsv": "استيراد CSV للتمارين"
+  "externalWorkoutCsv": "استيراد CSV للتمارين",
+  "importingBackup": "جارٍ استيراد النسخة الاحتياطية…",
+  "backupImported": "تم استيراد النسخة الاحتياطية.",
+  "invalidBackupFile": "اختر نسخة Flex احتياطية بصيغة ZIP أو قاعدة بيانات SQLite."
 }

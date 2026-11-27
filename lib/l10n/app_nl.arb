@@ -512,5 +512,8 @@
   "previousPerformance": "Vorige keer {date} · {sets}",
   "chartGridlines": "Rasterlijnen van grafiek",
   "chartShading": "Grafiekschaduw",
-  "externalWorkoutCsv": "Trainings-CSV importeren"
+  "externalWorkoutCsv": "Trainings-CSV importeren",
+  "importingBackup": "Back-up importeren…",
+  "backupImported": "Back-up geïmporteerd.",
+  "invalidBackupFile": "Kies een Flex-back-up in ZIP-formaat of een SQLite-database."
 }

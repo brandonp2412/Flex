@@ -464,6 +464,18 @@
   "@importData": {
     "description": "Action for opening data import options."
   },
+  "importingBackup": "Importing backup…",
+  "@importingBackup": {
+    "description": "Progress dialog title while restoring a backup."
+  },
+  "backupImported": "Backup imported.",
+  "@backupImported": {
+    "description": "Message after restoring a backup."
+  },
+  "invalidBackupFile": "Choose a Flex ZIP backup or SQLite database.",
+  "@invalidBackupFile": {
+    "description": "Error when the selected file is not a valid backup."
+  },
   "exportData": "Export data",
   "@exportData": {
     "description": "Action for opening data export options."

@@ -2028,5 +2028,8 @@
   "previousPerformance": "পূর্বে {date} · {sets}",
   "chartGridlines": "গ্রাফের গ্রিডলাইন",
   "chartShading": "গ্রাফের ছায়া",
-  "externalWorkoutCsv": "ওয়ার্কআউট CSV আমদানি করুন"
+  "externalWorkoutCsv": "ওয়ার্কআউট CSV আমদানি করুন",
+  "importingBackup": "ব্যাকআপ আমদানি হচ্ছে…",
+  "backupImported": "ব্যাকআপ আমদানি হয়েছে।",
+  "invalidBackupFile": "Flex-এর ZIP ব্যাকআপ বা SQLite ডেটাবেস বেছে নিন।"
 }

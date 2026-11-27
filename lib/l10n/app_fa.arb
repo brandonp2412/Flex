@@ -2028,5 +2028,8 @@
   "previousPerformance": "قبلاً {date} · {sets}",
   "chartGridlines": "خطوط شبکهٔ نمودار",
   "chartShading": "سایه‌زنی نمودار",
-  "externalWorkoutCsv": "وارد کردن CSV تمرین‌ها"
+  "externalWorkoutCsv": "وارد کردن CSV تمرین‌ها",
+  "importingBackup": "در حال وارد کردن نسخهٔ پشتیبان…",
+  "backupImported": "نسخهٔ پشتیبان وارد شد.",
+  "invalidBackupFile": "یک نسخهٔ پشتیبان ZIP از Flex یا پایگاه دادهٔ SQLite انتخاب کنید."
 }

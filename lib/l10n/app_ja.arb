@@ -512,5 +512,8 @@
   "previousPerformance": "前回 {date} · {sets}",
   "chartGridlines": "グラフのグリッド線",
   "chartShading": "グラフの塗りつぶし",
-  "externalWorkoutCsv": "ワークアウトCSVをインポート"
+  "externalWorkoutCsv": "ワークアウトCSVをインポート",
+  "importingBackup": "バックアップをインポート中…",
+  "backupImported": "バックアップをインポートしました。",
+  "invalidBackupFile": "Flex の ZIP バックアップまたは SQLite データベースを選択してください。"
 }
