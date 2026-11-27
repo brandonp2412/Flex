@@ -1,8 +1,13 @@
 import 'package:csv/csv.dart';
 import 'package:drift/drift.dart';
+import 'package:flex/data_portability/graph_csv_import_exception.dart';
+import 'package:flex/data_portability/graph_csv_import_result.dart';
+import 'package:flex/data_portability/graph_csv_row.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
-import 'package:flex/utils.dart';
+
+export 'package:flex/data_portability/graph_csv_import_exception.dart';
+export 'package:flex/data_portability/graph_csv_import_result.dart';
 
 const _format = 'flex_graphs_v2';
 const _previousFormat = 'flexify_graphs_v2';
@@ -37,29 +42,6 @@ const _header = <String>[
   'startedAt',
   'endedAt',
 ];
-
-final class GraphCsvImportException implements Exception {
-  const GraphCsvImportException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
-}
-
-final class GraphCsvImportResult {
-  const GraphCsvImportResult({
-    required this.exercises,
-    required this.workouts,
-    required this.exerciseSets,
-    required this.bodyWeights,
-  });
-
-  final int exercises;
-  final int workouts;
-  final int exerciseSets;
-  final int bodyWeights;
-}
 
 Future<String> exportGraphCsv(AppDatabase database) async {
   final exercises = await database.exercises.select().get();
@@ -232,7 +214,7 @@ Future<GraphCsvImportResult> _importV2(
   List<String> header,
   List<List<dynamic>> rows,
 ) async {
-  final records = rows.map((row) => _CsvRow(header, row)).toList();
+  final records = rows.map((row) => GraphCsvRow(header, row)).toList();
   for (final row in records) {
     final format = row.string('format');
     if (format != _format && format != _previousFormat) {
@@ -386,7 +368,7 @@ Future<GraphCsvImportResult> _importLegacy(
     throw const GraphCsvImportException('Unrecognized graph CSV columns.');
   }
 
-  final records = rows.map((row) => _CsvRow(header, row)).toList();
+  final records = rows.map((row) => GraphCsvRow(header, row)).toList();
   final legacyWeights =
       records
           .where(
@@ -516,74 +498,4 @@ Future<int?> _ensureCategory(AppDatabase database, String? category) async {
             ..where((row) => row.name.equals(name)))
           .getSingle())
       .id;
-}
-
-final class _CsvRow {
-  _CsvRow(List<String> header, List<dynamic> values)
-    : _values = {
-        for (var index = 0; index < header.length; index++)
-          header[index]: index < values.length ? values[index] : null,
-      };
-
-  final Map<String, dynamic> _values;
-
-  bool has(String key) => _values.containsKey(key);
-
-  String string(String key, {bool required = false, String fallback = ''}) {
-    final value = _values[key];
-    if (value == null || value.toString().trim().isEmpty) {
-      if (required) throw GraphCsvImportException('Missing $key.');
-      return fallback;
-    }
-    return value.toString().trim();
-  }
-
-  String? nullableString(String key) {
-    final value = string(key);
-    return value.isEmpty ? null : value;
-  }
-
-  double? number(String key, {bool required = false}) {
-    final value = _values[key];
-    if (value == null || value.toString().trim().isEmpty) {
-      if (required) throw GraphCsvImportException('Missing $key.');
-      return null;
-    }
-    if (value is num) return value.toDouble();
-    final parsed = double.tryParse(value.toString());
-    if (parsed == null) {
-      throw GraphCsvImportException('Invalid number for $key: $value.');
-    }
-    return parsed;
-  }
-
-  int? integer(String key, {bool required = false}) {
-    final value = number(key, required: required);
-    if (value == null) return null;
-    if (value % 1 != 0) {
-      throw GraphCsvImportException('Invalid integer for $key: $value.');
-    }
-    return value.toInt();
-  }
-
-  bool boolean(String key) {
-    final value = _values[key];
-    if (value is bool) return value;
-    if (value is num) return value != 0;
-    final normalized = value?.toString().trim().toLowerCase();
-    return normalized == 'true' || normalized == '1';
-  }
-
-  DateTime? date(String key, {bool required = false}) {
-    final value = _values[key];
-    if (value == null || value.toString().trim().isEmpty) {
-      if (required) throw GraphCsvImportException('Missing $key.');
-      return null;
-    }
-    try {
-      return parseDate(value.toString());
-    } on FormatException {
-      throw GraphCsvImportException('Invalid date for $key: $value.');
-    }
-  }
 }

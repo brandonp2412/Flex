@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart' hide Column;
+import 'package:flex/access_card.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -128,7 +129,7 @@ class _AppPermissionsDialogState extends State<_AppPermissionsDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (needsAlerts)
-                _AccessCard(
+                AccessCard(
                   icon: Icons.notifications_outlined,
                   title: l10n.notifications,
                   description: needsTimer
@@ -139,7 +140,7 @@ class _AppPermissionsDialogState extends State<_AppPermissionsDialog> {
                 ),
               if (needsAlerts && needsTimer) const SizedBox(height: 10),
               if (needsTimer)
-                _AccessCard(
+                AccessCard(
                   icon: Icons.battery_saver_outlined,
                   title: l10n.backgroundActivity,
                   description: l10n.backgroundActivityDescription,
@@ -149,7 +150,7 @@ class _AppPermissionsDialogState extends State<_AppPermissionsDialog> {
                 ),
               if (needsTimer) const SizedBox(height: 10),
               if (needsTimer)
-                _AccessCard(
+                AccessCard(
                   icon: Icons.alarm_outlined,
                   title: l10n.exactAlarms,
                   description: l10n.exactAlarmsDescription,
@@ -196,69 +197,6 @@ class _AppPermissionsDialogState extends State<_AppPermissionsDialog> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _AccessCard extends StatelessWidget {
-  const _AccessCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.granted,
-    required this.onRequest,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-  final bool granted;
-  final VoidCallback onRequest;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(icon, color: colors.onSurfaceVariant, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: theme.textTheme.titleSmall),
-                const SizedBox(height: 3),
-                Text(
-                  description,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (granted)
-            Tooltip(
-              message: context.l10n.allowed,
-              child: Icon(Icons.check_circle, color: colors.primary),
-            )
-          else
-            TextButton(
-              onPressed: onRequest,
-              child: Text(context.l10n.actionAllow),
-            ),
-        ],
-      ),
     );
   }
 }

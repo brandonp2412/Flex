@@ -1,60 +1,12 @@
+import 'package:flex/graph/compact_switch.dart';
 import 'package:flex/graph/graph_curve_settings.dart';
 import 'package:flex/graph/graph_date_field.dart';
+import 'package:flex/graph/limit_control.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-class GraphOptionsButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const GraphOptionsButton({super.key, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.center,
-      child: TextButton.icon(
-        key: const Key('graph-options-button'),
-        onPressed: onPressed,
-        icon: const Icon(Icons.tune),
-        label: Text(context.l10n.options),
-      ),
-    );
-  }
-}
-
-class GraphActionButtons extends StatelessWidget {
-  final VoidCallback onHistory;
-  final VoidCallback onOptions;
-
-  const GraphActionButtons({
-    super.key,
-    required this.onHistory,
-    required this.onOptions,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 12,
-      runSpacing: 4,
-      children: [
-        TextButton.icon(
-          key: const Key('graph-history-button'),
-          onPressed: onHistory,
-          icon: const Icon(Icons.history),
-          label: Text(context.l10n.navHistory),
-        ),
-        TextButton.icon(
-          key: const Key('graph-options-button'),
-          onPressed: onOptions,
-          icon: const Icon(Icons.tune),
-          label: Text(context.l10n.options),
-        ),
-      ],
-    );
-  }
-}
+export 'package:flex/graph/graph_options_button.dart';
+export 'package:flex/graph/graph_action_buttons.dart';
 
 class GraphOptionsControls extends StatelessWidget {
   final bool compact;
@@ -132,7 +84,7 @@ class GraphOptionsControls extends StatelessWidget {
         showClearButton: true,
         compact: true,
       ),
-      _LimitControl(
+      LimitControl(
         limit: limit,
         maxLimit: maxLimit,
         onChanged: onLimitChanged,
@@ -169,7 +121,7 @@ class GraphOptionsControls extends StatelessWidget {
               if (timeBasedXAxis != null && onTimeAxisChange != null) ...[
                 Expanded(
                   flex: 2,
-                  child: _CompactSwitch(
+                  child: CompactSwitch(
                     label: context.l10n.useTimeBasedXAxis,
                     value: timeBasedXAxis!,
                     onChanged: onTimeAxisChange!,
@@ -245,7 +197,7 @@ class GraphOptionsControls extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
-        _LimitControl(
+        LimitControl(
           limit: limit,
           maxLimit: maxLimit,
           onChanged: onLimitChanged,
@@ -259,139 +211,6 @@ class GraphOptionsControls extends StatelessWidget {
           ),
         const GraphCurveSettings(),
       ],
-    );
-  }
-}
-
-class _LimitControl extends StatelessWidget {
-  final int limit;
-  final int maxLimit;
-  final ValueChanged<int> onChanged;
-  final bool compact;
-
-  const _LimitControl({
-    required this.limit,
-    required this.maxLimit,
-    required this.onChanged,
-    this.compact = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    final label = Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Flexible(
-          child: Text(
-            context.l10n.dataPoints,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
-          decoration: BoxDecoration(
-            color: colorScheme.primary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            '$limit',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
-
-    final slider = Slider(
-      value: limit.toDouble(),
-      inactiveColor: colorScheme.primary.withValues(alpha: 0.24),
-      min: 10,
-      max: maxLimit.toDouble(),
-      divisions: 20,
-      onChanged: (value) => onChanged(value.toInt()),
-    );
-
-    if (!compact) {
-      return Column(mainAxisSize: MainAxisSize.min, children: [label, slider]);
-    }
-
-    return Container(
-      height: 58,
-      padding: const EdgeInsets.fromLTRB(12, 6, 8, 4),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          label,
-          SizedBox(
-            height: 24,
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-              ),
-              child: slider,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CompactSwitch extends StatelessWidget {
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _CompactSwitch({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      height: 58,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelLarge,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Switch(value: value, onChanged: onChanged),
-        ],
-      ),
     );
   }
 }

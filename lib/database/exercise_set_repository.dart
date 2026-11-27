@@ -2,9 +2,14 @@ import 'package:drift/drift.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/database/previous_exercise_day.dart';
+import 'package:flex/database/previous_exercise_set.dart';
 import 'package:flex/measurement_units.dart';
 
 export 'package:flex/measurement_units.dart';
+
+export 'package:flex/database/previous_exercise_set.dart';
+export 'package:flex/database/previous_exercise_day.dart';
 
 /// Converts a stored distance in metres to the exercise display unit.
 double displayDistance(String unit, double? distanceMetres) {
@@ -331,33 +336,6 @@ Future<List<ExerciseSetView>> getExerciseSetsForExercise(
 
   final rows = await query.get();
   return rows.map((row) => _toExerciseSetView(database, row)).toList();
-}
-
-class PreviousExerciseSet {
-  const PreviousExerciseSet({
-    required this.cardio,
-    required this.unit,
-    required this.reps,
-    required this.weight,
-    required this.distance,
-    required this.duration,
-    required this.incline,
-  });
-
-  final bool cardio;
-  final String unit;
-  final double reps;
-  final double weight;
-  final double distance;
-  final double duration;
-  final int? incline;
-}
-
-class PreviousExerciseDay {
-  const PreviousExerciseDay({required this.day, required this.sets});
-
-  final DateTime day;
-  final List<PreviousExerciseSet> sets;
 }
 
 Stream<Map<int, PreviousExerciseDay>> watchPreviousExerciseDays(

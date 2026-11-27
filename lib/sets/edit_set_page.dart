@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:drift/drift.dart' hide Column, View;
 import 'package:file_picker/file_picker.dart';
@@ -13,12 +12,13 @@ import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/editor_content.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/image_field.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
 import 'package:flex/platform_page_route.dart';
+import 'package:flex/responsive.dart';
+import 'package:flex/sets/keyboard_close_observer.dart';
 import 'package:flex/settings/category_management_page.dart';
 import 'package:flex/stepper_field.dart';
 import 'package:flex/timer/timer_state.dart';
@@ -805,7 +805,7 @@ class _EditSetPageState extends State<EditSetPage>
     final view = View.of(context);
     if (view.viewInsets.bottom > 0) {
       final closed = Completer<void>();
-      final observer = _KeyboardCloseObserver(view, closed);
+      final observer = KeyboardCloseObserver(view, closed);
       WidgetsBinding.instance.addObserver(observer);
       try {
         if (view.viewInsets.bottom > 0) {
@@ -914,20 +914,6 @@ class _EditSetPageState extends State<EditSetPage>
 
     if (pickedDate != null) {
       selectTime(pickedDate);
-    }
-  }
-}
-
-class _KeyboardCloseObserver extends WidgetsBindingObserver {
-  _KeyboardCloseObserver(this.view, this.closed);
-
-  final FlutterView view;
-  final Completer<void> closed;
-
-  @override
-  void didChangeMetrics() {
-    if (view.viewInsets.bottom == 0 && !closed.isCompleted) {
-      closed.complete();
     }
   }
 }

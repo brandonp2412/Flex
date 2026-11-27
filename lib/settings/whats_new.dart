@@ -1,12 +1,15 @@
-import 'package:flex/update_notice.dart';
 import 'dart:convert';
 
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
+import 'package:flex/settings/changelog.dart';
+import 'package:flex/update_notice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+
+export 'package:flex/settings/changelog.dart';
 
 const _catalog = <String, String>{
   'de': 'de',
@@ -65,14 +68,6 @@ class WhatsNew extends StatefulWidget {
 
   @override
   State<WhatsNew> createState() => _WhatsNewState();
-}
-
-class Changelog {
-  final String name;
-  final String content;
-  final String created;
-
-  Changelog({required this.name, required this.content, required this.created});
 }
 
 class _WhatsNewState extends State<WhatsNew> {

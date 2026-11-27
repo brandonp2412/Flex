@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flex/app_fab.dart';
-import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
@@ -16,6 +15,7 @@ import 'package:flex/plan/plan_queries.dart';
 import 'package:flex/plan/session_sets.dart';
 import 'package:flex/plan/start_list.dart';
 import 'package:flex/plan/start_plan_data.dart';
+import 'package:flex/plan/start_plan_dock_location.dart';
 import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
@@ -38,40 +38,6 @@ Future<void> openStartPlan(
       builder: (context) => StartPlanPage(plan: plan, initial: initial),
     ),
   );
-}
-
-/// Keep Save and its previews above *both* the bottom dock and Android IME.
-/// Using a single location throughout the keyboard animation avoids the
-/// 80dp teleport caused by swapping FAB locations at the first nonzero inset.
-class _StartPlanDockLocation extends FloatingActionButtonLocation {
-  const _StartPlanDockLocation(this.bottomViewPadding);
-
-  final double bottomViewPadding;
-
-  @override
-  bool operator ==(Object other) =>
-      other is _StartPlanDockLocation &&
-      other.bottomViewPadding == bottomViewPadding;
-
-  @override
-  int get hashCode => Object.hash(_StartPlanDockLocation, bottomViewPadding);
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry geometry) {
-    final centered = FloatingActionButtonLocation.centerFloat.getOffset(
-      geometry,
-    );
-    final dockTop =
-        geometry.scaffoldSize.height - bottomViewPadding - bottomNavHeight;
-    // The IME inset starts at the window bottom, but our route's Scaffold
-    // already excludes the persistent bottom gesture-navigation safe area.
-    final keyboardTop = geometry.contentBottom + bottomViewPadding;
-    final bottom = min(dockTop, keyboardTop) - 16;
-    return Offset(
-      centered.dx,
-      bottom - geometry.floatingActionButtonSize.height,
-    );
-  }
 }
 
 class StartPlanPage extends StatefulWidget {
@@ -308,9 +274,7 @@ class _StartPlanPageState extends State<StartPlanPage>
           ),
           floatingActionButtonLocation: desktop
               ? FloatingActionButtonLocation.centerFloat
-              : _StartPlanDockLocation(
-                  MediaQuery.viewPaddingOf(context).bottom,
-                ),
+              : StartPlanDockLocation(MediaQuery.viewPaddingOf(context).bottom),
           floatingActionButton:
               desktop ||
                   workout == null ||

@@ -1,0 +1,195 @@
+import 'dart:io';
+
+import 'package:flex/app_fab.dart';
+import 'package:flex/l10n/l10n.dart';
+import 'package:flex/main.dart';
+import 'package:flex/platform_page_route.dart';
+import 'package:flex/responsive.dart';
+import 'package:flex/settings/settings_page.dart';
+import 'package:flex/timer/timer_progress_widgets.dart';
+import 'package:flex/timer/timer_state.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+class TimerPageWidget extends StatefulWidget {
+  final TimerState timerState;
+  final int? total;
+  final int? progress;
+
+  const TimerPageWidget({
+    super.key,
+    required this.timerState,
+    this.total,
+    this.progress,
+  });
+
+  @override
+  State<TimerPageWidget> createState() => _TimerPageWidgetState();
+}
+
+class _TimerPageWidgetState extends State<TimerPageWidget>
+    with WidgetsBindingObserver {
+  DateTime? _startedAt;
+  Duration _elapsed = Duration.zero;
+  bool _running = false;
+
+  Duration get _stopwatchElapsed {
+    if (!_running || _startedAt == null) {
+      return _elapsed;
+    }
+    return _elapsed + DateTime.now().difference(_startedAt!);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.timerState.addListener(_onTimerStateChanged);
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    widget.timerState.removeListener(_onTimerStateChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void _startStopwatch() {
+    setState(() {
+      _startedAt = DateTime.now();
+      _running = true;
+    });
+  }
+
+  void _pauseStopwatch() {
+    setState(() {
+      _elapsed = _stopwatchElapsed;
+      _startedAt = null;
+      _running = false;
+    });
+  }
+
+  void _restartStopwatch() {
+    setState(() {
+      _elapsed = Duration.zero;
+      _startedAt = _running ? DateTime.now() : null;
+    });
+  }
+
+  void _onTimerStateChanged() {
+    if (widget.timerState.timer.total > Duration.zero && _running) {
+      setState(() {
+        _running = false;
+        _startedAt = null;
+        _elapsed = Duration.zero;
+      });
+    }
+    if (!widget.timerState.justExpired) return;
+    widget.timerState.justExpired = false;
+    // Android's TimerService already shows a system notification with its
+    // own Stop/Add 1 min actions when the timer expires, so an in-app toast
+    // here would just duplicate it.
+    if (!kIsWeb && Platform.isAndroid) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      messengerKey.currentState!.showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.timerFinishedToast),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          action: SnackBarAction(
+            label: context.l10n.actionStop,
+            onPressed: widget.timerState.stopTimer,
+          ),
+          duration: const Duration(seconds: 4),
+          persist: false,
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.total != null && widget.progress != null) {
+      widget.timerState.setTimer(widget.total!, widget.progress!);
+    }
+
+    final timer = widget.timerState.timer;
+    final hasCountdown = timer.total > Duration.zero;
+    final desktop = isDesktopLayout(context);
+
+    Widget? desktopAction;
+    if (timer.isRunning()) {
+      desktopAction = FilledButton.icon(
+        onPressed: () async => await widget.timerState.stopTimer(),
+        icon: const Icon(Icons.stop_rounded),
+        label: Text(context.l10n.stopTimer),
+      );
+    } else if (!hasCountdown) {
+      desktopAction = FilledButton.icon(
+        onPressed: _running ? _pauseStopwatch : _startStopwatch,
+        icon: Icon(_running ? Icons.pause_rounded : Icons.play_arrow),
+        label: Text(
+          _running ? context.l10n.actionPause : context.l10n.startStopwatch,
+        ),
+      );
+    }
+
+    final timerVisual = hasCountdown
+        ? TimerCircularProgressIndicator(
+            trailingControl: desktop ? desktopAction : null,
+          )
+        : StopwatchProgressIndicator(
+            startedAt: _startedAt,
+            accumulated: _elapsed,
+            isRunning: _running,
+            timerState: widget.timerState,
+            onRestart: _restartStopwatch,
+            trailingControl: desktop ? desktopAction : null,
+          );
+
+    return Scaffold(
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: desktop ? Text(context.l10n.navTimer) : null,
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(FlexPageRoute(builder: (context) => const SettingsPage()));
+            },
+            tooltip: context.l10n.navSettings,
+            icon: const Icon(Icons.settings),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: EdgeInsets.only(
+          top: desktop ? 24 : 0,
+          bottom: desktop ? 24 : 80,
+        ),
+        child: Center(child: timerVisual),
+      ),
+      floatingActionButton: switch (desktop) {
+        true => null,
+        _ when timer.isRunning() => AppFab(
+          onPressed: () async => await widget.timerState.stopTimer(),
+          icon: const Icon(Icons.stop),
+          label: Text(context.l10n.actionStop),
+        ),
+        _ when hasCountdown => const SizedBox(),
+        _ => AppFab(
+          onPressed: _running ? _pauseStopwatch : _startStopwatch,
+          icon: Icon(_running ? Icons.pause : Icons.play_arrow),
+          label: Text(
+            _running ? context.l10n.actionPause : context.l10n.actionStart,
+          ),
+        ),
+      },
+    );
+  }
+}

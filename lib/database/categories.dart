@@ -1,19 +1,14 @@
 import 'package:drift/drift.dart';
+import 'package:flex/database/category_summary.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/main.dart';
+
+export 'package:flex/database/category_summary.dart';
 
 /// Stores the reusable category names available for workout entries.
 class Categories extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().unique()();
-}
-
-/// A category and the number of workout entries currently using it.
-class CategorySummary {
-  const CategorySummary({required this.category, required this.usageCount});
-
-  final Category category;
-  final int usageCount;
 }
 
 /// Adds [name] if it is not already available.

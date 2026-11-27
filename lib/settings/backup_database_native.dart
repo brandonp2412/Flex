@@ -1,3 +1,4 @@
+import 'package:flex/settings/native_backup_database.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 abstract interface class BackupDatabase {
@@ -9,21 +10,4 @@ abstract interface class BackupDatabase {
 }
 
 BackupDatabase openBackupDatabase(String path) =>
-    _NativeBackupDatabase(sqlite3.open(path));
-
-final class _NativeBackupDatabase implements BackupDatabase {
-  _NativeBackupDatabase(this._database);
-
-  final Database _database;
-
-  @override
-  void execute(String sql, [List<Object?> parameters = const []]) =>
-      _database.execute(sql, parameters);
-
-  @override
-  ResultSet select(String sql, [List<Object?> parameters = const []]) =>
-      _database.select(sql, parameters);
-
-  @override
-  void close() => _database.close();
-}
+    NativeBackupDatabase(sqlite3.open(path));

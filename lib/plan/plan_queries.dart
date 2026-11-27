@@ -1,7 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/main.dart';
+import 'package:flex/plan/plan_count.dart';
+import 'package:flex/plan/plan_exercise_draft.dart';
 import 'package:flex/plan/workout_sessions.dart';
+
+export 'package:flex/plan/plan_exercise_draft.dart';
+export 'package:flex/plan/plan_count.dart';
 
 List<Plan> filterPlans(
   List<Plan> plans,
@@ -48,18 +53,6 @@ List<Plan> filterPlans(
   return exact.isNotEmpty || terms.length == 1 ? exact : findMatches(true);
 }
 
-class PlanExerciseDraft {
-  PlanExerciseDraft({required this.planExercise, required this.exerciseName})
-    : nameLower = exerciseName.toLowerCase();
-
-  final PlanExercisesCompanion planExercise;
-  final String exerciseName;
-  final String nameLower;
-
-  PlanExerciseDraft copyWithPlanExercise(PlanExercisesCompanion value) =>
-      PlanExerciseDraft(planExercise: value, exerciseName: exerciseName);
-}
-
 List<PlanExerciseDraft> filterPlanExerciseDrafts(
   Iterable<PlanExerciseDraft> exercises,
   String search,
@@ -69,18 +62,6 @@ List<PlanExerciseDraft> filterPlanExerciseDrafts(
     for (final exercise in exercises)
       if (exercise.nameLower.contains(query)) exercise,
   ];
-}
-
-class PlanCount {
-  final int planId;
-  final int total;
-  final int maxSets;
-
-  const PlanCount({
-    required this.planId,
-    required this.total,
-    required this.maxSets,
-  });
 }
 
 typedef GymCount = ({

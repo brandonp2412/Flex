@@ -1,107 +1,15 @@
 import 'package:csv/csv.dart';
 import 'package:drift/drift.dart';
+import 'package:flex/data_portability/csv_record.dart';
+import 'package:flex/data_portability/external_workout_format.dart';
+import 'package:flex/data_portability/external_workout_import_exception.dart';
+import 'package:flex/data_portability/external_workout_import_result.dart';
+import 'package:flex/data_portability/imported_set.dart';
 import 'package:flex/database/database.dart';
 
-/// CSV layouts are verified against each app's own export implementation:
-/// openGym: frontend/src/lib/export-csv.js
-/// LiftLog: app/src/store/settings/export-plaintext-effects.ts
-/// Fast N Fitness: app/src/main/java/com/easyfitness/DAO/export/CVSManager.java
-enum ExternalWorkoutFormat { openGym, liftLog, fastNFitness }
-
-final class ExternalWorkoutImportException implements Exception {
-  const ExternalWorkoutImportException(this.message);
-  final String message;
-
-  @override
-  String toString() => message;
-}
-
-final class ExternalWorkoutImportResult {
-  const ExternalWorkoutImportResult({
-    required this.format,
-    required this.workouts,
-    required this.exercises,
-    required this.sets,
-  });
-
-  final ExternalWorkoutFormat format;
-  final int workouts;
-  final int exercises;
-  final int sets;
-}
-
-final class _ImportedSet {
-  const _ImportedSet({
-    required this.group,
-    required this.timestamp,
-    required this.name,
-    required this.kind,
-    required this.unit,
-    this.reps,
-    this.load,
-    this.durationMs,
-    this.distanceMetres,
-    this.incline,
-    this.notes,
-  });
-
-  final String group;
-  final DateTime timestamp;
-  final String name;
-  final String kind;
-  final String unit;
-  final double? reps;
-  final double? load;
-  final int? durationMs;
-  final double? distanceMetres;
-  final double? incline;
-  final String? notes;
-}
-
-final class _CsvRecord {
-  _CsvRecord(this.line, this.columns, List<String> header, List<dynamic> values)
-    : fields = {
-        for (var i = 0; i < header.length; i++)
-          header[i]: i < values.length ? values[i].toString().trim() : '',
-      };
-
-  final int line;
-  final String columns;
-  final Map<String, String> fields;
-
-  String get(String name) => fields[name.toLowerCase()] ?? '';
-
-  String require(String name) {
-    final value = get(name);
-    if (value.isEmpty) {
-      throw ExternalWorkoutImportException('Row $line: missing $name.');
-    }
-    return value;
-  }
-
-  double? number(String name) {
-    final value = get(name);
-    if (value.isEmpty) return null;
-    final parsed = double.tryParse(value);
-    if (parsed == null || !parsed.isFinite || parsed < 0) {
-      throw ExternalWorkoutImportException(
-        'Row $line: invalid $name ($value).',
-      );
-    }
-    return parsed;
-  }
-
-  DateTime date(String value) {
-    final date = DateTime.tryParse(value);
-    if (date == null) {
-      throw ExternalWorkoutImportException('Row $line: invalid date ($value).');
-    }
-    return DateTime.fromMillisecondsSinceEpoch(
-      date.millisecondsSinceEpoch ~/ 1000 * 1000,
-      isUtc: date.isUtc,
-    );
-  }
-}
+export 'package:flex/data_portability/external_workout_format.dart';
+export 'package:flex/data_portability/external_workout_import_exception.dart';
+export 'package:flex/data_portability/external_workout_import_result.dart';
 
 String? _note(String a, String b) {
   final parts = [a, b].where((part) => part.isNotEmpty).toSet();
@@ -120,7 +28,7 @@ double? _kg(double? weight, String unit, int line) {
   };
 }
 
-List<_ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
+List<ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
   final rows = CsvDecoder().convert(csv.replaceFirst(RegExp(r'^\uFEFF'), ''));
   if (rows.length < 2) {
     throw const ExternalWorkoutImportException('CSV needs a header and data.');
@@ -134,9 +42,9 @@ List<_ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
   final records = [
     for (var i = 1; i < rows.length; i++)
       if (rows[i].any((value) => value.toString().trim().isNotEmpty))
-        _CsvRecord(i + 1, '', header, rows[i]),
+        CsvRecord(i + 1, '', header, rows[i]),
   ];
-  final result = <_ImportedSet>[];
+  final result = <ImportedSet>[];
 
   for (final row in records) {
     switch (format) {
@@ -150,7 +58,7 @@ List<_ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
         final distance = row.number('distance_km');
         final reps = row.number('reps');
         result.add(
-          _ImportedSet(
+          ImportedSet(
             group: group,
             timestamp: timestamp,
             name: row.require('exercise'),
@@ -169,7 +77,7 @@ List<_ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
       case ExternalWorkoutFormat.liftLog:
         final timestamp = row.date(row.require('timestamp'));
         result.add(
-          _ImportedSet(
+          ImportedSet(
             group: row.require('sessionid'),
             timestamp: timestamp,
             name: row.require('exercise'),
@@ -206,7 +114,7 @@ List<_ImportedSet> _parse(String csv, ExternalWorkoutFormat format) {
         }
         for (var set = 0; set < count; set++) {
           result.add(
-            _ImportedSet(
+            ImportedSet(
               group: '${row.get('date')}|${row.get('program_name')}',
               timestamp: timestamp,
               name: row.require('exercise'),
@@ -300,7 +208,7 @@ Future<ExternalWorkoutImportResult> importExternalWorkoutCsv(
 ) async {
   final format = detectExternalWorkoutFormat(csv);
   final imported = _parse(csv, format);
-  final groups = <String, List<_ImportedSet>>{};
+  final groups = <String, List<ImportedSet>>{};
   for (final set in imported) {
     groups.putIfAbsent(set.group, () => []).add(set);
   }

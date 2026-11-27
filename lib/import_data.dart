@@ -10,6 +10,7 @@ import 'package:flex/data_portability/graph_csv.dart';
 import 'package:flex/data_portability/import_issue.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
+import 'package:flex/import_validation_exception.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
@@ -23,20 +24,11 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-final class _ImportValidationException implements Exception {
-  const _ImportValidationException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => message;
-}
-
 String _localizedImportError(Object error, AppLocalizations l10n) {
   if (error is MissingBackupDatabaseException) {
     return l10n.backupArchiveMissingDatabase;
   }
-  if (error is _ImportValidationException) return error.message;
+  if (error is ImportValidationException) return error.message;
   if (error is GraphCsvImportException) return error.message;
   if (error is ExternalWorkoutImportException) return error.message;
   return l10n.unexpectedError;
@@ -48,9 +40,9 @@ Future<({int plans, int links})> replacePlansFromCsv(
   AppLocalizations l10n,
 ) async {
   final csvList = CsvDecoder().convert(csvContent);
-  if (csvList.isEmpty) throw _ImportValidationException(l10n.csvFileEmpty);
+  if (csvList.isEmpty) throw ImportValidationException(l10n.csvFileEmpty);
   if (csvList.length <= 1) {
-    throw _ImportValidationException(l10n.csvNeedsDataRow);
+    throw ImportValidationException(l10n.csvNeedsDataRow);
   }
 
   return database.transaction(() async {
@@ -60,7 +52,7 @@ Future<({int plans, int links})> replacePlansFromCsv(
       final idStr = row[0].toString().trim();
       final id = int.tryParse(idStr);
       if (id == null) {
-        throw _ImportValidationException(l10n.expectedIntegerPlanId(idStr));
+        throw ImportValidationException(l10n.expectedIntegerPlanId(idStr));
       }
       plansToInsert.add(
         PlansCompanion.insert(
@@ -200,7 +192,7 @@ class ImportData extends StatelessWidget {
 
     final selectedFile = File(result.single.path!);
     if (!await selectedFile.exists()) {
-      throw _ImportValidationException(l10n.selectedFileDoesNotExist);
+      throw ImportValidationException(l10n.selectedFileDoesNotExist);
     }
 
     final liveDatabase = await getDatabaseFile();
@@ -296,10 +288,10 @@ class ImportData extends StatelessWidget {
     try {
       await result.single.readAsBytes();
     } catch (_) {
-      throw _ImportValidationException(l10n.couldNotReadFileData);
+      throw ImportValidationException(l10n.couldNotReadFileData);
     }
 
-    throw _ImportValidationException(l10n.databaseImportWebUnsupported);
+    throw ImportValidationException(l10n.databaseImportWebUnsupported);
   }
 
   Future<void> importOtherAppCsv(BuildContext context) async {
