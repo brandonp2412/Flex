@@ -70,12 +70,20 @@ Stream<StartPlanData> watchStartPlanData(
           ),
           leftOuterJoin(
             database.exerciseSets,
-            database.exerciseSets.exerciseId.equalsExp(database.exercises.id) &
-                (database.exerciseSets.workoutId.equals(workout.id) |
-                    database.exerciseSets.id.equalsExp(defaultId) |
-                    CustomExpression<bool>(
-                      "date(exercise_sets.timestamp, 'unixepoch', 'localtime') = (${previousDay.content})",
-                    )),
+            CustomExpression<bool>('''
+              exercise_sets.id IN (
+                SELECT s.id FROM exercise_sets s
+                WHERE s.workout_id = ${workout.id}
+                  AND s.exercise_id = exercises.id
+                UNION
+                SELECT ${defaultId.content}
+                UNION
+                SELECT s.id FROM exercise_sets s
+                WHERE s.exercise_id = exercises.id
+                  AND s.timestamp >= CAST(strftime('%s', ${previousDay.content}, 'utc') AS INTEGER)
+                  AND s.timestamp < CAST(strftime('%s', date(${previousDay.content}, '+1 day'), 'utc') AS INTEGER)
+              )
+            '''),
           ),
           leftOuterJoin(
             database.workouts,
