@@ -10,7 +10,6 @@ import 'package:flex/import_data.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/settings/backup_archive.dart';
 import 'package:flex/storage/app_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -18,7 +17,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 Future<void> notifyAutomaticBackupEnabled(AppLocalizations l10n) async {
@@ -153,21 +151,4 @@ List<Widget> getDataSettings(
     if (matches([l10n.importData, 'restore'])) ImportData(ctx: context),
     if (matches([l10n.deleteRecords])) DeleteRecordsButton(ctx: context),
   ];
-}
-
-class DataSettings extends StatelessWidget {
-  const DataSettings({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = context.watch<Setting>();
-
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text(context.l10n.dataManagement)),
-      body: ResponsiveSettingsList(
-        children: getDataSettings('', settings, context),
-      ),
-    );
-  }
 }

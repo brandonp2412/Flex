@@ -1,11 +1,10 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
-import 'package:flex/utils.dart';
+import 'package:flex/plan/plan_exercise_settings_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-class ExerciseTile extends StatefulWidget {
+class ExerciseTile extends StatelessWidget {
   final PlanExercisesCompanion planExercise;
   final String exerciseName;
   final Function(PlanExercisesCompanion) onChange;
@@ -18,148 +17,48 @@ class ExerciseTile extends StatefulWidget {
   });
 
   @override
-  State<ExerciseTile> createState() => _ExerciseTileState();
-}
-
-class _ExerciseTileState extends State<ExerciseTile> {
-  late final TextEditingController _max;
-  late final TextEditingController _warmup;
-
-  @override
-  void initState() {
-    super.initState();
-    final settings = context.read<Setting>();
-    _max = TextEditingController(
-      text:
-          widget.planExercise.maxSets.value?.toString() ??
-          settings.maxSets.toString(),
-    );
-    _warmup = TextEditingController(
-      text:
-          widget.planExercise.warmupSets.value?.toString() ??
-          (settings.warmupSets ?? 0).toString(),
-    );
-  }
-
-  @override
-  void dispose() {
-    _max.dispose();
-    _warmup.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: IconButton(
         tooltip: context.l10n.navSettings,
         icon: const Icon(Icons.settings),
         onPressed: () {
+          var current = planExercise;
           showDialog(
             context: context,
-            builder: (context) {
-              bool timers = widget.planExercise.timers.present
-                  ? widget.planExercise.timers.value
-                  : true;
-
-              return AlertDialog.adaptive(
-                title: Text(widget.exerciseName),
-                content: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Selector<Setting, int?>(
-                        selector: (context, settings) => settings.warmupSets,
-                        builder: (context, value, child) => TextField(
-                          controller: _warmup,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: false,
-                          ),
-                          onTap: () => selectAll(_warmup),
-                          onChanged: (value) {
-                            final pe = widget.planExercise.copyWith(
-                              enabled: const Value(true),
-                              warmupSets: Value(int.tryParse(_warmup.text)),
-                            );
-                            widget.onChange(pe);
-                          },
-                          decoration: InputDecoration(
-                            labelText: context.l10n.warmupSets,
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Selector<Setting, int>(
-                        selector: (context, settings) => settings.maxSets,
-                        builder: (context, value, child) => TextField(
-                          controller: _max,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: false,
-                          ),
-                          onTap: () => selectAll(_max),
-                          onChanged: (value) {
-                            final parsed = int.tryParse(_max.text);
-                            if (parsed != null && parsed > 0 && parsed <= 20) {
-                              final pe = widget.planExercise.copyWith(
-                                enabled: const Value(true),
-                                maxSets: Value(parsed),
-                              );
-                              widget.onChange(pe);
-                            }
-                          },
-                          decoration: InputDecoration(
-                            labelText: context.l10n.workingSetsMax,
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      StatefulBuilder(
-                        builder: (context, setState) => ListTile(
-                          title: Text(context.l10n.restTimers),
-                          trailing: Switch(
-                            value: timers,
-                            onChanged: (value) {
-                              setState(() {
-                                timers = value;
-                              });
-                              widget.onChange(
-                                widget.planExercise.copyWith(
-                                  timers: Value(value),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                actions: [
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    label: Text(context.l10n.actionOk),
-                    icon: const Icon(Icons.check),
-                  ),
-                ],
-              );
-            },
+            builder: (context) => PlanExerciseSettingsDialog(
+              name: exerciseName,
+              initial: current,
+              draft: true,
+              onChanged: (patch) {
+                current = current.copyWith(
+                  enabled: patch.enabled.present
+                      ? patch.enabled
+                      : current.enabled,
+                  maxSets: patch.maxSets.present
+                      ? patch.maxSets
+                      : current.maxSets,
+                  warmupSets: patch.warmupSets.present
+                      ? patch.warmupSets
+                      : current.warmupSets,
+                  timers: patch.timers.present ? patch.timers : current.timers,
+                );
+                onChange(current);
+              },
+            ),
           );
         },
       ),
-      title: Text(widget.exerciseName),
+      title: Text(exerciseName),
       trailing: Switch(
-        value: widget.planExercise.enabled.value,
+        value: planExercise.enabled.value,
         onChanged: (value) {
-          widget.onChange(widget.planExercise.copyWith(enabled: Value(value)));
+          onChange(planExercise.copyWith(enabled: Value(value)));
         },
       ),
       onTap: () {
-        widget.onChange(
-          widget.planExercise.copyWith(
-            enabled: Value(!widget.planExercise.enabled.value),
-          ),
+        onChange(
+          planExercise.copyWith(enabled: Value(!planExercise.enabled.value)),
         );
       },
     );

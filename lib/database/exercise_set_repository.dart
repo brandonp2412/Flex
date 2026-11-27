@@ -124,229 +124,137 @@ JoinedSelectStatement<HasResultSet, dynamic> _exerciseSetQuery(
   return query;
 }
 
-JoinedSelectStatement<HasResultSet, dynamic> _filteredExerciseSetQuery(
-  AppDatabase database, {
-  String search = '',
-  String? category,
-  DateTime? startDate,
-  DateTime? endDate,
-  DateTime? endDateExclusive,
-  Iterable<int>? ids,
-  bool? cardio,
-  double? repsGt,
-  double? repsLt,
-  double? weightGt,
-  double? weightLt,
-  int? limit,
-  bool idsOnly = false,
-}) {
-  final query = _exerciseSetQuery(database, idsOnly: idsOnly);
-  final sets = database.exerciseSets;
-  final exercises = database.exercises;
-  for (final term
-      in search.toLowerCase().split(' ').where((term) => term.isNotEmpty)) {
-    query.where(exercises.name.lower().contains(term));
-  }
-  if (category != null) query.where(database.categories.name.equals(category));
-  if (startDate != null)
-    query.where(sets.timestamp.isBiggerOrEqualValue(startDate));
-  if (endDate != null)
-    query.where(sets.timestamp.isSmallerOrEqualValue(endDate));
-  if (endDateExclusive != null)
-    query.where(sets.timestamp.isSmallerThanValue(endDateExclusive));
-  if (ids != null) query.where(sets.id.isIn(ids));
-  if (cardio != null) {
-    query.where(exercises.kind.equals(cardio ? 'cardio' : 'strength'));
-  }
+class ExerciseSetQuery {
+  const ExerciseSetQuery(
+    this.database, {
+    this.search = '',
+    this.category,
+    this.startDate,
+    this.endDate,
+    this.endDateExclusive,
+    this.ids,
+    this.cardio,
+    this.exerciseName,
+    this.exerciseId,
+    this.workoutId,
+    this.timestamp,
+    this.repsGt,
+    this.repsLt,
+    this.weightGt,
+    this.weightLt,
+    this.limit,
+    this.order = OrderingMode.desc,
+  });
 
-  // History's numeric filters apply to strength sets only, in displayed units.
-  final isCardio = exercises.kind.equals('cardio');
-  final reps = ifNull(sets.reps, const Constant(0.0));
-  final load = ifNull(sets.loadKg, const Constant(0.0));
-  final preferredUnit = ifNull(
-    database.settings.strengthUnit,
-    const Constant('last-entry'),
-  );
-  final unit = exercises.kind.caseMatch<String>(
-    when: {
-      const Constant('strength'): preferredUnit.caseMatch<String>(
-        when: {const Constant('last-entry'): exercises.displayUnit},
-        orElse: preferredUnit,
-      ),
-    },
-    orElse: exercises.displayUnit,
-  );
-  final weight = unit.caseMatch<double>(
-    when: {
-      const Constant('lb'): load / const Constant(0.45359237),
-      const Constant('stone'): load / const Constant(6.35029318),
-    },
-    orElse: load,
-  );
-  if (repsGt != null) query.where(isCardio | reps.isBiggerThanValue(repsGt));
-  if (repsLt != null) query.where(isCardio | reps.isSmallerThanValue(repsLt));
-  if (weightGt != null)
-    query.where(isCardio | weight.isBiggerThanValue(weightGt));
-  if (weightLt != null)
-    query.where(isCardio | weight.isSmallerThanValue(weightLt));
-  if (limit != null) query.limit(limit);
-  return query;
-}
+  final AppDatabase database;
+  final String search;
+  final String? category, exerciseName;
+  final DateTime? startDate, endDate, endDateExclusive, timestamp;
+  final Iterable<int>? ids;
+  final bool? cardio;
+  final int? exerciseId, workoutId, limit;
+  final double? repsGt, repsLt, weightGt, weightLt;
+  final OrderingMode order;
 
-/// Watches exercise sets projected with exercise metadata for history UI.
-Stream<List<ExerciseSetView>> watchExerciseSets(
-  AppDatabase database, {
-  String search = '',
-  String? category,
-  DateTime? startDate,
-  DateTime? endDate,
-  double? repsGt,
-  double? repsLt,
-  double? weightGt,
-  double? weightLt,
-  int? limit,
-}) {
-  return _filteredExerciseSetQuery(
-    database,
-    search: search,
-    category: category,
-    startDate: startDate,
-    endDate: endDate,
-    repsGt: repsGt,
-    repsLt: repsLt,
-    weightGt: weightGt,
-    weightLt: weightLt,
-    limit: limit,
-  ).watch().map(
-    (rows) => rows.map((row) => _toExerciseSetView(database, row)).toList(),
-  );
-}
-
-/// Loads exercise sets projected with exercise metadata.
-Future<List<ExerciseSetView>> getExerciseSets(
-  AppDatabase database, {
-  String search = '',
-  String? category,
-  DateTime? startDate,
-  DateTime? endDate,
-  DateTime? endDateExclusive,
-  bool? cardio,
-  double? repsGt,
-  double? repsLt,
-  double? weightGt,
-  double? weightLt,
-  int? limit,
-}) async {
-  final rows = await _filteredExerciseSetQuery(
-    database,
-    search: search,
-    category: category,
-    startDate: startDate,
-    endDate: endDate,
-    endDateExclusive: endDateExclusive,
-    cardio: cardio,
-    repsGt: repsGt,
-    repsLt: repsLt,
-    weightGt: weightGt,
-    weightLt: weightLt,
-    limit: limit,
-  ).get();
-  return rows.map((row) => _toExerciseSetView(database, row)).toList();
-}
-
-/// Loads the identifiers of every set matching the History filters.
-Future<List<int>> getExerciseSetIds(
-  AppDatabase database, {
-  String search = '',
-  String? category,
-  DateTime? startDate,
-  DateTime? endDate,
-  double? repsGt,
-  double? repsLt,
-  double? weightGt,
-  double? weightLt,
-}) async {
-  if (search.trim().isEmpty &&
-      category == null &&
-      repsGt == null &&
-      repsLt == null &&
-      weightGt == null &&
-      weightLt == null) {
+  JoinedSelectStatement<HasResultSet, dynamic> _query({bool idsOnly = false}) {
+    final query = _exerciseSetQuery(database, idsOnly: idsOnly, order: order);
     final sets = database.exerciseSets;
-    final query = database.selectOnly(sets)..addColumns([sets.id]);
-    if (startDate != null) {
-      query.where(sets.timestamp.isBiggerOrEqualValue(startDate));
+    final exercises = database.exercises;
+    for (final term
+        in search.toLowerCase().split(' ').where((term) => term.isNotEmpty)) {
+      query.where(exercises.name.lower().contains(term));
     }
-    if (endDate != null) {
-      query.where(sets.timestamp.isSmallerOrEqualValue(endDate));
+    if (category != null)
+      query.where(database.categories.name.equals(category!));
+    if (startDate != null)
+      query.where(sets.timestamp.isBiggerOrEqualValue(startDate!));
+    if (endDate != null)
+      query.where(sets.timestamp.isSmallerOrEqualValue(endDate!));
+    if (endDateExclusive != null)
+      query.where(sets.timestamp.isSmallerThanValue(endDateExclusive!));
+    if (ids != null) query.where(sets.id.isIn(ids!));
+    if (exerciseName != null) query.where(exercises.name.equals(exerciseName!));
+    if (exerciseId != null) query.where(sets.exerciseId.equals(exerciseId!));
+    if (workoutId != null) query.where(sets.workoutId.equals(workoutId!));
+    if (timestamp != null) query.where(sets.timestamp.equals(timestamp!));
+    if (cardio != null) {
+      query.where(exercises.kind.equals(cardio! ? 'cardio' : 'strength'));
     }
-    final rows = await query.get();
-    return rows.map((row) => row.read(sets.id)!).toList();
-  }
 
-  final query = _filteredExerciseSetQuery(
-    database,
-    search: search,
-    category: category,
-    startDate: startDate,
-    endDate: endDate,
-    repsGt: repsGt,
-    repsLt: repsLt,
-    weightGt: weightGt,
-    weightLt: weightLt,
-    idsOnly: true,
-  );
-  final rows = await query.get();
-  return rows.map((row) => row.read(database.exerciseSets.id)!).toList();
-}
-
-/// Loads only the requested exercise-set identifiers.
-Future<List<ExerciseSetView>> getExerciseSetsByIds(
-  AppDatabase database,
-  Iterable<int> ids,
-) async {
-  final values = ids.toList();
-  if (values.isEmpty) return [];
-  final rows = await _filteredExerciseSetQuery(database, ids: values).get();
-  return rows.map((row) => _toExerciseSetView(database, row)).toList();
-}
-
-Future<List<ExerciseSetView>> getExerciseSetsForExercise(
-  AppDatabase database, {
-  required String exerciseName,
-  DateTime? startDate,
-  DateTime? endDate,
-  int? limit,
-  OrderingMode order = OrderingMode.desc,
-}) async {
-  final query = _exerciseSetQuery(database, order: order)
-    ..where(database.exercises.name.equals(exerciseName));
-
-  if (startDate != null) {
-    query.where(
-      database.exerciseSets.timestamp.isBiggerOrEqualValue(startDate),
+    // History's numeric filters apply to strength sets only, in displayed units.
+    final isCardio = exercises.kind.equals('cardio');
+    final reps = ifNull(sets.reps, const Constant(0.0));
+    final load = ifNull(sets.loadKg, const Constant(0.0));
+    final preferredUnit = ifNull(
+      database.settings.strengthUnit,
+      const Constant('last-entry'),
     );
+    final unit = exercises.kind.caseMatch<String>(
+      when: {
+        const Constant('strength'): preferredUnit.caseMatch<String>(
+          when: {const Constant('last-entry'): exercises.displayUnit},
+          orElse: preferredUnit,
+        ),
+      },
+      orElse: exercises.displayUnit,
+    );
+    final weight = unit.caseMatch<double>(
+      when: {
+        const Constant('lb'): load / const Constant(0.45359237),
+        const Constant('stone'): load / const Constant(6.35029318),
+      },
+      orElse: load,
+    );
+    if (repsGt != null) query.where(isCardio | reps.isBiggerThanValue(repsGt!));
+    if (repsLt != null)
+      query.where(isCardio | reps.isSmallerThanValue(repsLt!));
+    if (weightGt != null)
+      query.where(isCardio | weight.isBiggerThanValue(weightGt!));
+    if (weightLt != null)
+      query.where(isCardio | weight.isSmallerThanValue(weightLt!));
+    if (!idsOnly && limit != null) query.limit(limit!);
+    return query;
   }
-  if (endDate != null) {
-    query.where(database.exerciseSets.timestamp.isSmallerThanValue(endDate));
+
+  List<ExerciseSetView> _project(List<TypedResult> rows) => [
+    for (final row in rows) _toExerciseSetView(database, row),
+  ];
+
+  Future<List<ExerciseSetView>> get() async => _project(await _query().get());
+
+  Stream<List<ExerciseSetView>> watch() => _query().watch().map(_project);
+
+  Future<ExerciseSetView?> firstOrNull() async {
+    final row = await (_query()..limit(1)).getSingleOrNull();
+    return row == null ? null : _toExerciseSetView(database, row);
   }
-  if (limit != null) query.limit(limit);
 
-  final rows = await query.get();
-  return rows.map((row) => _toExerciseSetView(database, row)).toList();
-}
-
-Future<ExerciseSetView?> getExerciseSetForExerciseAt(
-  AppDatabase database, {
-  required String exerciseName,
-  required DateTime timestamp,
-}) async {
-  final query = _exerciseSetQuery(database)
-    ..where(database.exercises.name.equals(exerciseName))
-    ..where(database.exerciseSets.timestamp.equals(timestamp))
-    ..limit(1);
-  final row = await query.getSingleOrNull();
-  return row == null ? null : _toExerciseSetView(database, row);
+  Future<List<int>> getIds() async {
+    final sets = database.exerciseSets;
+    if (search.trim().isEmpty &&
+        category == null &&
+        exerciseName == null &&
+        exerciseId == null &&
+        workoutId == null &&
+        timestamp == null &&
+        endDateExclusive == null &&
+        ids == null &&
+        cardio == null &&
+        repsGt == null &&
+        repsLt == null &&
+        weightGt == null &&
+        weightLt == null) {
+      final query = database.selectOnly(sets)..addColumns([sets.id]);
+      if (startDate != null)
+        query.where(sets.timestamp.isBiggerOrEqualValue(startDate!));
+      if (endDate != null)
+        query.where(sets.timestamp.isSmallerOrEqualValue(endDate!));
+      return [for (final row in await query.get()) row.read(sets.id)!];
+    }
+    return [
+      for (final row in await _query(idsOnly: true).get()) row.read(sets.id)!,
+    ];
+  }
 }
 
 Future<int> countExerciseSetsForExercises(
@@ -373,46 +281,6 @@ Future<int> countExerciseSetsForExercises(
   return row.read(count) ?? 0;
 }
 
-/// Loads one exercise set by its exercise_sets identifier.
-Future<ExerciseSetView?> getExerciseSetById(
-  AppDatabase database,
-  int id,
-) async {
-  final query = _exerciseSetQuery(database)
-    ..where(database.exerciseSets.id.equals(id));
-  final row = await query.getSingleOrNull();
-  return row == null ? null : _toExerciseSetView(database, row);
-}
-
-/// Loads the latest exercise set for an exercise name.
-Future<ExerciseSetView?> getLatestExerciseSet(
-  AppDatabase database, {
-  required String exerciseName,
-}) async {
-  final query = _exerciseSetQuery(database)
-    ..where(database.exercises.name.equals(exerciseName))
-    ..limit(1);
-  final row = await query.getSingleOrNull();
-  return row == null ? null : _toExerciseSetView(database, row);
-}
-
-/// Loads the latest exercise set for an exercise in one workout.
-Future<ExerciseSetView?> getLatestWorkoutExerciseSet(
-  AppDatabase database, {
-  required int workoutId,
-  required int exerciseId,
-}) async {
-  final query = _exerciseSetQuery(database)
-    ..where(
-      database.exerciseSets.workoutId.equals(workoutId) &
-          database.exerciseSets.exerciseId.equals(exerciseId),
-    )
-    ..limit(1);
-  final row = await query.getSingleOrNull();
-  return row == null ? null : _toExerciseSetView(database, row);
-}
-
-/// Watches exercise sets for one exercise in one workout.
 ExerciseSetsCompanion _setValues(
   ExerciseSetView set,
   int exerciseId,
@@ -454,7 +322,7 @@ Future<ExerciseSetView> insertExerciseSet(
       workoutId: Value(workoutId),
     ),
   );
-  return (await getExerciseSetById(database, id))!;
+  return (await ExerciseSetQuery(database, ids: [id]).firstOrNull())!;
 }
 
 /// Updates per-performance data and exercise identity in exercise_sets only.
@@ -505,28 +373,9 @@ Future<bool> isBestExerciseSet(
           set.id.isNotValue(exerciseSet.id),
     );
 
-  if (exerciseSet.cardio &&
-      const {'kg', 'lb', 'stone'}.contains(exerciseSet.unit)) {
-    final best =
-        await (previous
-              ..orderBy([
-                (set) =>
-                    OrderingTerm.desc(ifNull(set.loadKg, const Constant(0.0))),
-                (set) => OrderingTerm.desc(
-                  ifNull(set.durationMs, const Constant(0)),
-                ),
-              ])
-              ..limit(1))
-            .getSingleOrNull();
-    if (best == null) return false;
-    final bestWeight = displayLoad(exerciseSet.unit, best.loadKg);
-    final bestDuration = (best.durationMs ?? 0) / 60000;
-    return exerciseSet.weight > bestWeight ||
-        (exerciseSet.weight == bestWeight &&
-            exerciseSet.duration > bestDuration);
-  }
+  final weightedCardio = exerciseSet.cardio && isWeightUnit(exerciseSet.unit);
 
-  if (exerciseSet.cardio) {
+  if (exerciseSet.cardio && !weightedCardio) {
     if (exerciseSet.duration == 0) return false;
     final candidates = await previous.get();
     var bestPace = 0.0;
@@ -550,13 +399,18 @@ Future<bool> isBestExerciseSet(
             ..orderBy([
               (set) =>
                   OrderingTerm.desc(ifNull(set.loadKg, const Constant(0.0))),
-              (set) => OrderingTerm.desc(ifNull(set.reps, const Constant(0.0))),
+              (set) => weightedCardio
+                  ? OrderingTerm.desc(ifNull(set.durationMs, const Constant(0)))
+                  : OrderingTerm.desc(ifNull(set.reps, const Constant(0.0))),
             ])
             ..limit(1))
           .getSingleOrNull();
   if (best == null) return false;
   final bestWeight = displayLoad(exerciseSet.unit, best.loadKg);
-  final bestReps = best.reps ?? 0;
+  final bestSecondary = weightedCardio
+      ? (best.durationMs ?? 0) / 60000
+      : best.reps ?? 0;
+  final secondary = weightedCardio ? exerciseSet.duration : exerciseSet.reps;
   return exerciseSet.weight > bestWeight ||
-      (exerciseSet.weight == bestWeight && exerciseSet.reps > bestReps);
+      (exerciseSet.weight == bestWeight && secondary > bestSecondary);
 }

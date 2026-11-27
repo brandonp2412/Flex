@@ -30,10 +30,10 @@ void main() {
         weight: 5,
         created: testNow,
       );
-      final sets = (await getExerciseSets(
+      final sets = (await ExerciseSetQuery(
         harness.database,
         search: 'Graph history test',
-      )).where((set) => set.name == 'Graph history test').toList();
+      ).get()).where((set) => set.name == 'Graph history test').toList();
       final tabController = MockTabController();
       addTearDown(tabController.dispose);
 
@@ -67,10 +67,10 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
       await tester.pumpAndSettle();
 
-      final remaining = (await getExerciseSets(
+      final remaining = (await ExerciseSetQuery(
         harness.database,
         search: 'Graph history test',
-      )).where((set) => set.name == 'Graph history test');
+      ).get()).where((set) => set.name == 'Graph history test');
       expect(remaining, isEmpty);
       expect(find.text('No history yet for Graph history test'), findsOne);
     },
@@ -96,10 +96,10 @@ void main() {
         );
       }
 
-      final initialSets = await getExerciseSetsForExercise(
+      final initialSets = await ExerciseSetQuery(
         harness.database,
         exerciseName: 'Press',
-      );
+      ).get();
       expect(initialSets.map((set) => set.id), contains(exact.id));
 
       final tabController = TabController(
@@ -164,7 +164,10 @@ void main() {
 
     expect((await getBodyWeightById(harness.database, weightId))?.weightKg, 81);
     expect(
-      (await getExerciseSetById(harness.database, unrelated.id))?.weight,
+      (await ExerciseSetQuery(
+        harness.database,
+        ids: [unrelated.id],
+      ).firstOrNull())?.weight,
       50,
     );
     expect(find.text('1 × 81 kg'), findsOneWidget);
@@ -177,7 +180,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(await getBodyWeightById(harness.database, weightId), isNull);
-    expect(await getExerciseSetById(harness.database, unrelated.id), isNotNull);
+    expect(
+      await ExerciseSetQuery(
+        harness.database,
+        ids: [unrelated.id],
+      ).firstOrNull(),
+      isNotNull,
+    );
   });
 
   testWidgets('desktop weight history context menu deletes the weight table', (
@@ -229,6 +238,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(await getBodyWeightById(harness.database, weightId), isNull);
-    expect(await getExerciseSetById(harness.database, unrelated.id), isNotNull);
+    expect(
+      await ExerciseSetQuery(
+        harness.database,
+        ids: [unrelated.id],
+      ).firstOrNull(),
+      isNotNull,
+    );
   });
 }

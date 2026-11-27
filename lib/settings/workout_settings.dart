@@ -5,11 +5,9 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/settings/category_management_page.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 ({List<Widget> tracking, List<Widget> history, List<Widget> graphs})
 getWorkoutSettingGroups(BuildContext context, String term, Setting settings) {
@@ -233,63 +231,43 @@ List<Widget> getWorkoutSettings(
   return [...groups.tracking, ...groups.history, ...groups.graphs];
 }
 
-class WorkoutSettings extends StatefulWidget {
-  const WorkoutSettings({super.key});
-
-  @override
-  State<WorkoutSettings> createState() => _WorkoutSettingsState();
-}
-
-class _WorkoutSettingsState extends State<WorkoutSettings> {
-  late var _settings = context.read<Setting>();
-
-  @override
-  Widget build(BuildContext context) {
-    _settings = context.watch<Setting>();
-    final settings = getWorkoutSettingGroups(context, '', _settings);
-
-    Widget section(
-      String? title,
-      List<Widget> children, {
-      bool collapsed = false,
-    }) {
-      final content = collapsed
-          ? ExpansionTile(
-              title: Text(title!),
-              initiallyExpanded: false,
-              children: children,
-            )
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (title != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+List<Widget> workoutSettingsSections(BuildContext context, Setting value) {
+  final settings = getWorkoutSettingGroups(context, '', value);
+  Widget section(
+    String? title,
+    List<Widget> children, {
+    bool collapsed = false,
+  }) {
+    final content = collapsed
+        ? ExpansionTile(
+            title: Text(title!),
+            initiallyExpanded: false,
+            children: children,
+          )
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (title != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
-                ...children,
-              ],
-            );
+                ),
+              ...children,
+            ],
+          );
 
-      return content;
-    }
-
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text(context.l10n.workouts)),
-      body: ResponsiveSettingsList(
-        children: [
-          section(null, settings.tracking),
-          section(context.l10n.navHistory, settings.history),
-          section(context.l10n.navGraphs, settings.graphs, collapsed: true),
-        ],
-      ),
-    );
+    return content;
   }
+
+  return [
+    section(null, settings.tracking),
+    section(context.l10n.navHistory, settings.history),
+    section(context.l10n.navGraphs, settings.graphs, collapsed: true),
+  ];
 }

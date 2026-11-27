@@ -2,7 +2,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/error_state.dart';
-import 'package:flex/graph/add_exercise_page.dart';
+import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/platform_page_route.dart';
@@ -97,7 +97,9 @@ class _SwapWorkoutState extends State<SwapWorkout> {
 
   Future<void> _createAndSwap() async {
     final exercise = await Navigator.of(context).push<Exercise>(
-      FlexPageRoute(builder: (context) => AddExercisePage(name: _searchQuery)),
+      FlexPageRoute(
+        builder: (context) => ExerciseEditorPage.add(name: _searchQuery),
+      ),
     );
     if (exercise == null || !mounted) return;
     await _swapToExercise(exercise);

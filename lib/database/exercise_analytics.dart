@@ -200,39 +200,19 @@ double _oneRepMax(double weight, double reps) {
 ExerciseSetView _latest(List<ExerciseSetView> sets) =>
     sets.reduce((a, b) => a.created.isAfter(b.created) ? a : b);
 
-ExerciseSetView _bestWeightSet(List<ExerciseSetView> sets, String target) {
-  var best = sets.first;
-  var bestWeight = _loadInUnit(best, target);
-  for (final set in sets.skip(1)) {
-    final weight = _loadInUnit(set, target);
-    if (weight > bestWeight || (weight == bestWeight && set.reps > best.reps)) {
-      best = set;
-      bestWeight = weight;
+ExerciseSetView _bestSet(
+  List<ExerciseSetView> sets,
+  double Function(ExerciseSetView) metric, [
+  double Function(ExerciseSetView)? tieBreaker,
+]) {
+  return sets.reduce((a, b) {
+    final first = metric(a), second = metric(b);
+    if (second > first ||
+        (first == second &&
+            tieBreaker != null &&
+            tieBreaker(b) > tieBreaker(a))) {
+      return b;
     }
-  }
-  return best;
-}
-
-ExerciseSetView _bestRepsSet(List<ExerciseSetView> sets) {
-  return sets.reduce((a, b) {
-    if (b.reps > a.reps) return b;
-    if (b.reps == a.reps && b.weight > a.weight) return b;
-    return a;
-  });
-}
-
-ExerciseSetView _bestOneRepMaxSet(List<ExerciseSetView> sets, String target) {
-  return sets.reduce((a, b) {
-    final aOrm = _oneRepMax(_loadInUnit(a, target), a.reps);
-    final bOrm = _oneRepMax(_loadInUnit(b, target), b.reps);
-    return bOrm > aOrm ? b : a;
-  });
-}
-
-ExerciseSetView _bestRelativeSet(List<ExerciseSetView> sets) {
-  return sets.reduce((a, b) {
-    if (b.weight > a.weight) return b;
-    if (b.weight == a.weight && b.reps > a.reps) return b;
     return a;
   });
 }
@@ -248,15 +228,22 @@ StrengthData _strengthBucket(
 
   switch (metric) {
     case StrengthMetric.bestWeight:
-      representative = _bestWeightSet(sets, target);
+      representative = _bestSet(
+        sets,
+        (set) => _loadInUnit(set, target),
+        (set) => set.reps,
+      );
       value = _loadInUnit(representative, target);
       break;
     case StrengthMetric.bestReps:
-      representative = _bestRepsSet(sets);
+      representative = _bestSet(sets, (set) => set.reps, (set) => set.weight);
       value = representative.reps;
       break;
     case StrengthMetric.oneRepMax:
-      representative = _bestOneRepMaxSet(sets, target);
+      representative = _bestSet(
+        sets,
+        (set) => _oneRepMax(_loadInUnit(set, target), set.reps),
+      );
       value = _oneRepMax(
         _loadInUnit(representative, target),
         representative.reps,
@@ -271,7 +258,7 @@ StrengthData _strengthBucket(
       value = double.parse(volume.toStringAsFixed(2));
       break;
     case StrengthMetric.relativeStrength:
-      representative = _bestRelativeSet(sets);
+      representative = _bestSet(sets, (set) => set.weight, (set) => set.reps);
       value = representative.bodyWeight == 0
           ? 0
           : representative.weight / representative.bodyWeight;
@@ -325,6 +312,24 @@ Future<List<StrengthData>> getBodyWeightData({
   }).toList();
 }
 
+Future<List<List<ExerciseSetView>>> _exerciseBuckets({
+  required String name,
+  required bool cardio,
+  required Period period,
+  required DateTime? start,
+  required DateTime? end,
+  required int limit,
+}) async {
+  final sets = await ExerciseSetQuery(
+    db,
+    exerciseName: name,
+    startDate: start,
+    endDateExclusive: end,
+    order: OrderingMode.asc,
+  ).get();
+  return _groupSets(sets.where((set) => set.cardio == cardio), period, limit);
+}
+
 Future<List<StrengthData>> getStrengthData({
   required String target,
   required String name,
@@ -334,14 +339,14 @@ Future<List<StrengthData>> getStrengthData({
   required DateTime? end,
   required int limit,
 }) async {
-  final sets = await getExerciseSetsForExercise(
-    db,
-    exerciseName: name,
-    startDate: start,
-    endDate: end,
-    order: OrderingMode.asc,
+  final groups = await _exerciseBuckets(
+    name: name,
+    cardio: false,
+    period: period,
+    start: start,
+    end: end,
+    limit: limit,
   );
-  final groups = _groupSets(sets.where((set) => !set.cardio), period, limit);
   return [
     for (final group in groups)
       _strengthBucket(
@@ -370,42 +375,19 @@ CardioData _cardioBucket(
   final representative = _latest(sets);
   final duration = sets.fold<double>(0, (sum, set) => sum + set.duration);
   final incline = _averageIncline(sets);
-  late final double value;
-
-  switch (metric) {
-    case CardioMetric.pace:
-      final distance = sets.fold<double>(
-        0,
-        (sum, set) => sum + _distanceInUnit(set, target),
-      );
-      value = duration == 0 ? 0 : distance / duration;
-      break;
-    case CardioMetric.distance:
-      value = sets.fold<double>(
-        0,
-        (sum, set) => sum + _distanceInUnit(set, target),
-      );
-      break;
-    case CardioMetric.duration:
-      value = duration;
-      break;
-    case CardioMetric.incline:
-      value = incline;
-      break;
-    case CardioMetric.inclineAdjustedPace:
-      final distance = sets.fold<double>(
-        0,
-        (sum, set) => sum + _distanceInUnit(set, target),
-      );
-      final pace = duration == 0 ? 0 : distance / duration;
-      value = pace * math.pow(1.1, incline).toDouble();
-      break;
-    case CardioMetric.weight:
-      value = sets
-          .map((set) => _loadInUnit(set, target))
-          .fold<double>(0, math.max);
-      break;
-  }
+  double distance() =>
+      sets.fold<double>(0, (sum, set) => sum + _distanceInUnit(set, target));
+  double pace() => duration == 0 ? 0 : distance() / duration;
+  final value = switch (metric) {
+    CardioMetric.pace => pace(),
+    CardioMetric.distance => distance(),
+    CardioMetric.duration => duration,
+    CardioMetric.incline => incline,
+    CardioMetric.inclineAdjustedPace =>
+      pace() * math.pow(1.1, incline).toDouble(),
+    CardioMetric.weight =>
+      sets.map((set) => _loadInUnit(set, target)).fold<double>(0, math.max),
+  };
 
   return CardioData(
     created: representative.created,
@@ -423,14 +405,14 @@ Future<List<CardioData>> getCardioData({
   DateTime? end,
   int limit = 11,
 }) async {
-  final sets = await getExerciseSetsForExercise(
-    db,
-    exerciseName: name,
-    startDate: start ?? DateTime(0),
-    endDate: end ?? DateTime.now().toLocal().add(const Duration(days: 1)),
-    order: OrderingMode.asc,
+  final groups = await _exerciseBuckets(
+    name: name,
+    cardio: true,
+    period: period,
+    start: start ?? DateTime(0),
+    end: end ?? DateTime.now().toLocal().add(const Duration(days: 1)),
+    limit: limit,
   );
-  final groups = _groupSets(sets.where((set) => set.cardio), period, limit);
   return [
     for (final group in groups)
       _cardioBucket(group, metric: metric, target: target),
@@ -463,11 +445,11 @@ Future<List<StrengthData>> getGlobalData({
   final fetchStart = start != null && start.isAfter(window.cutoff!)
       ? start
       : window.cutoff;
-  final allSets = await getExerciseSets(
+  final allSets = await ExerciseSetQuery(
     db,
     startDate: fetchStart,
     endDateExclusive: end,
-  );
+  ).get();
 
   final buckets = <String, List<ExerciseSetView>>{};
   for (final set in allSets) {
@@ -593,11 +575,7 @@ Future<List<ExerciseSetView>> getGraphHistory(
   String exerciseName, {
   int limit = 20,
 }) {
-  return getExerciseSetsForExercise(
-    db,
-    exerciseName: exerciseName,
-    limit: limit,
-  );
+  return ExerciseSetQuery(db, exerciseName: exerciseName, limit: limit).get();
 }
 
 Future<List<ExerciseSetView>> getBodyWeightGraphHistory({
@@ -627,11 +605,11 @@ Future<ExerciseSetView?> getGraphPointSet(
   String exerciseName,
   DateTime timestamp,
 ) {
-  return getExerciseSetForExerciseAt(
+  return ExerciseSetQuery(
     db,
     exerciseName: exerciseName,
     timestamp: timestamp,
-  );
+  ).firstOrNull();
 }
 
 Future<int> countGraphSets(Iterable<String> exerciseNames) {

@@ -83,7 +83,10 @@ void main() {
             .exerciseId,
         exercise.id,
       );
-      final history = await getExerciseSets(db, search: 'Renamed stable lift');
+      final history = await ExerciseSetQuery(
+        db,
+        search: 'Renamed stable lift',
+      ).get();
       expect(history, hasLength(1));
       expect(history.single.name, 'Renamed stable lift');
       expect(history.single.created, timestamp);

@@ -1,3 +1,4 @@
+import 'package:flex/selection_tile.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
@@ -89,134 +90,111 @@ class _PlanTileState extends State<PlanTile> {
     final colors = Theme.of(context).colorScheme;
     final today = widget.plan.days.split(',').contains(widget.weekday);
 
-    final tile = Material(
-      color: switch (desktop) {
-        _ when widget.selected.contains(widget.plan.id) =>
-          colors.primary.withValues(alpha: .18),
-        true => colors.surfaceContainerLow,
-        _ => Colors.transparent,
-      },
-      borderRadius: desktop ? BorderRadius.circular(16) : null,
-      clipBehavior: desktop ? Clip.antiAlias : Clip.none,
-      child: ListTile(
-        contentPadding: desktop
-            ? const EdgeInsets.symmetric(horizontal: 20, vertical: 10)
-            : null,
-        title: Row(
-          children: [
-            Flexible(child: title),
-            if (desktop && today) ...[
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  context.l10n.todayLabel,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colors.onPrimaryContainer,
-                    fontWeight: FontWeight.w700,
-                  ),
+    return SelectionTile(
+      selected: widget.selected.contains(widget.plan.id),
+      selectionActive: widget.selected.isNotEmpty,
+      onSelect: () => widget.onSelect(widget.plan.id),
+      onSecondaryTapDown: (_) => widget.onSelect(widget.plan.id),
+      desktopVerticalPadding: 10,
+      title: Row(
+        children: [
+          Flexible(child: title),
+          if (desktop && today) ...[
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                context.l10n.todayLabel,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: colors.onPrimaryContainer,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ],
+            ),
           ],
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: widget.exercises == null
-              ? const SizedBox.shrink()
-              : Text(
-                  widget.exercises!
-                      .map((entry) => entry.exercise.name)
-                      .join('  •  '),
-                  maxLines: desktop ? 2 : null,
-                  overflow: desktop ? TextOverflow.ellipsis : null,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-        ),
-        leading: leading,
-        trailing: Builder(
-          builder: (context) {
-            final trailing = context.select<Setting, PlanTrailing>(
-              (settings) => PlanTrailing.values.byName(
-                settings.planTrailing.replaceFirst('PlanTrailing.', ''),
-              ),
-            );
-            if (trailing == PlanTrailing.none) return const SizedBox();
-            if (trailing == PlanTrailing.reorder && desktop) {
-              return ReorderableDragStartListener(
-                index: widget.index,
-                child: Icon(
-                  Icons.drag_indicator_rounded,
+        ],
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: widget.exercises == null
+            ? const SizedBox.shrink()
+            : Text(
+                widget.exercises!
+                    .map((entry) => entry.exercise.name)
+                    .join('  •  '),
+                maxLines: desktop ? 2 : null,
+                overflow: desktop ? TextOverflow.ellipsis : null,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: colors.onSurfaceVariant,
                 ),
-              );
-            }
-            if (trailing == PlanTrailing.reorder &&
-                defaultTargetPlatform == TargetPlatform.linux)
-              return const SizedBox();
-            else if (trailing == PlanTrailing.reorder &&
-                defaultTargetPlatform == TargetPlatform.android)
-              return ReorderableDragStartListener(
-                index: widget.index,
-                child: const Icon(Icons.drag_handle),
-              );
-
-            final count = widget.count;
-            if (count == null) return const SizedBox();
-
-            if (trailing == PlanTrailing.count)
-              return Text(
-                formatDisplayNumber(context, count.total, maxDigits: 0),
-                style: const TextStyle(fontSize: 16),
-              );
-
-            if (trailing == PlanTrailing.percent)
-              return Text(
-                formatDisplayPercent(context, count.total / count.maxSets),
-                style: const TextStyle(fontSize: 16),
-              );
-            else
-              return Text(
-                "${formatDisplayNumber(context, count.total, maxDigits: 0)} / ${formatDisplayNumber(context, count.maxSets, maxDigits: 0)}",
-                style: const TextStyle(fontSize: 16),
-              );
-          },
-        ),
-        onTap: () async {
-          if (widget.selected.isNotEmpty) {
-            widget.onSelect(widget.plan.id);
-            return;
-          }
-          if (_opening) return;
-          _opening = true;
-          try {
-            await openStartPlan(
-              widget.navigatorKey.currentState!,
-              widget.plan,
-              initial: widget.exercises,
+              ),
+      ),
+      leading: leading,
+      trailing: Builder(
+        builder: (context) {
+          final trailing = context.select<Setting, PlanTrailing>(
+            (settings) => PlanTrailing.values.byName(
+              settings.planTrailing.replaceFirst('PlanTrailing.', ''),
+            ),
+          );
+          if (trailing == PlanTrailing.none) return const SizedBox();
+          if (trailing == PlanTrailing.reorder && desktop) {
+            return ReorderableDragStartListener(
+              index: widget.index,
+              child: Icon(
+                Icons.drag_indicator_rounded,
+                color: colors.onSurfaceVariant,
+              ),
             );
-          } finally {
-            _opening = false;
           }
-        },
-        onLongPress: desktop ? null : () => widget.onSelect(widget.plan.id),
-      ),
-    );
+          if (trailing == PlanTrailing.reorder &&
+              defaultTargetPlatform == TargetPlatform.linux)
+            return const SizedBox();
+          else if (trailing == PlanTrailing.reorder &&
+              defaultTargetPlatform == TargetPlatform.android)
+            return ReorderableDragStartListener(
+              index: widget.index,
+              child: const Icon(Icons.drag_handle),
+            );
 
-    if (!desktop) return tile;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onSecondaryTapDown: (_) => widget.onSelect(widget.plan.id),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-        child: tile,
+          final count = widget.count;
+          if (count == null) return const SizedBox();
+
+          if (trailing == PlanTrailing.count)
+            return Text(
+              formatDisplayNumber(context, count.total, maxDigits: 0),
+              style: const TextStyle(fontSize: 16),
+            );
+
+          if (trailing == PlanTrailing.percent)
+            return Text(
+              formatDisplayPercent(context, count.total / count.maxSets),
+              style: const TextStyle(fontSize: 16),
+            );
+          else
+            return Text(
+              "${formatDisplayNumber(context, count.total, maxDigits: 0)} / ${formatDisplayNumber(context, count.maxSets, maxDigits: 0)}",
+              style: const TextStyle(fontSize: 16),
+            );
+        },
       ),
+      onOpen: () async {
+        if (_opening) return;
+        _opening = true;
+        try {
+          await openStartPlan(
+            widget.navigatorKey.currentState!,
+            widget.plan,
+            initial: widget.exercises,
+          );
+        } finally {
+          _opening = false;
+        }
+      },
     );
   }
 

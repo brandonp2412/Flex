@@ -44,7 +44,7 @@ void main() {
 
       final updated = await findExerciseByIdFixture(db, exercise.id);
       expect(await getExerciseCategoryName(db, updated!), 'Upper body');
-      final history = await getExerciseSets(db, search: 'Bench press');
+      final history = await ExerciseSetQuery(db, search: 'Bench press').get();
       expect(history.single.category, 'Upper body');
     },
   );
@@ -67,7 +67,7 @@ void main() {
 
       final updated = await findExerciseByIdFixture(db, exercise.id);
       expect(updated!.categoryId, upperBody.id);
-      final history = await getExerciseSets(db, search: 'Bench press');
+      final history = await ExerciseSetQuery(db, search: 'Bench press').get();
       expect(history.single.category, 'Upper body');
     },
   );
@@ -86,7 +86,7 @@ void main() {
         (await findExerciseByIdFixture(db, exercise.id))!.categoryId,
         isNull,
       );
-      final history = await getExerciseSets(db, search: 'Bench press');
+      final history = await ExerciseSetQuery(db, search: 'Bench press').get();
       expect(history.single.category, isNull);
     },
   );

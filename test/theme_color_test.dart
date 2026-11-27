@@ -1,7 +1,7 @@
+import 'package:flex/settings/settings_category_page.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flex/database/database.dart';
 import 'package:flex/main.dart';
-import 'package:flex/settings/appearance_settings.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +61,7 @@ void main() {
     final harness = await FlexTestHarness.create();
     await harness.pump(
       tester,
-      const AppearanceSettings(),
+      const SettingsCategoryPage(SettingsCategory.appearance),
       surfaceSize: const Size(320, 640),
       textScaler: const TextScaler.linear(1.5),
     );

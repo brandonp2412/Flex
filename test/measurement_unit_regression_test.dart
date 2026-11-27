@@ -37,7 +37,10 @@ void main() {
                 .getSingle();
         expect(stored.loadKg, 25, reason: unit);
 
-        final read = await getExerciseSetById(harness.database, inserted.id);
+        final read = await ExerciseSetQuery(
+          harness.database,
+          ids: [inserted.id],
+        ).firstOrNull();
         expect(read!.unit, unit);
         expect(read.weight, 25);
         expect(read.reps, 30);
@@ -48,7 +51,10 @@ void main() {
           exerciseId: stored.exerciseId,
           exerciseSet: read.copyWith(weight: 50),
         );
-        final updated = await getExerciseSetById(harness.database, inserted.id);
+        final updated = await ExerciseSetQuery(
+          harness.database,
+          ids: [inserted.id],
+        ).firstOrNull();
         expect(updated!.weight, 50, reason: unit);
         final graph = (await watchGraphs().first).singleWhere(
           (item) => item.name == name,
@@ -122,7 +128,7 @@ void main() {
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
-      final saved = (await getExerciseSets(harness.database)).single;
+      final saved = (await ExerciseSetQuery(harness.database).get()).single;
       expect(saved.reps, 30);
       expect(saved.weight, 25);
       expect(saved.unit, 'm');

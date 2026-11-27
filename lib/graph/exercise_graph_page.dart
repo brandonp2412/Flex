@@ -5,7 +5,7 @@ import 'package:flex/bottom_nav.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/graph/flex_line_chart.dart';
 import 'package:flex/graph/graph_data.dart';
-import 'package:flex/graph/edit_graph_page.dart';
+import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/utils.dart';
 import 'package:flex/graph/graph_metric_chips.dart';
 import 'package:flex/graph/graph_period_picker.dart';
@@ -197,7 +197,9 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
 
   Future<void> editGraph() async {
     final name = await Navigator.of(context).push<String>(
-      FlexPageRoute(builder: (context) => EditGraphPage(name: exerciseName)),
+      FlexPageRoute(
+        builder: (context) => ExerciseEditorPage.edit(name: exerciseName),
+      ),
     );
     if (!mounted || name == null) return;
     final updated = cardio ? await getExerciseByName(db, name) : null;

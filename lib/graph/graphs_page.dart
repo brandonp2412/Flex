@@ -9,11 +9,11 @@ import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/error_state.dart';
-import 'package:flex/graph/add_exercise_page.dart';
+
 import 'package:flex/graph/cardio_data.dart';
 import 'package:flex/graph/graph_data.dart';
 import 'package:flex/graph/strength_data.dart';
-import 'package:flex/graph/edit_graph_page.dart';
+import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/graph/flex_line_chart.dart';
 import 'package:flex/graph/global_progress_page.dart';
 import 'package:flex/graph/merge_graphs_page.dart';
@@ -179,7 +179,9 @@ class GraphsPageState extends State<GraphsPage>
   Future<void> _editGraphSummary(GraphExerciseSummary summary) async {
     if (summary.bodyWeight) return;
     await Navigator.of(context).push(
-      FlexPageRoute(builder: (context) => EditGraphPage(name: summary.name)),
+      FlexPageRoute(
+        builder: (context) => ExerciseEditorPage.edit(name: summary.name),
+      ),
     );
   }
 
@@ -297,7 +299,7 @@ class GraphsPageState extends State<GraphsPage>
                   child: FilledButton.icon(
                     onPressed: () => navKey.currentState!.push(
                       FlexPageRoute(
-                        builder: (context) => const AddExercisePage(),
+                        builder: (context) => const ExerciseEditorPage.add(),
                       ),
                     ),
                     icon: const Icon(Icons.add_rounded),
@@ -369,7 +371,7 @@ class GraphsPageState extends State<GraphsPage>
                                           Navigator.of(context).push(
                                             FlexPageRoute(
                                               builder: (context) =>
-                                                  AddExercisePage(
+                                                  ExerciseEditorPage.add(
                                                     name: _search,
                                                   ),
                                             ),
@@ -433,7 +435,7 @@ class GraphsPageState extends State<GraphsPage>
                       await Navigator.of(context).push(
                         FlexPageRoute(
                           builder: (context) =>
-                              EditGraphPage(name: summary.name),
+                              ExerciseEditorPage.edit(name: summary.name),
                         ),
                       );
                     },
@@ -451,7 +453,9 @@ class GraphsPageState extends State<GraphsPage>
           ? null
           : AppFab(
               onPressed: () => navKey.currentState!.push(
-                FlexPageRoute(builder: (context) => const AddExercisePage()),
+                FlexPageRoute(
+                  builder: (context) => const ExerciseEditorPage.add(),
+                ),
               ),
               label: Text(context.l10n.actionAdd),
               scroll: _scroll,

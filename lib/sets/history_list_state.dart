@@ -5,13 +5,11 @@ import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/platform_page_route.dart';
-import 'package:flex/responsive.dart';
+import 'package:flex/selection_tile.dart';
 import 'package:flex/set_summary.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/weight_page.dart';
 import 'package:flutter/material.dart';
-
-enum HistoryContextAction { edit, delete }
 
 abstract class HistoryListState<T extends StatefulWidget> extends State<T> {
   ScrollController get scroll;
@@ -63,31 +61,12 @@ abstract class HistoryListState<T extends StatefulWidget> extends State<T> {
     TapDownDetails details,
     ExerciseSetView exerciseSet,
   ) async {
-    final action = await showDesktopContextMenu<HistoryContextAction>(
-      context,
-      details.globalPosition,
-      [
-        PopupMenuItem(
-          value: HistoryContextAction.edit,
-          child: ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: Text(context.l10n.actionEdit),
-          ),
-        ),
-        PopupMenuItem(
-          value: HistoryContextAction.delete,
-          child: ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: Text(context.l10n.actionDelete),
-          ),
-        ),
-      ],
-    );
+    final action = await showEditDeleteMenu(context, details.globalPosition);
     if (!context.mounted) return;
     switch (action) {
-      case HistoryContextAction.edit:
+      case EditDeleteAction.edit:
         await editEntry(exerciseSet);
-      case HistoryContextAction.delete:
+      case EditDeleteAction.delete:
         final confirmed = await showAppConfirmation(
           context,
           title: context.l10n.confirmDelete,

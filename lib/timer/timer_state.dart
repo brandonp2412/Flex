@@ -23,15 +23,22 @@ class TimerState extends ChangeNotifier {
   FlutterLocalNotificationsPlugin? _notifications;
   String _timerUpTitle = '';
   String _openLabel = '';
-  String _stopLabel = '';
-  String _addMinuteLabel = '';
-  String _restTimerTitle = '';
-  String _channelName = '';
-  String _timerChannelDesc = '';
-  String _doneChannel = '';
-  String _doneChannelDesc = '';
-  String _doneTitle = '';
-  String _alarmUnavailable = '';
+  Map<String, String> _notificationLabels = {
+    for (final key in [
+      'stopLabel',
+      'addOneMinuteLabel',
+      'restTimerTitle',
+      'timerChannelName',
+      'timerChannelDescription',
+      'timerFinishedChannelName',
+      'timerFinishedChannelDescription',
+      'timerFinishedTitle',
+      'exactAlarmRequestUnavailable',
+    ])
+      key: '',
+  };
+
+  bool get _isAndroid => !kIsWeb && Platform.isAndroid;
 
   bool get keepScreenOn => _keepScreenOn;
 
@@ -49,26 +56,36 @@ class TimerState extends ChangeNotifier {
     required String alarmUnavailable,
   }) {
     _timerUpTitle = upTitle;
-    _stopLabel = stopLabel;
-    _addMinuteLabel = addMinuteLabel;
-    _restTimerTitle = restTitle;
-    _channelName = timerChannel;
-    _timerChannelDesc = timerDesc;
-    _doneChannel = doneChannel;
-    _doneChannelDesc = doneDesc;
-    _doneTitle = doneTitle;
-    _alarmUnavailable = alarmUnavailable;
+    _notificationLabels = {
+      'stopLabel': stopLabel,
+      'addOneMinuteLabel': addMinuteLabel,
+      'restTimerTitle': restTitle,
+      'timerChannelName': timerChannel,
+      'timerChannelDescription': timerDesc,
+      'timerFinishedChannelName': doneChannel,
+      'timerFinishedChannelDescription': doneDesc,
+      'timerFinishedTitle': doneTitle,
+      'exactAlarmRequestUnavailable': alarmUnavailable,
+    };
     if (_openLabel == openLabel) return;
     _openLabel = openLabel;
     _notifications = null;
   }
 
+  void _setWakelock(bool enabled) {
+    WakelockPlus.toggle(enable: enabled).catchError((error, stackTrace) {
+      talker.handle(
+        error,
+        stackTrace,
+        'Failed to ${enabled ? 'enable' : 'disable'} wakelock',
+      );
+    });
+  }
+
   void setKeepScreenOn(bool value) {
     _keepScreenOn = value;
-    if (!value && !kIsWeb && Platform.isAndroid) {
-      WakelockPlus.disable().catchError((error, stackTrace) {
-        talker.handle(error, stackTrace, 'Failed to disable wakelock');
-      });
+    if (!value && _isAndroid) {
+      _setWakelock(false);
     }
   }
 
@@ -91,7 +108,7 @@ class TimerState extends ChangeNotifier {
         _setNotificationTarget(call.arguments as String?);
       }
     });
-    if (!kIsWeb && Platform.isAndroid) {
+    if (_isAndroid) {
       androidChannel
           .invokeMethod<String>('getNotificationTarget')
           .then(
@@ -133,32 +150,14 @@ class TimerState extends ChangeNotifier {
     starting = false;
     final updated = timer.increaseDuration(const Duration(minutes: 1));
     updateTimer(updated);
-    final args = {
-      'timestamp': updated.stamp.millisecondsSinceEpoch,
-      'alarmSound': alarmSound,
-      'vibrate': vibrate,
-      'enableSound': enableSound,
-      'keepRinging': keepRinging,
-      'target': _target,
-      'stopLabel': _stopLabel,
-      'addOneMinuteLabel': _addMinuteLabel,
-      'restTimerTitle': _restTimerTitle,
-      'timerChannelName': _channelName,
-      'timerChannelDescription': _timerChannelDesc,
-      'timerFinishedChannelName': _doneChannel,
-      'timerFinishedChannelDescription': _doneChannelDesc,
-      'timerFinishedTitle': _doneTitle,
-      'exactAlarmRequestUnavailable': _alarmUnavailable,
-    };
-    if (!kIsWeb && Platform.isAndroid) {
-      androidChannel.invokeMethod('add', args);
-    } else {
-      next?.cancel();
-      next = Timer(
-        const Duration(minutes: 1),
-        () => _expireDesktopTimer(null, alarmSound, enableSound, keepRinging),
-      );
-    }
+    await _schedule(
+      updated,
+      const Duration(minutes: 1),
+      alarmSound,
+      vibrate,
+      enableSound,
+      keepRinging,
+    );
   }
 
   @override
@@ -179,10 +178,8 @@ class TimerState extends ChangeNotifier {
   ]) async {
     talker.info('Starting rest timer for ${rest.inSeconds} seconds');
     _target = target;
-    if (_keepScreenOn && !kIsWeb && Platform.isAndroid) {
-      WakelockPlus.enable().catchError((error, stackTrace) {
-        talker.handle(error, stackTrace, 'Failed to enable wakelock');
-      });
+    if (_keepScreenOn && _isAndroid) {
+      _setWakelock(true);
     }
     final timer = NativeTimerWrapper(
       rest,
@@ -191,31 +188,47 @@ class TimerState extends ChangeNotifier {
       NativeTimerState.running,
     );
     updateTimer(timer);
-    final args = {
-      'title': title,
-      'timestamp': timer.stamp.millisecondsSinceEpoch,
-      'restMs': rest.inMilliseconds,
-      'alarmSound': alarmSound,
-      'vibrate': vibrate,
-      'enableSound': enableSound,
-      'keepRinging': keepRinging,
-      'target': target,
-      'stopLabel': _stopLabel,
-      'addOneMinuteLabel': _addMinuteLabel,
-      'restTimerTitle': _restTimerTitle,
-      'timerChannelName': _channelName,
-      'timerChannelDescription': _timerChannelDesc,
-      'timerFinishedChannelName': _doneChannel,
-      'timerFinishedChannelDescription': _doneChannelDesc,
-      'timerFinishedTitle': _doneTitle,
-      'exactAlarmRequestUnavailable': _alarmUnavailable,
-    };
-    if (!kIsWeb && Platform.isAndroid) {
-      await androidChannel.invokeMethod('timer', args);
+    await _schedule(
+      timer,
+      rest,
+      alarmSound,
+      vibrate,
+      enableSound,
+      keepRinging,
+      title: title,
+    );
+  }
+
+  Future<void> _schedule(
+    NativeTimerWrapper timer,
+    Duration delay,
+    String alarmSound,
+    bool vibrate,
+    bool enableSound,
+    bool keepRinging, {
+    String? title,
+  }) async {
+    if (_isAndroid) {
+      final args = {
+        'title': ?title,
+        if (title != null) 'restMs': delay.inMilliseconds,
+        'timestamp': timer.stamp.millisecondsSinceEpoch,
+        'alarmSound': alarmSound,
+        'vibrate': vibrate,
+        'enableSound': enableSound,
+        'keepRinging': keepRinging,
+        'target': _target,
+        ..._notificationLabels,
+      };
+      if (title == null) {
+        androidChannel.invokeMethod('add', args);
+      } else {
+        await androidChannel.invokeMethod('timer', args);
+      }
     } else {
       next?.cancel();
       next = Timer(
-        rest,
+        delay,
         () => _expireDesktopTimer(title, alarmSound, enableSound, keepRinging),
       );
     }
@@ -296,13 +309,11 @@ class TimerState extends ChangeNotifier {
     talker.info('Stopping rest timer');
     _target = 'timer';
     updateTimer(NativeTimerWrapper.emptyTimer());
-    if (kIsWeb || !Platform.isAndroid) {
+    if (!_isAndroid) {
       player.stop();
       next?.cancel();
     } else {
-      WakelockPlus.disable().catchError((error, stackTrace) {
-        talker.handle(error, stackTrace, 'Failed to disable wakelock');
-      });
+      _setWakelock(false);
       androidChannel.invokeMethod('stop');
     }
   }
@@ -323,9 +334,7 @@ class TimerState extends ChangeNotifier {
             updated.state == NativeTimerState.paused) &&
         !kIsWeb &&
         Platform.isAndroid) {
-      WakelockPlus.disable().catchError((error, stackTrace) {
-        talker.handle(error, stackTrace, 'Failed to disable wakelock');
-      });
+      _setWakelock(false);
     }
     notifyListeners();
   }

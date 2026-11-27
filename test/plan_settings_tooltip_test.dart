@@ -1,5 +1,5 @@
+import 'package:flex/settings/settings_category_page.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
-import 'package:flex/settings/plan_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,7 +15,7 @@ void main() {
 
     await harness.pump(
       tester,
-      const PlanSettings(),
+      const SettingsCategoryPage(SettingsCategory.plans),
       locale: locale,
       surfaceSize: const Size(1200, 800),
     );

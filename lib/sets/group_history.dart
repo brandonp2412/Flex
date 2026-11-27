@@ -1,5 +1,5 @@
 import 'package:flex/sets/history_list_state.dart';
-import 'package:flex/exercise_avatar.dart';
+import 'package:flex/exercise_summary_tile.dart';
 
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
@@ -37,9 +37,6 @@ class _GroupHistoryState extends HistoryListState<GroupHistory> {
 
   @override
   Widget build(BuildContext context) {
-    final showImages = context.select<Setting, bool>(
-      (settings) => settings.showImages,
-    );
     final shortDateFormat = context.select<Setting, String>(
       (settings) => settings.shortDateFormat,
     );
@@ -52,13 +49,8 @@ class _GroupHistoryState extends HistoryListState<GroupHistory> {
         top: appSearchHeight + 8,
       ),
       controller: widget.scroll,
-      itemBuilder: (context, index) => _dayCard(
-        context,
-        widget.days[index],
-        shortDateFormat,
-        showImages,
-        desktop,
-      ),
+      itemBuilder: (context, index) =>
+          _dayCard(context, widget.days[index], shortDateFormat, desktop),
     );
   }
 
@@ -66,7 +58,6 @@ class _GroupHistoryState extends HistoryListState<GroupHistory> {
     BuildContext context,
     HistoryDayGroup group,
     String shortDateFormat,
-    bool showImages,
     bool desktop,
   ) {
     return Card(
@@ -79,7 +70,7 @@ class _GroupHistoryState extends HistoryListState<GroupHistory> {
         children: [
           _dayHeader(context, group, shortDateFormat),
           for (final exercise in group.exercises)
-            _exerciseTile(context, group, exercise, showImages, desktop),
+            _exerciseTile(context, group, exercise),
         ],
       ),
     );
@@ -131,8 +122,6 @@ class _GroupHistoryState extends HistoryListState<GroupHistory> {
     BuildContext context,
     HistoryDayGroup group,
     HistoryDay exercise,
-    bool showImages,
-    bool desktop,
   ) {
     final count = formatDisplayNumber(
       context,
@@ -146,64 +135,24 @@ class _GroupHistoryState extends HistoryListState<GroupHistory> {
       shape: const Border.symmetric(),
       children: [
         for (final exerciseSet in exercise.exerciseSets)
-          Builder(
-            builder: (context) =>
-                _setRow(context, exerciseSet, showImages, desktop),
-          ),
+          Builder(builder: (context) => _setRow(context, exerciseSet)),
       ],
     );
   }
 
-  Widget _setRow(
-    BuildContext context,
-    ExerciseSetView exerciseSet,
-    bool showImages,
-    bool desktop,
-  ) {
-    final leading = showImages
-        ? ExerciseAvatar(
-            name: exerciseSet.name,
-            image: exerciseSet.image,
-            onTap: () => widget.onSelect(exerciseSet.id),
-          )
-        : null;
-
-    final title = setSummary(context, exerciseSet);
-
-    final tile = Material(
-      color: widget.selected.contains(exerciseSet.id)
-          ? Theme.of(context).colorScheme.primary.withValues(alpha: .18)
-          : Colors.transparent,
-      child: ListTile(
-        leading: leading,
-        title: Text(title),
-        subtitle: Selector<Setting, String>(
-          selector: (context, settings) => settings.longDateFormat,
-          builder: (context, dateFormat, child) => Text(
-            dateFormat == 'timeago'
-                ? formatRelativeTime(context, exerciseSet.created)
-                : formatDisplayDate(context, exerciseSet.created, dateFormat),
-          ),
-        ),
-        onLongPress: desktop
-            ? null
-            : () {
-                widget.onSelect(exerciseSet.id);
-              },
-        onTap: () {
-          if (widget.selected.isNotEmpty)
-            widget.onSelect(exerciseSet.id);
-          else
-            editEntry(exerciseSet);
-        },
-      ),
-    );
-    if (!desktop) return tile;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+  Widget _setRow(BuildContext context, ExerciseSetView exerciseSet) {
+    return ExerciseSummaryTile(
+      name: exerciseSet.name,
+      summary: setSummary(context, exerciseSet),
+      created: exerciseSet.created,
+      image: exerciseSet.image,
+      selected: widget.selected.contains(exerciseSet.id),
+      selectionActive: widget.selected.isNotEmpty,
+      onSelect: () => widget.onSelect(exerciseSet.id),
+      onOpen: () => editEntry(exerciseSet),
       onSecondaryTapDown: (details) =>
           showContextMenu(context, details, exerciseSet),
-      child: tile,
+      grouped: true,
     );
   }
 }

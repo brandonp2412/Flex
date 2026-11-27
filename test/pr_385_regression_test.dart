@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/graph/add_exercise_page.dart';
-import 'package:flex/graph/edit_graph_page.dart';
+
+import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/sets/edit_sets_page.dart';
 import 'package:flutter/material.dart';
@@ -43,11 +43,11 @@ void main() {
     tester,
   ) async {
     final harness = await FlexTestHarness.create();
-    await _openEditor(tester, harness, (_) => const AddExercisePage());
+    await _openEditor(tester, harness, (_) => const ExerciseEditorPage.add());
 
     await tester.tap(find.byType(Switch));
     await tester.pump();
-    await _attemptBack(tester, find.byType(AddExercisePage));
+    await _attemptBack(tester, find.byType(ExerciseEditorPage));
 
     expect(find.text('Unsaved changes'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
@@ -145,11 +145,11 @@ void main() {
     await _openEditor(
       tester,
       harness,
-      (_) => const EditGraphPage(name: 'Bench press'),
+      (_) => const ExerciseEditorPage.edit(name: 'Bench press'),
     );
 
     expect(find.bySemanticsLabel('Rest minutes'), findsOneWidget);
-    await _attemptBack(tester, find.byType(EditGraphPage));
+    await _attemptBack(tester, find.byType(ExerciseEditorPage));
 
     expect(find.text('Open editor'), findsOneWidget);
     expect(find.text('Unsaved changes'), findsNothing);
@@ -161,7 +161,7 @@ void main() {
     await _openEditor(
       tester,
       harness,
-      (_) => const EditGraphPage(name: 'Bench press'),
+      (_) => const ExerciseEditorPage.edit(name: 'Bench press'),
     );
 
     final unitDropdown = find.byWidgetPredicate(
@@ -174,7 +174,7 @@ void main() {
     await tester.tap(find.text('Pounds (lb)').last);
     await tester.pumpAndSettle();
 
-    await _attemptBack(tester, find.byType(EditGraphPage));
+    await _attemptBack(tester, find.byType(ExerciseEditorPage));
     expect(find.text('Unsaved changes'), findsOneWidget);
   });
 
@@ -182,11 +182,11 @@ void main() {
     tester,
   ) async {
     final harness = await FlexTestHarness.create();
-    await _openEditor(tester, harness, (_) => const AddExercisePage());
+    await _openEditor(tester, harness, (_) => const ExerciseEditorPage.add());
 
     await tester.enterText(find.bySemanticsLabel('Name'), 'Bench press');
     await tester.pump();
-    await _attemptBack(tester, find.byType(AddExercisePage));
+    await _attemptBack(tester, find.byType(ExerciseEditorPage));
 
     expect(find.text('Unsaved changes'), findsOneWidget);
   });

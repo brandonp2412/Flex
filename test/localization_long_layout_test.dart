@@ -1,3 +1,4 @@
+import 'package:flex/settings/settings_category_page.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flex/app_search.dart';
 import 'package:flex/database/database.dart';
@@ -8,8 +9,6 @@ import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/session_sets.dart';
 import 'package:flex/plan/workout_sessions.dart';
-import 'package:flex/settings/appearance_settings.dart';
-import 'package:flex/settings/plan_settings.dart';
 import 'package:flex/timer/timer_page.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +78,7 @@ void main() {
 
     await harness.pump(
       tester,
-      const AppearanceSettings(),
+      const SettingsCategoryPage(SettingsCategory.appearance),
       locale: locale,
       surfaceSize: _narrowSurface,
       textScaler: _largeText,
@@ -108,7 +107,7 @@ void main() {
 
     await harness.pump(
       tester,
-      const PlanSettings(),
+      const SettingsCategoryPage(SettingsCategory.plans),
       locale: locale,
       surfaceSize: _narrowSurface,
       textScaler: _largeText,

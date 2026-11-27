@@ -1,19 +1,14 @@
 import 'dart:io';
 
 import 'package:flex/about_page.dart';
-import 'package:flex/audio/safe_audio_player.dart';
+import 'package:flex/settings/settings_category_page.dart';
+import 'package:flex/settings/settings_inputs.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
-import 'package:flex/settings/appearance_settings.dart';
-import 'package:flex/settings/data_settings.dart';
-import 'package:flex/settings/format_settings.dart';
-import 'package:flex/settings/plan_settings.dart';
 import 'package:flex/settings/tab_settings.dart';
-import 'package:flex/settings/timer_settings.dart';
-import 'package:flex/settings/workout_settings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,13 +27,13 @@ class _SettingsContentState extends State<SettingsContent>
   final _searchCtrl = TextEditingController();
   final _focusNode = FocusNode();
 
-  late final Setting _settings;
-  late final TextEditingController _maxSets;
-  late final TextEditingController _warmupSets;
-  late final TextEditingController _minutes;
-  late final TextEditingController _seconds;
+  late final SettingsInputs _inputs;
 
-  final SafeAudioPlayer _player = SafeAudioPlayer(enabled: !kIsWeb);
+  @override
+  void initState() {
+    super.initState();
+    _inputs = SettingsInputs(context.read<Setting>());
+  }
 
   @override
   bool get wantKeepAlive => true;
@@ -50,32 +45,24 @@ class _SettingsContentState extends State<SettingsContent>
     final settings = context.watch<Setting>();
     final desktop = isDesktopLayout(context);
     if (_searchCtrl.text.isNotEmpty) {
-      filtered.addAll(
-        getAppearanceSettings(context, _searchCtrl.text, settings),
-      );
-      filtered.addAll(getFormatSettings(context, _searchCtrl.text, settings));
-      filtered.addAll(getWorkoutSettings(context, _searchCtrl.text, settings));
-      if (_player.enabled)
+      for (final category in [
+        SettingsCategory.appearance,
+        SettingsCategory.formats,
+        SettingsCategory.workouts,
+        SettingsCategory.timers,
+        SettingsCategory.data,
+        SettingsCategory.plans,
+      ]) {
         filtered.addAll(
-          getTimerSettings(
-            _searchCtrl.text,
-            settings,
-            _minutes,
-            _seconds,
-            _player,
+          settingsItems(
             context,
+            category,
+            settings,
+            _inputs,
+            search: _searchCtrl.text,
           ),
         );
-      filtered.addAll(getDataSettings(_searchCtrl.text, settings, context));
-      filtered.addAll(
-        getPlanSettings(
-          context,
-          _searchCtrl.text,
-          settings,
-          _maxSets,
-          _warmupSets,
-        ),
-      );
+      }
     }
 
     if (filtered.isEmpty)
@@ -191,11 +178,11 @@ class _SettingsContentState extends State<SettingsContent>
                 children: _searchCtrl.text.isNotEmpty
                     ? filtered
                     : [
-                        for (final category in _categories)
+                        for (final category in SettingsCategory.values)
                           ListTile(
-                            leading: Icon(category.$1),
-                            title: Text(category.$2),
-                            subtitle: Text(category.$3),
+                            leading: Icon(category.presentation(context).$1),
+                            title: Text(category.presentation(context).$2),
+                            subtitle: Text(category.presentation(context).$3),
                             trailing: Icon(
                               Icons.chevron_right_rounded,
                               size: 18,
@@ -204,7 +191,11 @@ class _SettingsContentState extends State<SettingsContent>
                                   .onSurfaceVariant
                                   .withValues(alpha: 0.6),
                             ),
-                            onTap: () => _openCategory(category.$4),
+                            onTap: () => _openCategory(
+                              category == SettingsCategory.tabs
+                                  ? const TabSettings()
+                                  : SettingsCategoryPage(category),
+                            ),
                           ),
                       ],
               ),
@@ -215,51 +206,6 @@ class _SettingsContentState extends State<SettingsContent>
     );
   }
 
-  List<(IconData, String, String, Widget)> get _categories => [
-    (
-      Icons.fitness_center_rounded,
-      context.l10n.workouts,
-      context.l10n.workoutsDescription,
-      const WorkoutSettings(),
-    ),
-    (
-      Icons.calendar_today_rounded,
-      context.l10n.navPlans,
-      context.l10n.plansSettingsDescription,
-      const PlanSettings(),
-    ),
-    (
-      Icons.timer_rounded,
-      context.l10n.timers,
-      context.l10n.timersDescription,
-      const TimerSettings(),
-    ),
-    (
-      Icons.color_lens_rounded,
-      context.l10n.appearance,
-      context.l10n.appearanceDescription,
-      const AppearanceSettings(),
-    ),
-    (
-      Icons.format_bold_rounded,
-      context.l10n.formats,
-      context.l10n.formatsDescription,
-      const FormatSettings(),
-    ),
-    (
-      Icons.tab_rounded,
-      context.l10n.tabs,
-      context.l10n.tabsDescription,
-      const TabSettings(),
-    ),
-    (
-      Icons.storage_rounded,
-      context.l10n.dataManagement,
-      context.l10n.dataManagementDescription,
-      const DataSettings(),
-    ),
-  ];
-
   void _openCategory(Widget page) {
     Navigator.of(context).push(FlexPageRoute(builder: (context) => page));
   }
@@ -268,32 +214,7 @@ class _SettingsContentState extends State<SettingsContent>
   void dispose() {
     _focusNode.dispose();
     _searchCtrl.dispose();
-    _maxSets.dispose();
-    _warmupSets.dispose();
-    _minutes.dispose();
-    _seconds.dispose();
-    _player.dispose();
-
+    _inputs.dispose();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    _settings = context.read<Setting>();
-    _maxSets = TextEditingController(text: _settings.maxSets.toString());
-    _warmupSets = TextEditingController(
-      text: (_settings.warmupSets ?? 0).toString(),
-    );
-    _minutes = TextEditingController(
-      text: Duration(
-        milliseconds: _settings.timerDuration,
-      ).inMinutes.toString(),
-    );
-    _seconds = TextEditingController(
-      text: (Duration(milliseconds: _settings.timerDuration).inSeconds % 60)
-          .toString(),
-    );
   }
 }

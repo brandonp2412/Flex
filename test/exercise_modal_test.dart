@@ -20,7 +20,7 @@ Future<(FlexTestHarness, int)> pumpExerciseModal(WidgetTester tester) async {
     tester,
     Scaffold(
       body: ExerciseModal(
-        planExerciseId: planExercise.id,
+        planExercise: planExercise,
         exerciseId: exercise.id,
         exerciseName: exercise.name,
         workoutId: workout.id,

@@ -1,14 +1,9 @@
+import 'package:flex/settings/settings_category_page.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flex/responsive.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/settings/category_management_page.dart';
-import 'package:flex/settings/appearance_settings.dart';
-import 'package:flex/settings/data_settings.dart';
-import 'package:flex/settings/format_settings.dart';
-import 'package:flex/settings/plan_settings.dart';
-import 'package:flex/settings/workout_settings.dart';
 import 'package:flex/settings/tab_settings.dart';
-import 'package:flex/settings/timer_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,13 +11,13 @@ import 'support/test_app.dart';
 
 void main() {
   for (final page in <Widget>[
-    const AppearanceSettings(),
-    const WorkoutSettings(),
-    const PlanSettings(),
-    const FormatSettings(),
-    const TimerSettings(),
+    const SettingsCategoryPage(SettingsCategory.appearance),
+    const SettingsCategoryPage(SettingsCategory.workouts),
+    const SettingsCategoryPage(SettingsCategory.plans),
+    const SettingsCategoryPage(SettingsCategory.formats),
+    const SettingsCategoryPage(SettingsCategory.timers),
     const TabSettings(),
-    const DataSettings(),
+    const SettingsCategoryPage(SettingsCategory.data),
     const CategoryManagementPage(),
   ]) {
     for (final width in [390.0, 850.0, 1200.0]) {
@@ -30,7 +25,8 @@ void main() {
         tester,
       ) async {
         final harness = await FlexTestHarness.create();
-        if (page is TimerSettings) {
+        if ((page is SettingsCategoryPage &&
+            page.category == SettingsCategory.timers)) {
           await harness.database.exercises.insertOne(
             ExercisesCompanion.insert(
               name: 'Custom timer exercise',
@@ -53,7 +49,8 @@ void main() {
             .first;
         expect(tester.getSize(content).width, lessThanOrEqualTo(760));
         expect(tester.takeException(), isNull);
-        if (page is TimerSettings) {
+        if ((page is SettingsCategoryPage &&
+            page.category == SettingsCategory.timers)) {
           await tester.scrollUntilVisible(
             find.text('Custom timer exercise'),
             300,
@@ -97,7 +94,7 @@ void main() {
     final harness = await FlexTestHarness.create();
     await harness.pump(
       tester,
-      const DataSettings(),
+      const SettingsCategoryPage(SettingsCategory.data),
       surfaceSize: const Size(850, 900),
     );
     await tester.pumpAndSettle();

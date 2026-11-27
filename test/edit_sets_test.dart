@@ -128,7 +128,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Edit 3 sets'), findsNothing);
-    final exerciseSets = (await getExerciseSets(harness.database))
+    final exerciseSets = (await ExerciseSetQuery(harness.database).get())
         .where(
           (set) =>
               ids.contains(set.id) &&

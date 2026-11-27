@@ -3,10 +3,8 @@ import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 final List<String> long = [
   'timeago',
@@ -167,21 +165,4 @@ List<Widget> getFormatSettings(
         ),
       ),
   ];
-}
-
-class FormatSettings extends StatelessWidget {
-  const FormatSettings({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = context.watch<Setting>();
-
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text(context.l10n.formats)),
-      body: ResponsiveSettingsList(
-        children: getFormatSettings(context, '', settings),
-      ),
-    );
-  }
 }

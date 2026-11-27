@@ -5,10 +5,8 @@ import 'package:flex/graph/graph_curve_settings.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/l10n/locale_preferences.dart';
 import 'package:flex/main.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/settings/theme_color_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 List<Widget> getAppearanceSettings(
   BuildContext context,
@@ -272,23 +270,6 @@ List<Widget> getAppearanceSettings(
         ),
       ),
   ];
-}
-
-class AppearanceSettings extends StatelessWidget {
-  const AppearanceSettings({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = context.watch<Setting>();
-
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text(context.l10n.appearance)),
-      body: ResponsiveSettingsList(
-        children: getAppearanceSettings(context, '', settings),
-      ),
-    );
-  }
 }
 
 const _themeColors = [

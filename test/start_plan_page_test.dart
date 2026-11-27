@@ -151,7 +151,7 @@ void main() {
       double.parse(tester.widget<EditableText>(weight).controller.text),
       closeTo(220.46, 0.01),
     );
-    final sets = await getExerciseSets(database, cardio: false);
+    final sets = await ExerciseSetQuery(database, cardio: false).get();
     expect(sets.first.unit, 'lb');
     expect(sets.first.weight, closeTo(220.46, 0.01));
   });
@@ -963,10 +963,10 @@ void main() {
       await tester.tap(find.text(l10n.actionSave));
       await tester.pumpAndSettle();
 
-      final saved = await getLatestExerciseSet(
+      final saved = await ExerciseSetQuery(
         database,
         exerciseName: exercise,
-      );
+      ).firstOrNull();
       expect(saved!.name, exercise, reason: locale.toLanguageTag());
       expect(saved.reps, 5, reason: locale.toLanguageTag());
       expect(saved.weight, 50, reason: locale.toLanguageTag());
@@ -1005,10 +1005,10 @@ void main() {
     await tester.tap(find.text(l10n.actionSave));
     await tester.pumpAndSettle();
 
-    final saved = await getExerciseSetsForExercise(
+    final saved = await ExerciseSetQuery(
       database,
       exerciseName: exercise,
-    );
+    ).get();
     expect(saved, hasLength(1));
   });
 
@@ -1091,7 +1091,10 @@ void main() {
     await tester.tap(find.text(l10n.actionSave));
     await tester.pumpAndSettle();
 
-    final saved = await getLatestExerciseSet(database, exerciseName: exercise);
+    final saved = await ExerciseSetQuery(
+      database,
+      exerciseName: exercise,
+    ).firstOrNull();
     expect(saved!.name, exercise);
     expect(saved.notes, note);
     expect(saved.weight, 50.5);
@@ -1283,13 +1286,16 @@ void main() {
 
     expect(notes, findsOne);
     expect(tester.widget<EditableText>(notes).focusNode.hasFocus, isTrue);
-    expect(await getExerciseSets(database, search: 'Bench press'), isEmpty);
+    expect(
+      await ExerciseSetQuery(database, search: 'Bench press').get(),
+      isEmpty,
+    );
 
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
     expect(
-      await getExerciseSets(database, search: 'Bench press'),
+      await ExerciseSetQuery(database, search: 'Bench press').get(),
       hasLength(1),
     );
   });
@@ -1338,7 +1344,7 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
-    final saved = await getExerciseSets(database, search: 'Sled push');
+    final saved = await ExerciseSetQuery(database, search: 'Sled push').get();
     expect(saved, hasLength(1));
   });
 
@@ -1426,10 +1432,10 @@ void main() {
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
-    final exerciseSetViews = await getExerciseSets(
+    final exerciseSetViews = await ExerciseSetQuery(
       database,
       search: 'Barbell bench press',
-    );
+    ).get();
     expect(
       exerciseSetViews.where((set) => set.name == 'Barbell bench press'),
       hasLength(1),

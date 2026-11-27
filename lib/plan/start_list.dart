@@ -58,11 +58,11 @@ class _StartListState extends State<StartList> {
 
     final workoutId = widget.workoutId;
     if (workoutId == null) return;
-    final exerciseSet = await getLatestWorkoutExerciseSet(
+    final exerciseSet = await ExerciseSetQuery(
       db,
       workoutId: workoutId,
       exerciseId: widget.exercises[index].exercise.id,
-    );
+    ).firstOrNull();
     if (exerciseSet == null) return;
     if (!mounted) return;
 
@@ -171,7 +171,7 @@ class _StartListState extends State<StartList> {
       context: context,
       builder: (context) => SafeArea(
         child: ExerciseModal(
-          planExerciseId: exercise.planExercise.id,
+          planExercise: exercise.planExercise,
           exerciseId: exercise.exercise.id,
           exerciseName: exercise.exercise.name,
           workoutId: widget.workoutId,
@@ -263,7 +263,7 @@ class _StartListState extends State<StartList> {
                             padding: EdgeInsets.only(left: compact ? 0 : 36),
                             child: ExerciseModal(
                               key: ValueKey(exercise.planExercise.id),
-                              planExerciseId: exercise.planExercise.id,
+                              planExercise: exercise.planExercise,
                               exerciseId: exercise.exercise.id,
                               exerciseName: exercise.exercise.name,
                               workoutId: widget.workoutId,

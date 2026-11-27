@@ -2,6 +2,13 @@ import 'package:flex/l10n/l10n.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
 
+FormFieldValidator<String> requiredNumberValidator(BuildContext context) =>
+    (value) => value == null || value.isEmpty
+    ? context.l10n.requiredField
+    : parseDisplayNumber(context, value) == null
+    ? context.l10n.invalidNumber
+    : null;
+
 FormFieldValidator<String> wholeNumberValidator(BuildContext context) =>
     (value) => value == null || value.isEmpty || int.tryParse(value) != null
     ? null

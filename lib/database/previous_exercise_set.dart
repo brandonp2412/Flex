@@ -1,4 +1,6 @@
-class PreviousExerciseSet {
+import 'package:flex/database/set_performance.dart';
+
+class PreviousExerciseSet implements SetPerformance {
   const PreviousExerciseSet({
     required this.cardio,
     required this.unit,
@@ -11,9 +13,14 @@ class PreviousExerciseSet {
 
   final bool cardio;
   final String unit;
+  @override
   final double reps;
+  @override
   final double weight;
+  @override
   final double distance;
+  @override
   final double duration;
+  @override
   final int? incline;
 }

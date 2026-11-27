@@ -161,7 +161,10 @@ void main() {
         exerciseId: exerciseId,
       );
 
-      final updated = await getExerciseSetById(database, inserted.id);
+      final updated = await ExerciseSetQuery(
+        database,
+        ids: [inserted.id],
+      ).firstOrNull();
       expect(updated, isNotNull);
       expect(updated!.reps, 6);
       expect(updated.weight, closeTo(225, 0.000001));
@@ -169,7 +172,10 @@ void main() {
       expect(updated.category, 'Push');
 
       expect(await deleteExerciseSets(database, [inserted.id]), 1);
-      expect(await getExerciseSetById(database, inserted.id), isNull);
+      expect(
+        await ExerciseSetQuery(database, ids: [inserted.id]).firstOrNull(),
+        isNull,
+      );
     },
   );
 
@@ -212,7 +218,7 @@ void main() {
       await database.settings.update().write(
         const SettingsCompanion(strengthUnit: Value('lb')),
       );
-      final history = await getExerciseSets(database);
+      final history = await ExerciseSetQuery(database).get();
       final strength = history.singleWhere((set) => !set.cardio);
       final cardio = history.singleWhere((set) => set.cardio);
       expect(strength.unit, 'lb');
@@ -220,7 +226,7 @@ void main() {
       expect(cardio.unit, 'kg');
       expect(cardio.weight, 50);
       expect(
-        await getExerciseSets(database, weightGt: 200, cardio: false),
+        await ExerciseSetQuery(database, weightGt: 200, cardio: false).get(),
         hasLength(1),
       );
 
@@ -236,14 +242,20 @@ void main() {
               .getSingle();
       expect(stored.loadKg, closeTo(102.058, 0.001));
       expect(
-        (await getExerciseSetById(database, bench.id))!.weight,
+        (await ExerciseSetQuery(
+          database,
+          ids: [bench.id],
+        ).firstOrNull())!.weight,
         closeTo(225, 0.001),
       );
 
       await database.settings.update().write(
         const SettingsCompanion(strengthUnit: Value('last-entry')),
       );
-      final originalUnit = await getExerciseSetById(database, bench.id);
+      final originalUnit = await ExerciseSetQuery(
+        database,
+        ids: [bench.id],
+      ).firstOrNull();
       expect(originalUnit!.unit, 'kg');
       expect(originalUnit.weight, closeTo(102.058, 0.001));
     },
@@ -299,23 +311,23 @@ void main() {
       exerciseId: runId,
     );
 
-    final searched = await getExerciseSets(database, search: 'bench');
+    final searched = await ExerciseSetQuery(database, search: 'bench').get();
     expect(searched, hasLength(2));
     expect(searched.every((set) => set.category == 'Push'), isTrue);
     expect(searched.first.created, DateTime(2026, 10, 1, 9));
 
-    final filtered = await getExerciseSets(
+    final filtered = await ExerciseSetQuery(
       database,
       category: 'Push',
       startDate: DateTime(2026, 10, 1),
       repsGt: 6,
       weightGt: 85,
-    );
+    ).get();
     expect(filtered, hasLength(1));
     expect(filtered.single.name, 'Cutover Bench');
     expect(filtered.single.reps, 8);
 
-    final cardio = await getExerciseSets(database, category: 'Cardio');
+    final cardio = await ExerciseSetQuery(database, category: 'Cardio').get();
     expect(cardio, hasLength(1));
     expect(cardio.single.cardio, isTrue);
     expect(cardio.single.distance, closeTo(5, 0.000001));
@@ -370,18 +382,18 @@ void main() {
       exerciseId: cardioId,
     );
 
-    final selected = await getExerciseSetsByIds(database, [
-      oldStrength.id,
-      cardio.id,
-    ]);
+    final selected = await ExerciseSetQuery(
+      database,
+      ids: [oldStrength.id, cardio.id],
+    ).get();
     expect(selected.map((set) => set.id).toSet(), {oldStrength.id, cardio.id});
 
-    final recentStrength = await getExerciseSets(
+    final recentStrength = await ExerciseSetQuery(
       database,
       startDate: DateTime(2026, 10, 1),
       endDateExclusive: DateTime(2026, 10, 3),
       cardio: false,
-    );
+    ).get();
     expect(recentStrength.map((set) => set.id), [newStrength.id]);
   });
 
@@ -564,22 +576,22 @@ void main() {
       double? repsGt,
       double? weightGt,
     }) async {
-      final ids = await getExerciseSetIds(
+      final ids = await ExerciseSetQuery(
         database,
         search: search,
         category: category,
         startDate: startDate,
         repsGt: repsGt,
         weightGt: weightGt,
-      );
-      final full = await getExerciseSets(
+      ).getIds();
+      final full = await ExerciseSetQuery(
         database,
         search: search,
         category: category,
         startDate: startDate,
         repsGt: repsGt,
         weightGt: weightGt,
-      );
+      ).get();
       expect(ids.toSet(), full.map((set) => set.id).toSet());
       expect(ids.length, full.length);
     }

@@ -325,53 +325,21 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
     setStream();
   }
 
-  Stream<List<ExerciseSetView>> _filteredStream({int? rowLimit}) {
-    return watchExerciseSets(
-      db,
-      search: search,
-      category: category,
-      startDate: startDate,
-      endDate: endDate,
-      repsGt: repsGt.text.isEmpty
-          ? null
-          : parseDisplayNumber(context, repsGt.text),
-      repsLt: repsLt.text.isEmpty
-          ? null
-          : parseDisplayNumber(context, repsLt.text),
-      weightGt: weightGt.text.isEmpty
-          ? null
-          : parseDisplayNumber(context, weightGt.text),
-      weightLt: weightLt.text.isEmpty
-          ? null
-          : parseDisplayNumber(context, weightLt.text),
-      limit: rowLimit,
-    );
-  }
-
-  Future<List<int>> _filteredSetIds() {
-    return getExerciseSetIds(
-      db,
-      search: search,
-      category: category,
-      startDate: startDate,
-      endDate: endDate,
-      repsGt: repsGt.text.isEmpty
-          ? null
-          : parseDisplayNumber(context, repsGt.text),
-      repsLt: repsLt.text.isEmpty
-          ? null
-          : parseDisplayNumber(context, repsLt.text),
-      weightGt: weightGt.text.isEmpty
-          ? null
-          : parseDisplayNumber(context, weightGt.text),
-      weightLt: weightLt.text.isEmpty
-          ? null
-          : parseDisplayNumber(context, weightLt.text),
-    );
-  }
+  ExerciseSetQuery _filteredQuery({int? rowLimit}) => ExerciseSetQuery(
+    db,
+    search: search,
+    category: category,
+    startDate: startDate,
+    endDate: endDate,
+    repsGt: parseDisplayNumber(context, repsGt.text),
+    repsLt: parseDisplayNumber(context, repsLt.text),
+    weightGt: parseDisplayNumber(context, weightGt.text),
+    weightLt: parseDisplayNumber(context, weightLt.text),
+    limit: rowLimit,
+  );
 
   Future<void> selectAllFiltered() async {
-    final ids = await _filteredSetIds();
+    final ids = await _filteredQuery().getIds();
     if (!mounted) return;
     setState(() {
       _selection.addAll(ids);
@@ -380,7 +348,7 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
 
   void setStream() {
     setState(() {
-      stream = _filteredStream(rowLimit: limit);
+      stream = _filteredQuery(rowLimit: limit).watch();
     });
   }
 }

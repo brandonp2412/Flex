@@ -175,11 +175,11 @@ class _GraphHistoryPageState extends State<GraphHistoryPage> {
   Future<void> setSets() async {
     final result = widget.bodyWeight
         ? await getBodyWeightGraphHistory(limit: limit)
-        : await getExerciseSetsForExercise(
+        : await ExerciseSetQuery(
             db,
             exerciseName: widget.name,
             limit: limit,
-          );
+          ).get();
     if (!mounted) return;
     setState(() {
       _sets = result;

@@ -1,9 +1,9 @@
+import 'package:flex/settings/settings_category_page.dart';
 import 'package:drift/drift.dart' hide Column, isNull;
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/plan/plans_page.dart';
 import 'package:flex/home_page.dart';
-import 'package:flex/settings/appearance_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -34,7 +34,14 @@ void main() {
 
     await tester.tap(find.text('Appearance'));
     await tester.pumpAndSettle();
-    expect(find.byType(AppearanceSettings), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is SettingsCategoryPage &&
+            widget.category == SettingsCategory.appearance,
+      ),
+      findsOneWidget,
+    );
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.text('Search...'), findsOneWidget);
@@ -78,7 +85,14 @@ void main() {
     await tester.tap(find.text('Appearance'));
     await tester.pumpAndSettle();
     expect(find.byType(DesktopNav), findsOneWidget);
-    expect(find.byType(AppearanceSettings), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is SettingsCategoryPage &&
+            widget.category == SettingsCategory.appearance,
+      ),
+      findsOneWidget,
+    );
     expect(find.byType(BackButton), findsOneWidget);
 
     await tester.tap(find.byType(BackButton));

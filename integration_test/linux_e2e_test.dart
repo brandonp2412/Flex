@@ -206,13 +206,13 @@ Future<ExerciseSetView> _insertE2ESet({
     await (app.db.exercises.update()
           ..where((row) => row.id.equals(exercise.id)))
         .write(ExercisesCompanion(defaultRestDurationMs: Value(restMs)));
-    return (await getExerciseSetById(app.db, inserted.id))!;
+    return (await ExerciseSetQuery(app.db, ids: [inserted.id]).firstOrNull())!;
   }
   return inserted;
 }
 
 Future<List<ExerciseSetView>> _setsNamed(String name) =>
-    getExerciseSetsForExercise(app.db, exerciseName: name);
+    ExerciseSetQuery(app.db, exerciseName: name).get();
 
 Future<ExerciseSetView> _singleSet(String name) async =>
     (await _setsNamed(name)).single;
@@ -223,9 +223,9 @@ Future<ExerciseSetView?> _maybeSet(String name) async {
 }
 
 Future<List<ExerciseSetView>> _setsForPlan(int planId) async =>
-    (await getExerciseSets(
+    (await ExerciseSetQuery(
       app.db,
-    )).where((set) => set.planId == planId).toList(growable: false);
+    ).get()).where((set) => set.planId == planId).toList(growable: false);
 
 Future<Exercise> _exerciseNamed(String name) =>
     (app.db.exercises.select()..where((row) => row.name.equals(name)))
@@ -824,7 +824,10 @@ void main() {
               ..limit(1))
             .getSingle();
     expect(weightRow.weightKg, closeTo(82 * 0.45359237, 0.0001));
-    final unchanged = await getExerciseSetById(app.db, baseline.id);
+    final unchanged = await ExerciseSetQuery(
+      app.db,
+      ids: [baseline.id],
+    ).firstOrNull();
     expect(unchanged, isNotNull);
     expect(unchanged!.bodyWeight, 0);
     expect(tester.takeException(), isNull);

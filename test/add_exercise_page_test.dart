@@ -1,4 +1,4 @@
-import 'package:flex/graph/add_exercise_page.dart';
+import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,7 +19,7 @@ void main() {
     final initialCount =
         (await harness.database.select(harness.database.exercises).get())
             .length;
-    await harness.pump(tester, const AddExercisePage());
+    await harness.pump(tester, const ExerciseEditorPage.add());
     for (final name in ['Existing press', ' existing PRESS ']) {
       await tester.enterText(find.bySemanticsLabel('Name'), name);
       await tester.tap(find.text('Save'));
@@ -43,7 +43,7 @@ void main() {
 
   testWidgets('AddExercise', (WidgetTester tester) async {
     final harness = await FlexTestHarness.create();
-    await harness.pump(tester, const AddExercisePage());
+    await harness.pump(tester, const ExerciseEditorPage.add());
 
     expect(find.text('Add exercise'), findsOne);
     await tester.enterText(find.bySemanticsLabel('Name'), 'Bench press 2');
@@ -58,7 +58,7 @@ void main() {
     WidgetTester tester,
   ) async {
     final harness = await FlexTestHarness.create();
-    await harness.pump(tester, const AddExercisePage());
+    await harness.pump(tester, const ExerciseEditorPage.add());
 
     expect(find.text('Kilograms (kg)'), findsOneWidget);
     await tester.tap(find.byType(Switch));

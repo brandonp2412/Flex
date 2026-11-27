@@ -1,5 +1,5 @@
 import 'package:flex/sets/history_list_state.dart';
-import 'package:flex/exercise_avatar.dart';
+import 'package:flex/exercise_summary_tile.dart';
 
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
@@ -64,8 +64,7 @@ class _HistoryListState extends HistoryListState<HistoryList> {
 
   Widget _buildListItem(
     ExerciseSetView exerciseSet,
-    int index,
-    bool showImages, {
+    int index, {
     bool showDayDivider = true,
     bool showTime = false,
   }) {
@@ -73,16 +72,6 @@ class _HistoryListState extends HistoryListState<HistoryList> {
     final bool showDivider =
         previous != null &&
         !DateUtils.isSameDay(exerciseSet.created, previous.created);
-
-    final leading = showImages
-        ? ExerciseAvatar(
-            name: exerciseSet.name,
-            image: exerciseSet.image,
-            onTap: () => widget.onSelect(exerciseSet.id),
-          )
-        : null;
-
-    final trailing = setSummary(context, exerciseSet);
 
     return Column(
       children: [
@@ -114,89 +103,23 @@ class _HistoryListState extends HistoryListState<HistoryList> {
           ),
         Builder(
           builder: (context) {
-            final desktop = isDesktopLayout(context);
-            final colors = Theme.of(context).colorScheme;
-            final tile = Material(
-              color: switch (desktop) {
-                _ when widget.selected.contains(exerciseSet.id) =>
-                  colors.primary.withValues(alpha: .18),
-                true => colors.surfaceContainerLow,
-                _ => Colors.transparent,
-              },
-              borderRadius: desktop ? BorderRadius.circular(16) : null,
-              clipBehavior: desktop ? Clip.antiAlias : Clip.none,
-              child: ListTile(
-                contentPadding: desktop
-                    ? const EdgeInsets.symmetric(horizontal: 20, vertical: 9)
-                    : null,
-                leading: leading,
-                title: Text(
-                  exerciseSet.name,
-                  style: desktop
-                      ? Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        )
-                      : null,
-                ),
-                subtitle: Selector<Setting, String>(
-                  selector: (context, settings) => settings.longDateFormat,
-                  builder: (context, dateFormat, child) => Padding(
-                    padding: const EdgeInsets.only(top: 3),
-                    child: Text(
-                      switch (dateFormat) {
-                        _ when showTime => TimeOfDay.fromDateTime(
-                          exerciseSet.created,
-                        ).format(context),
-                        'timeago' => formatRelativeTime(
-                          context,
-                          exerciseSet.created,
-                        ),
-                        _ => formatDisplayDate(
-                          context,
-                          exerciseSet.created,
-                          dateFormat,
-                        ),
-                      },
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-                trailing: Text(
-                  trailing,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                onLongPress: desktop
-                    ? null
-                    : () => widget.onSelect(exerciseSet.id),
-                onTap: () {
-                  if (widget.selected.isNotEmpty) {
-                    widget.onSelect(exerciseSet.id);
-                  } else {
-                    editEntry(exerciseSet);
-                  }
-                },
-              ),
+            final tile = ExerciseSummaryTile(
+              name: exerciseSet.name,
+              summary: setSummary(context, exerciseSet),
+              created: exerciseSet.created,
+              image: exerciseSet.image,
+              selected: widget.selected.contains(exerciseSet.id),
+              selectionActive: widget.selected.isNotEmpty,
+              onSelect: () => widget.onSelect(exerciseSet.id),
+              onOpen: () => editEntry(exerciseSet),
+              onSecondaryTapDown: (details) =>
+                  showContextMenu(context, details, exerciseSet),
+              showTime: showTime,
+              desktopPadding: const EdgeInsets.all(4),
             );
-            if (!desktop) return tile;
-            return ResponsiveContent(
-              maxWidth: dataMaxWidth,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onSecondaryTapDown: (details) =>
-                    showContextMenu(context, details, exerciseSet),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 4,
-                  ),
-                  child: tile,
-                ),
-              ),
-            );
+            return isDesktopLayout(context)
+                ? ResponsiveContent(maxWidth: dataMaxWidth, child: tile)
+                : tile;
           },
         ),
       ],
@@ -205,10 +128,6 @@ class _HistoryListState extends HistoryListState<HistoryList> {
 
   @override
   Widget build(BuildContext context) {
-    final showImages = context.select<Setting, bool>(
-      (settings) => settings.showImages,
-    );
-
     final wide =
         isDesktopLayout(context) && MediaQuery.sizeOf(context).width >= 1200;
     if (wide) {
@@ -268,7 +187,6 @@ class _HistoryListState extends HistoryListState<HistoryList> {
                 child: _buildListItem(
                   _current[row.$1],
                   row.$1,
-                  showImages,
                   showDayDivider: false,
                   showTime: true,
                 ),
@@ -280,7 +198,6 @@ class _HistoryListState extends HistoryListState<HistoryList> {
                     : _buildListItem(
                         _current[row.$2!],
                         row.$2!,
-                        showImages,
                         showDayDivider: false,
                         showTime: true,
                       ),
@@ -299,7 +216,7 @@ class _HistoryListState extends HistoryListState<HistoryList> {
       controller: widget.scroll,
       itemCount: _current.length,
       itemBuilder: (context, index) {
-        return _buildListItem(_current[index], index, showImages);
+        return _buildListItem(_current[index], index);
       },
     );
   }

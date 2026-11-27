@@ -772,7 +772,10 @@ void main() {
           final stored = await newDb.select(newDb.exerciseSets).getSingle();
           expect(stored.loadKg, closeTo(11.33980925, 0.000001));
 
-          final displayed = (await getExerciseSetById(newDb, stored.id))!;
+          final displayed = (await ExerciseSetQuery(
+            newDb,
+            ids: [stored.id],
+          ).firstOrNull())!;
           expect(displayed.reps, 10);
           expect(displayed.unit, 'lb');
           expect(displayed.weight, closeTo(25, 0.000001));
@@ -782,7 +785,10 @@ void main() {
           await newDb.exercises.update().write(
             const ExercisesCompanion(displayUnit: Value('kg')),
           );
-          final converted = (await getExerciseSetById(newDb, stored.id))!;
+          final converted = (await ExerciseSetQuery(
+            newDb,
+            ids: [stored.id],
+          ).firstOrNull())!;
           expect(converted.unit, 'kg');
           expect(converted.weight, closeTo(11.33980925, 0.000001));
           expect(

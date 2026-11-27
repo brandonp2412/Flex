@@ -6,13 +6,13 @@ import 'package:flex/main.dart';
 import 'package:flex/plan/swap_workout.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/timer/timer_state.dart';
-import 'package:flex/utils.dart';
+import 'package:flex/plan/plan_exercise_settings_dialog.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class ExerciseModal extends StatefulWidget {
-  final int planExerciseId;
+class ExerciseModal extends StatelessWidget {
+  final PlanExercise planExercise;
   final int exerciseId;
   final String exerciseName;
   final int? workoutId;
@@ -22,7 +22,7 @@ class ExerciseModal extends StatefulWidget {
 
   const ExerciseModal({
     super.key,
-    required this.planExerciseId,
+    required this.planExercise,
     required this.exerciseId,
     required this.exerciseName,
     required this.workoutId,
@@ -31,55 +31,16 @@ class ExerciseModal extends StatefulWidget {
     this.inlineActions = false,
   });
 
-  @override
-  State<ExerciseModal> createState() => _ExerciseModalState();
-}
-
-class _ExerciseModalState extends State<ExerciseModal> {
-  final _max = TextEditingController();
-  final _warmup = TextEditingController();
-  bool _timers = true;
-
-  @override
-  void dispose() {
-    _max.dispose();
-    _warmup.dispose();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    (db.planExercises.select()
-          ..where((u) => u.id.equals(widget.planExerciseId))
-          ..limit(1))
-        .getSingle()
-        .then((planExercise) {
-          if (!mounted) return;
-          _max.text =
-              planExercise.maxSets?.toString() ??
-              context.read<Setting>().maxSets.toString();
-          _warmup.text =
-              planExercise.warmupSets?.toString() ??
-              (context.read<Setting>().warmupSets ?? 0).toString();
-
-          setState(() {
-            _timers = planExercise.timers;
-          });
-        });
-  }
-
   Widget action({
     required Widget leading,
     required Widget title,
     required VoidCallback onTap,
-  }) => widget.inlineActions
+  }) => inlineActions
       ? TextButton.icon(onPressed: onTap, icon: leading, label: title)
       : ListTile(leading: leading, title: title, onTap: onTap);
 
-  void closeActions() {
-    if (!widget.inlineActions) Navigator.pop(context);
+  void closeActions(BuildContext context) {
+    if (!inlineActions) Navigator.pop(context);
   }
 
   @override
@@ -89,101 +50,38 @@ class _ExerciseModalState extends State<ExerciseModal> {
         action(
           leading: const Icon(Icons.settings),
           title: Text(context.l10n.navSettings),
-          onTap: () async {
+          onTap: () {
             final rootContext = Navigator.of(
               context,
               rootNavigator: true,
             ).context;
-            final maxController = TextEditingController(text: _max.text);
-            final warmupCtrl = TextEditingController(text: _warmup.text);
-            var timers = _timers;
-            closeActions();
-
-            await showDialog(
+            closeActions(context);
+            showDialog(
               context: rootContext,
-              builder: (dialogContext) {
-                return AlertDialog.adaptive(
-                  title: Text(widget.exerciseName),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Selector<Setting, int?>(
-                          selector: (context, settings) => settings.warmupSets,
-                          builder: (context, value, child) => TextField(
-                            controller: warmupCtrl,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: false,
-                            ),
-                            onTap: () => selectAll(warmupCtrl),
-                            onChanged: changeWarmup,
-                            decoration: InputDecoration(
-                              labelText: dialogContext.l10n.warmupSets,
-                              border: const OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Selector<Setting, int>(
-                          selector: (context, settings) => settings.maxSets,
-                          builder: (context, value, child) => TextField(
-                            controller: maxController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: false,
-                            ),
-                            onTap: () => selectAll(maxController),
-                            onChanged: changeMax,
-                            decoration: InputDecoration(
-                              labelText: dialogContext.l10n.workingSetsMax,
-                              border: const OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        StatefulBuilder(
-                          builder: (context, setDialogState) => ListTile(
-                            title: Text(dialogContext.l10n.restTimers),
-                            trailing: Switch(
-                              value: timers,
-                              onChanged: (value) {
-                                setDialogState(() {
-                                  timers = value;
-                                });
-                                changeTimers(value);
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  actions: [
-                    TextButton.icon(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      label: Text(dialogContext.l10n.actionOk),
-                      icon: const Icon(Icons.check),
-                    ),
-                  ],
-                );
-              },
+              builder: (context) => PlanExerciseSettingsDialog(
+                name: exerciseName,
+                initial: planExercise.toCompanion(false),
+                onChanged: (patch) =>
+                    (db.planExercises.update()
+                          ..where((row) => row.id.equals(planExercise.id)))
+                        .write(patch),
+              ),
             );
-            maxController.dispose();
-            warmupCtrl.dispose();
           },
         ),
-        if (widget.hasData)
+        if (hasData)
           action(
             leading: const Icon(Icons.edit),
             title: Text(context.l10n.actionEdit),
             onTap: () async {
-              closeActions();
-              final workoutId = widget.workoutId;
+              closeActions(context);
+              final workoutId = this.workoutId;
               if (workoutId == null) return;
-              final exerciseSet = await getLatestWorkoutExerciseSet(
+              final exerciseSet = await ExerciseSetQuery(
                 db,
                 workoutId: workoutId,
-                exerciseId: widget.exerciseId,
-              );
+                exerciseId: exerciseId,
+              ).firstOrNull();
               if (exerciseSet == null) return;
               if (!context.mounted) return;
               await Navigator.of(context).push(
@@ -191,67 +89,49 @@ class _ExerciseModalState extends State<ExerciseModal> {
                   builder: (context) => EditSetPage(exerciseSet: exerciseSet),
                 ),
               );
-              widget.onSelect();
+              onSelect();
             },
           ),
-        if (widget.hasData)
+        if (hasData)
           action(
             leading: const Icon(Icons.undo),
             title: Text(context.l10n.actionUndo),
             onTap: () async {
-              closeActions();
-              final workoutId = widget.workoutId;
+              closeActions(context);
+              final workoutId = this.workoutId;
               if (workoutId == null) return;
-              final exerciseSet = await getLatestWorkoutExerciseSet(
+              final exerciseSet = await ExerciseSetQuery(
                 db,
                 workoutId: workoutId,
-                exerciseId: widget.exerciseId,
-              );
+                exerciseId: exerciseId,
+              ).firstOrNull();
               if (exerciseSet == null) return;
               await deleteExerciseSets(db, [exerciseSet.id]);
               if (!context.mounted) return;
-              widget.onSelect();
+              onSelect();
               final timerState = context.read<TimerState>();
               timerState.stopTimer();
             },
           ),
-        if (!widget.hasData)
+        if (!hasData)
           action(
             leading: const Icon(Icons.swap_horiz),
             title: Text(context.l10n.actionSwap),
             onTap: () async {
               final navigator = Navigator.of(context);
-              if (!widget.inlineActions) navigator.pop();
+              if (!inlineActions) navigator.pop();
               final result = await navigator.push(
                 FlexPageRoute(
                   builder: (context) =>
-                      SwapWorkout(planExerciseId: widget.planExerciseId),
+                      SwapWorkout(planExerciseId: planExercise.id),
                 ),
               );
               if (result == true) {
-                widget.onSelect();
+                onSelect();
               }
             },
           ),
       ],
     );
-  }
-
-  void changeTimers(bool value) {
-    (db.planExercises.update()
-          ..where((u) => u.id.equals(widget.planExerciseId)))
-        .write(PlanExercisesCompanion(timers: Value(value)));
-  }
-
-  void changeMax(String value) {
-    (db.planExercises.update()
-          ..where((u) => u.id.equals(widget.planExerciseId)))
-        .write(PlanExercisesCompanion(maxSets: Value(int.tryParse(value))));
-  }
-
-  void changeWarmup(String value) {
-    (db.planExercises.update()
-          ..where((u) => u.id.equals(widget.planExerciseId)))
-        .write(PlanExercisesCompanion(warmupSets: Value(int.tryParse(value))));
   }
 }

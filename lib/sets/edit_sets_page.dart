@@ -1,3 +1,4 @@
+import 'package:flex/sets/workout_input.dart';
 import 'package:flex/sets/workout_category_field.dart';
 import 'package:flex/sets/workout_editor_fields.dart';
 import 'package:flex/sets/workout_unit_field.dart';
@@ -28,14 +29,9 @@ class EditSetsPage extends StatefulWidget {
 
 class _EditSetsPageState extends State<EditSetsPage>
     with UnsavedChanges<EditSetsPage> {
-  final _reps = TextEditingController();
-  final _weight = TextEditingController();
   final _body = TextEditingController();
-  final _distance = TextEditingController();
-  final _minutes = TextEditingController();
-  final _seconds = TextEditingController();
-  final _incline = TextEditingController();
   final _name = TextEditingController();
+  final _input = WorkoutInput();
   final _key = GlobalKey<FormState>();
 
   String? _unit;
@@ -132,7 +128,7 @@ class _EditSetsPageState extends State<EditSetsPage>
             if (_cardio == true) ...[
               if (isWeightUnit(_unit))
                 WorkoutNumberField(
-                  controller: _weight,
+                  controller: _input.weight,
                   decoration: InputDecoration(
                     labelText: l10n.weightLabel,
                     hintText: _oldWeights,
@@ -141,7 +137,7 @@ class _EditSetsPageState extends State<EditSetsPage>
                 )
               else
                 WorkoutNumberField(
-                  controller: _distance,
+                  controller: _input.distance,
                   decoration: InputDecoration(
                     labelText: l10n.distanceLabel,
                     hintText: _oldDist,
@@ -155,38 +151,15 @@ class _EditSetsPageState extends State<EditSetsPage>
                   },
                 ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: WorkoutNumberField(
-                      controller: _minutes,
-                      decoration: InputDecoration(
-                        labelText: l10n.minutesLabel,
-                        hintText: _oldMin,
-                      ),
-                      integer: true,
-                      onChanged: (_) => markDirty(),
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: WorkoutNumberField(
-                      controller: _seconds,
-                      decoration: InputDecoration(
-                        labelText: l10n.secondsLabel,
-                        hintText: _oldSec,
-                      ),
-                      integer: true,
-                      onChanged: (_) => markDirty(),
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                ],
+              _input.durationFields(
+                context,
+                minutesHint: _oldMin,
+                secondsHint: _oldSec,
+                onChanged: (_) => markDirty(),
               ),
               const SizedBox(height: 12),
               WorkoutNumberField(
-                controller: _incline,
+                controller: _input.incline,
                 decoration: InputDecoration(
                   labelText: l10n.inclinePercent,
                   hintText: _oldInc,
@@ -201,7 +174,7 @@ class _EditSetsPageState extends State<EditSetsPage>
             ],
             if (_cardio == false || _cardio == null) ...[
               WorkoutNumberField(
-                controller: _reps,
+                controller: _input.reps,
                 decoration: InputDecoration(
                   labelText: l10n.repsLabel,
                   hintText: _oldReps,
@@ -210,7 +183,7 @@ class _EditSetsPageState extends State<EditSetsPage>
               ),
               const SizedBox(height: 12),
               WorkoutNumberField(
-                controller: _weight,
+                controller: _input.weight,
                 decoration: InputDecoration(
                   labelText: switch (_unit) {
                     null => l10n.weightLabel,
@@ -293,13 +266,8 @@ class _EditSetsPageState extends State<EditSetsPage>
 
   @override
   void dispose() {
-    _reps.dispose();
-    _weight.dispose();
+    _input.dispose();
     _body.dispose();
-    _distance.dispose();
-    _minutes.dispose();
-    _seconds.dispose();
-    _incline.dispose();
     _name.dispose();
 
     super.dispose();
@@ -310,7 +278,7 @@ class _EditSetsPageState extends State<EditSetsPage>
     super.initState();
     final settings = context.read<Setting>();
 
-    getExerciseSetsByIds(db, widget.ids).then((allSets) {
+    ExerciseSetQuery(db, ids: widget.ids).get().then((allSets) {
       final exerciseSets = allSets.take(3).toList();
       if (exerciseSets.isEmpty) return;
       setState(() {
@@ -376,21 +344,13 @@ class _EditSetsPageState extends State<EditSetsPage>
 
     _category = _category?.trim();
     if (_category?.isEmpty ?? false) _category = null;
-    final reps = _reps.text.isEmpty
-        ? null
-        : parseDisplayNumber(context, _reps.text);
-    final weight = _weight.text.isEmpty
-        ? null
-        : parseDisplayNumber(context, _weight.text);
     final bodyWeight = _body.text.isEmpty
         ? null
         : parseDisplayNumber(context, _body.text);
-    final distance = _distance.text.isEmpty
-        ? null
-        : parseDisplayNumber(context, _distance.text);
+    final applyInput = _input.snapshot(context, partial: true);
     final preferredStrengthUnit = context.read<Setting>().strengthUnit;
     if (_category != null) await createCategory(_category!);
-    final selected = await getExerciseSetsByIds(db, widget.ids);
+    final selected = await ExerciseSetQuery(db, ids: widget.ids).get();
 
     final changesExercise =
         _name.text.isNotEmpty ||
@@ -430,23 +390,13 @@ class _EditSetsPageState extends State<EditSetsPage>
       final bodyWeightKg = bodyWeight == null
           ? originalBodyWeightKg
           : loadKg(bodyUnit, bodyWeight);
-      final updated = original.copyWith(
+      final updated = applyInput(original).copyWith(
         name: name,
         unit: unit,
         created: _created ?? original.created,
         cardio: cardio,
         restMs: Value(restMs),
-        reps: reps ?? original.reps,
-        weight: weight ?? original.weight,
         bodyWeight: bodyWeight ?? original.bodyWeight,
-        distance: distance ?? original.distance,
-        duration: _seconds.text.isEmpty && _minutes.text.isEmpty
-            ? original.duration
-            : (int.tryParse(_seconds.text) ?? 0) / 60 +
-                  (int.tryParse(_minutes.text) ?? 0),
-        incline: _incline.text.isEmpty
-            ? Value(original.incline)
-            : Value(int.tryParse(_incline.text)),
         category: Value(category),
       );
 

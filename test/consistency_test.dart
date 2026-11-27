@@ -2,7 +2,7 @@ import 'package:drift/drift.dart' hide Column, isNull;
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/editor_content.dart';
 import 'package:flex/error_state.dart';
-import 'package:flex/graph/add_exercise_page.dart';
+import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/image_field.dart';
 import 'package:flex/set_summary.dart';
 import 'package:flex/weight_page.dart';
@@ -112,7 +112,7 @@ void main() {
       final harness = await FlexTestHarness.create();
       await harness.pump(
         tester,
-        const AddExercisePage(),
+        const ExerciseEditorPage.add(),
         surfaceSize: const Size(1400, 900),
       );
       await tester.pumpAndSettle();

@@ -6,7 +6,7 @@ import 'package:flex/day_selector.dart';
 import 'package:flex/editor_content.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/error_state.dart';
-import 'package:flex/graph/add_exercise_page.dart';
+import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
@@ -39,9 +39,11 @@ class _EditPlanPageState extends State<EditPlanPage>
   final _titleCtrl = TextEditingController();
 
   Future<void> addExercise() async {
-    Exercise? exercise = await Navigator.of(
-      context,
-    ).push(FlexPageRoute(builder: (context) => AddExercisePage(name: _search)));
+    Exercise? exercise = await Navigator.of(context).push(
+      FlexPageRoute(
+        builder: (context) => ExerciseEditorPage.add(name: _search),
+      ),
+    );
     if (exercise == null || !mounted) return;
 
     setState(() {

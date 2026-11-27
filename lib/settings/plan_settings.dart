@@ -3,11 +3,9 @@ import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
-import 'package:flex/responsive.dart';
 import 'package:flex/settings/plan_trailing_preview.dart';
 import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 List<Widget> getPlanSettings(
   BuildContext context,
@@ -157,41 +155,4 @@ List<Widget> getPlanSettings(
         ),
       ),
   ];
-}
-
-class PlanSettings extends StatefulWidget {
-  const PlanSettings({super.key});
-
-  @override
-  State<PlanSettings> createState() => _PlanSettingsState();
-}
-
-class _PlanSettingsState extends State<PlanSettings> {
-  late var _settings = context.read<Setting>();
-
-  late final _max = TextEditingController(text: _settings.maxSets.toString());
-
-  late final _warmup = TextEditingController(
-    text: (_settings.warmupSets ?? 0).toString(),
-  );
-
-  @override
-  void dispose() {
-    _max.dispose();
-    _warmup.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    _settings = context.watch<Setting>();
-
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text(context.l10n.navPlans)),
-      body: ResponsiveSettingsList(
-        children: getPlanSettings(context, '', _settings, _max, _warmup),
-      ),
-    );
-  }
 }

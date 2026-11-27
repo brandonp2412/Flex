@@ -2,8 +2,8 @@ import 'package:drift/drift.dart' hide isNull;
 import 'package:flex/app_fab.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/editor_content.dart';
-import 'package:flex/graph/add_exercise_page.dart';
-import 'package:flex/graph/edit_graph_page.dart';
+
+import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/plan/edit_plan_page.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/sets/edit_sets_page.dart';
@@ -24,8 +24,9 @@ void setViewport(WidgetTester tester, Size size) {
 void main() {
   final editors = <String, Widget Function()>{
     'plan': () => const EditPlanPage(plan: PlansCompanion(days: Value(''))),
-    'exercise': () => const AddExercisePage(),
-    'exercise details': () => const EditGraphPage(name: 'Bench press'),
+    'exercise': () => const ExerciseEditorPage.add(),
+    'exercise details': () =>
+        const ExerciseEditorPage.edit(name: 'Bench press'),
     'set': () => EditSetPage(exerciseSet: exerciseSetModelFixture()),
     'bulk sets': () => const EditSetsPage(ids: []),
     'body weight': () => const WeightPage(),
@@ -79,7 +80,7 @@ void main() {
   testWidgets('desktop exercise Save submits the entered name', (tester) async {
     setViewport(tester, const Size(1200, 900));
     final harness = await FlexTestHarness.create();
-    await harness.pump(tester, const AddExercisePage());
+    await harness.pump(tester, const ExerciseEditorPage.add());
     await tester.pumpAndSettle();
     await tester.enterText(find.bySemanticsLabel('Name'), 'Desktop press');
     final save = find.byKey(const Key('desktop-editor-save'));

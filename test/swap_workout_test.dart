@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:flex/graph/add_exercise_page.dart';
+import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/plan/swap_workout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -72,7 +72,7 @@ void main() {
     await tester.tap(find.byKey(const Key('create-swap-exercise')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(AddExercisePage), findsOneWidget);
+    expect(find.byType(ExerciseEditorPage), findsOneWidget);
     expect(
       tester
           .widget<TextFormField>(find.byType(TextFormField).first)
