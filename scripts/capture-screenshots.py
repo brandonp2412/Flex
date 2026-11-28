@@ -152,6 +152,8 @@ def build_gallery(captures, destination):
             directory.mkdir()
             markdown = [f"# {label}", "", "[All device profiles](../)", ""]
             cards = []
+            w, h, scale = PROFILES[profile]
+            image_width, image_height = round(w * scale), round(h * scale)
             for source, filename in files:
                 shutil.copyfile(source, directory / filename)
                 title = filename.removesuffix(".png")
@@ -161,7 +163,7 @@ def build_gallery(captures, destination):
                 width = 260 if profile == "phoneScreenshots" else 480
                 markdown.extend([f"### {title}", "", f'<a href="{filename}"><img src="{filename}" alt="{title}" width="{width}"/></a>', ""])
                 path = f"{profile}/{filename}"
-                cards.append(f'<a href="{path}"><img loading="lazy" src="{path}" alt="{html.escape(title)}"><span>{html.escape(title)}</span></a>')
+                cards.append(f'<a href="{path}"><img loading="lazy" src="{path}" width="{image_width}" height="{image_height}" alt="{html.escape(title)}"><span>{html.escape(title)}</span></a>')
             (directory / "README.md").write_text("\n".join(markdown), encoding="utf-8")
             sections.append(f'<section id="{profile}"><h2>{label} · {len(files)} screenshots</h2><div class="screens {profile}">{"".join(cards)}</div></section>')
         (gallery / "README.md").write_text("\n".join(root) + "\n", encoding="utf-8")
@@ -175,7 +177,7 @@ def build_gallery(captures, destination):
             'a{color:#d3bfff;text-decoration:none}.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}'
             '.phoneScreenshots{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}'
             '.screens a{display:flex;flex-direction:column;gap:8px;background:#25242b;border-radius:12px;padding:12px}'
-            'img{width:100%;height:auto;object-fit:contain;border-radius:5px}section{scroll-margin-top:65px}'
+            'img{display:block;width:100%;height:auto;object-fit:contain;border-radius:5px;background:#17161b}section{scroll-margin-top:65px}'
             '@media(max-width:500px){.screens,.phoneScreenshots{grid-template-columns:1fr}}'
             '</style><h1>Flex screenshots</h1><p>All device profiles · Sample data · Click any image for full resolution</p>'
             f'<nav>{links}</nav>{"".join(sections)}</html>',
