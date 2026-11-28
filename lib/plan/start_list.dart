@@ -1,4 +1,3 @@
-import 'package:flex/plan/plan_progress.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
@@ -6,10 +5,11 @@ import 'package:flex/custom_set_indicator.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/exercise_modal.dart';
+import 'package:flex/plan/plan_progress.dart';
 import 'package:flex/plan/workout_sessions.dart';
+import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/sets/edit_set_page.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -76,38 +76,57 @@ class _StartListState extends State<StartList> {
       bottom: desktop ? (widget.exercises.length == 1 ? 0 : 8) : _bottomPadding,
     );
 
-    if (trailing == PlanTrailing.reorder)
-      return ReorderableListView.builder(
-        shrinkWrap: desktop,
-        itemCount: widget.exercises.length,
-        buildDefaultDragHandles: !desktop,
-        padding: padding,
-        itemBuilder: (context, index) =>
-            itemBuilder(context, index, max, trailing),
-        onReorderItem: (oldIndex, newIndex) async {
-          final ordered = widget.exercises.toList();
-          final item = ordered.removeAt(oldIndex);
-          ordered.insert(newIndex, item);
+    Widget list(double? width) {
+      Widget item(BuildContext context, int index) =>
+          itemBuilder(context, index, max, trailing, width);
 
-          await db.batch((batch) {
-            for (var i = 0; i < ordered.length; i++) {
-              batch.update(
-                db.planExercises,
-                PlanExercisesCompanion(sequence: Value(i)),
-                where: (pe) => pe.id.equals(ordered[i].planExercise.id),
-              );
-            }
-          });
-        },
-      );
-    else
+      if (trailing == PlanTrailing.reorder) {
+        return ReorderableListView.builder(
+          shrinkWrap: desktop,
+          itemCount: widget.exercises.length,
+          buildDefaultDragHandles: !desktop,
+          padding: padding,
+          itemBuilder: item,
+          onReorderItem: (oldIndex, newIndex) async {
+            final ordered = widget.exercises.toList();
+            final entry = ordered.removeAt(oldIndex);
+            ordered.insert(newIndex, entry);
+
+            await db.batch((batch) {
+              for (var i = 0; i < ordered.length; i++) {
+                batch.update(
+                  db.planExercises,
+                  PlanExercisesCompanion(sequence: Value(i)),
+                  where: (pe) => pe.id.equals(ordered[i].planExercise.id),
+                );
+              }
+            });
+          },
+        );
+      }
+      if (desktop) {
+        return SingleChildScrollView(
+          padding: padding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < widget.exercises.length; i++)
+                item(context, i),
+            ],
+          ),
+        );
+      }
       return ListView.builder(
         padding: padding,
-        shrinkWrap: desktop,
         itemCount: widget.exercises.length,
-        itemBuilder: (context, index) =>
-            itemBuilder(context, index, max, trailing),
+        itemBuilder: item,
       );
+    }
+
+    return desktop
+        ? LayoutBuilder(builder: (_, constraints) => list(constraints.maxWidth))
+        : list(null);
   }
 
   Widget itemBuilder(
@@ -115,12 +134,15 @@ class _StartListState extends State<StartList> {
     int index,
     int maxSets,
     PlanTrailing trailing,
+    double? width,
   ) {
     final exercise = widget.exercises[index];
     final count = widget.sets[exercise.exercise.id]?.length ?? 0;
     final max = exercise.planExercise.maxSets ?? maxSets;
 
-    final desktop = isDesktopLayout(context);
+    final desktop = width != null;
+    final compact = desktop && width < 260;
+    final showProgress = desktop && width >= 420;
     final trail = switch (trailing) {
       PlanTrailing.reorder => ReorderableDragStartListener(
         index: index,
@@ -169,83 +191,72 @@ class _StartListState extends State<StartList> {
                 borderRadius: BorderRadius.circular(14),
                 onTap: () => tap(index),
                 onLongPress: null,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final compact = constraints.maxWidth < 260;
-                    final showProgress = constraints.maxWidth >= 420;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              if (!compact) ...[
-                                Icon(
-                                  selected
-                                      ? Icons.radio_button_checked_rounded
-                                      : Icons.radio_button_unchecked_rounded,
-                                  color: selected
-                                      ? colors.primary
-                                      : colors.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 12),
-                              ],
-                              Expanded(
-                                child: Text(
-                                  exercise.exercise.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(
-                                        fontWeight: selected
-                                            ? FontWeight.w700
-                                            : FontWeight.w600,
-                                      ),
-                                ),
+                          if (!compact) ...[
+                            Icon(
+                              selected
+                                  ? Icons.radio_button_checked_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              color: selected
+                                  ? colors.primary
+                                  : colors.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(
+                            child: Text(
+                              exercise.exercise.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: selected
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                  ),
+                            ),
+                          ),
+                          if (!compact) const SizedBox(width: 12),
+                          if (showProgress) ...[
+                            SizedBox(
+                              width: 150,
+                              child: CustomSetIndicator(count: count, max: max),
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          if (!compact &&
+                              (trailing == PlanTrailing.reorder ||
+                                  trailing == PlanTrailing.none)) ...[
+                            Text(
+                              planProgressLabel(
+                                context,
+                                PlanTrailing.ratio,
+                                count,
+                                max,
                               ),
-                              if (!compact) const SizedBox(width: 12),
-                              if (showProgress) ...[
-                                SizedBox(
-                                  width: 150,
-                                  child: CustomSetIndicator(
-                                    count: count,
-                                    max: max,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                              ],
-                              if (!compact &&
-                                  (trailing == PlanTrailing.reorder ||
-                                      trailing == PlanTrailing.none)) ...[
-                                Text(
-                                  planProgressLabel(
-                                    context,
-                                    PlanTrailing.ratio,
-                                    count,
-                                    max,
-                                  ),
-                                  style: Theme.of(context).textTheme.labelLarge
-                                      ?.copyWith(
-                                        color: colors.onSurfaceVariant,
-                                      ),
-                                ),
-                                const SizedBox(width: 10),
-                              ],
-                              trail,
-                            ],
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(left: compact ? 0 : 36),
-                            child: actions(inline: true),
-                          ),
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(color: colors.onSurfaceVariant),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          trail,
                         ],
                       ),
-                    );
-                  },
+                      Padding(
+                        padding: EdgeInsets.only(left: compact ? 0 : 36),
+                        child: actions(inline: true),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flex/desktop_editor_save_button.dart';
 import 'package:flex/sets/workout_input.dart';
 import 'package:flex/app_message.dart';
@@ -34,20 +35,75 @@ Future<void> openStartPlan(
   NavigatorState navigator,
   Plan plan, {
   List<PlanExerciseEntry>? initial,
-}) {
-  return navigator.push<void>(
-    FlexPageRoute<void>(
-      settings: RouteSettings(name: 'start-plan:${plan.id}'),
-      snapshotOnPop: true,
-      builder: (context) => StartPlanPage(plan: plan, initial: initial),
-    ),
+}) async {
+  Future<void> push({StartPlanData? data, Stream<StartPlanData>? stream}) =>
+      navigator.push<void>(
+        FlexPageRoute<void>(
+          settings: RouteSettings(name: 'start-plan:${plan.id}'),
+          snapshotOnPop: true,
+          builder: (context) => StartPlanPage(
+            plan: plan,
+            initial: initial,
+            initialData: data,
+            initialStream: stream,
+          ),
+        ),
+      );
+
+  if (!isDesktopLayout(navigator.context)) return push();
+
+  final ready = Completer<StartPlanData>();
+  final controller = StreamController<StartPlanData>();
+  final subscription = watchStartPlanData(db, plan.id).listen(
+    (data) {
+      if (!ready.isCompleted) {
+        ready.complete(data);
+      } else {
+        controller.add(data);
+      }
+    },
+    onError: (Object error, StackTrace stack) {
+      if (!ready.isCompleted) {
+        ready.completeError(error, stack);
+      } else {
+        controller.addError(error, stack);
+      }
+    },
+    onDone: () {
+      if (!ready.isCompleted) {
+        ready.completeError(StateError('Workout data unavailable'));
+      }
+      unawaited(controller.close());
+    },
   );
+  controller.onCancel = subscription.cancel;
+  try {
+    StartPlanData data;
+    try {
+      data = await ready.future;
+    } catch (_) {
+      if (navigator.mounted) await push();
+      return;
+    }
+    if (navigator.mounted) await push(data: data, stream: controller.stream);
+  } finally {
+    await subscription.cancel();
+    unawaited(controller.close());
+  }
 }
 
 class StartPlanPage extends StatefulWidget {
   final Plan plan;
   final List<PlanExerciseEntry>? initial;
-  const StartPlanPage({super.key, required this.plan, this.initial});
+  final StartPlanData? initialData;
+  final Stream<StartPlanData>? initialStream;
+  const StartPlanPage({
+    super.key,
+    required this.plan,
+    this.initial,
+    this.initialData,
+    this.initialStream,
+  });
 
   @override
   createState() => _StartPlanPageState();
@@ -83,6 +139,7 @@ class _StartPlanPageState extends State<StartPlanPage>
   Widget build(BuildContext context) {
     return StreamBuilder<StartPlanData>(
       stream: _stream,
+      initialData: widget.initialData,
       builder: (context, snapshot) {
         final data = snapshot.data;
         final exercises = data?.exercises ?? widget.initial;
@@ -390,14 +447,17 @@ class _StartPlanPageState extends State<StartPlanPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     dbVersion.addListener(_reloadDatabaseStreams);
-    _stream = _watchData();
     final initial = widget.initial;
     if (initial != null && initial.isNotEmpty)
       _unit = initial.first.exercise.displayUnit;
+    final data = widget.initialData;
+    if (data != null)
+      _select(data.exercises, data.defaults, _selectedIndex(data.exercises));
+    _stream = _watchData(widget.initialStream);
   }
 
-  Stream<StartPlanData> _watchData() =>
-      watchStartPlanData(db, widget.plan.id).map((data) {
+  Stream<StartPlanData> _watchData([Stream<StartPlanData>? source]) =>
+      (source ?? watchStartPlanData(db, widget.plan.id)).map((data) {
         if (!mounted) return data;
         if (data.plan == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {

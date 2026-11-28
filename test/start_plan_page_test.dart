@@ -226,6 +226,76 @@ void main() {
     expect(find.byIcon(Icons.check_circle_outline), findsNothing);
   });
 
+  testWidgets('desktop plan opens with populated fields and previews', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    final database = harness.database;
+    final id = await database.plans.insertOne(planFixture(title: 'Monday'));
+    await insertPlanExerciseFixture(
+      database,
+      planId: id,
+      exercise: 'Leg press',
+    );
+    await insertExerciseSetFixture(
+      database,
+      'Leg press',
+      reps: 10,
+      weight: 60,
+      created: DateTime.now().subtract(const Duration(days: 1)),
+    );
+    final plan =
+        await (database.plans.select()..where((row) => row.id.equals(id)))
+            .getSingle();
+    await database.settings.update().write(
+      const SettingsCompanion(planTrailing: Value('PlanTrailing.ratio')),
+    );
+    final initial = (await getAllPlanExerciseEntries(
+      database,
+    )).where((entry) => entry.planExercise.planId == id).toList();
+    await harness.pump(
+      tester,
+      Builder(
+        builder: (context) => TextButton(
+          onPressed: () =>
+              openStartPlan(Navigator.of(context), plan, initial: initial),
+          child: const Text('Open Monday'),
+        ),
+      ),
+      surfaceSize: const Size(1400, 800),
+    );
+    await tester.tap(find.text('Open Monday'));
+    for (
+      var i = 0;
+      i < 50 && find.byType(StartPlanPage).evaluate().isEmpty;
+      i++
+    ) {
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect(find.byType(StartPlanPage), findsOneWidget);
+    expect(
+      tester.widget<EditableText>(textFieldWithLabel('Reps')).controller.text,
+      '10',
+    );
+    expect(
+      tester
+          .widget<EditableText>(textFieldWithLabel('Weight (kg)'))
+          .controller
+          .text,
+      '60',
+    );
+    expect(find.byKey(const Key('previous-set-scroll')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(StartList),
+        matching: find.byType(ShrinkWrappingViewport),
+      ),
+      findsNothing,
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('resizing preserves draft workout fields', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(800, 800);
