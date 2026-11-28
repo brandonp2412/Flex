@@ -1,0 +1,77 @@
+name: Deploy Flex website
+
+on:
+  workflow_call:
+    inputs:
+      web_run_id:
+        required: true
+        type: string
+      gallery_run_id:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      web_run_id:
+        description: Build and Release run containing the flex-web artifact
+        required: true
+        type: string
+      gallery_run_id:
+        description: Build and Release run containing the screenshot gallery artifact
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: flex-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download web application
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: flex-web
+          path: site
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.web_run_id }}
+
+      - name: Download screenshot gallery
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: flex-screenshot-gallery
+          path: site/screenshots
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.gallery_run_id }}
+
+      - name: Validate website and gallery
+        run: |
+          test -s site/index.html
+          test -s site/flutter_bootstrap.js
+          test -s site/privacy-policy.html
+          test -s site/screenshots/index.html
+          for profile in phoneScreenshots sevenInchScreenshots tenInchScreenshots desktop; do
+            test "$(find "site/screenshots/$profile" -maxdepth 1 -name '*.png' | wc -l)" -ge 54
+          done
+
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload website to Pages
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

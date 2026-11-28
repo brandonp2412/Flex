@@ -35,7 +35,7 @@ A private, offline-first workout tracker for logging gym sessions and building s
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6_en-US.png" alt="Flex history screen listing recorded exercise sets and weights" width="360" />
 </p>
 
-[View all screenshots — phone, tablets and desktop](https://github.com/brandonp2412/Flex/tree/screenshots)
+[View all screenshots — phone, tablets and desktop](https://brandonp2412.github.io/Flex/screenshots/)
 
 ## Build from source
 

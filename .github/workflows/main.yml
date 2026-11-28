@@ -136,33 +136,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  publish-screenshot-gallery:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: generate-screenshots
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          persist-credentials: true
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: flex-screenshot-gallery
-          path: ${{ runner.temp }}/flex-gallery
-      - name: Publish current screenshot gallery
-        run: |
-          if [ "$(git ls-remote origin refs/heads/main | cut -f1)" != "$GITHUB_SHA" ]; then
-            echo "A newer main commit exists; skipping stale screenshots."
-            exit 0
-          fi
-          old="$(git ls-remote origin refs/heads/screenshots | cut -f1)"
-          git switch --orphan screenshots
-          cp -a "$RUNNER_TEMP/flex-gallery/." .
-          git add .
-          git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com commit -m "Screenshots for $GITHUB_SHA"
-          git push --force-with-lease="refs/heads/screenshots:$old" origin HEAD:refs/heads/screenshots
-
   version-bump:
     if: ${{ always() && github.event_name == 'workflow_dispatch' && needs.quality-checks.result == 'success' }}
     needs: [quality-checks, generate-screenshots]
@@ -455,15 +428,10 @@ jobs:
           name: windows-builds
           path: flex-windows.zip
 
-  build-and-deploy-web:
+  build-web:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       contents: read
-      pages: write
-      id-token: write
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -494,20 +462,27 @@ jobs:
       - name: Add privacy policy to web deployment
         run: cp docs/privacy-policy.html build/web/privacy-policy.html
 
-      - name: Setup Pages
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-
-      - name: Upload to GitHub Pages
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+      - name: Upload web application
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          path: ./build/web
+          name: flex-web
+          path: build/web/
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: Deploy to GitHub Pages
-        if: github.event_name == 'workflow_dispatch'
-        id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+  publish-pages:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: [generate-screenshots, build-web]
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
+    with:
+      web_run_id: ${{ github.run_id }}
+      gallery_run_id: ${{ github.run_id }}
 
   create-github-release:
     needs: [version-bump, build-android, build-linux, build-windows]
