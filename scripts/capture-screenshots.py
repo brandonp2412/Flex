@@ -173,14 +173,14 @@ def build_gallery(captures, destination):
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             '<title>Flex screenshots</title><style>'
             'body{font:16px system-ui;margin:24px;background:#17161b;color:#eee}'
-            'nav{display:flex;gap:20px;flex-wrap:wrap;position:sticky;top:0;background:#17161b;padding:12px 0}'
+            'nav{display:flex;gap:20px;flex-wrap:wrap;position:sticky;top:0;z-index:1;background:#17161b;padding:12px 0}'
             'a{color:#d3bfff;text-decoration:none}.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}'
             '.phoneScreenshots{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}'
             '.screens a{display:flex;flex-direction:column;gap:8px;background:#25242b;border-radius:12px;padding:12px}'
-            'img{display:block;width:100%;height:auto;object-fit:contain;border-radius:5px;background:#17161b}section{scroll-margin-top:65px}'
+            'img{display:block;width:100%;height:auto;object-fit:contain;border-radius:5px;background:#17161b}section{scroll-margin-top:calc(var(--nav-height, 65px) + 12px)}'
             '@media(max-width:500px){.screens,.phoneScreenshots{grid-template-columns:1fr}}'
             '</style><h1>Flex screenshots</h1><p>All device profiles · Sample data · Click any image for full resolution</p>'
-            f'<nav>{links}</nav>{"".join(sections)}</html>',
+            f'<nav>{links}</nav>{"".join(sections)}<script>const nav=document.querySelector("nav");const resize=()=>document.documentElement.style.setProperty("--nav-height",nav.offsetHeight+"px");resize();new ResizeObserver(resize).observe(nav);</script></html>',
             encoding="utf-8",
         )
         if destination.exists():
