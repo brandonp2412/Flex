@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flex/about_page.dart';
 import 'package:flex/settings/settings_category_page.dart';
-import 'package:flex/settings/settings_inputs.dart';
+import 'package:flex/audio/safe_audio_player.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/l10n/l10n.dart';
@@ -27,13 +27,7 @@ class _SettingsContentState extends State<SettingsContent>
   final _searchCtrl = TextEditingController();
   final _focusNode = FocusNode();
 
-  late final SettingsInputs _inputs;
-
-  @override
-  void initState() {
-    super.initState();
-    _inputs = SettingsInputs(context.read<Setting>());
-  }
+  final _player = SafeAudioPlayer(enabled: !kIsWeb);
 
   @override
   bool get wantKeepAlive => true;
@@ -51,7 +45,7 @@ class _SettingsContentState extends State<SettingsContent>
             context,
             category,
             settings,
-            _inputs,
+            _player,
             search: _searchCtrl.text,
           ),
         );
@@ -207,7 +201,7 @@ class _SettingsContentState extends State<SettingsContent>
   void dispose() {
     _focusNode.dispose();
     _searchCtrl.dispose();
-    _inputs.dispose();
+    _player.dispose();
     super.dispose();
   }
 }

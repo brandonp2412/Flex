@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/main.dart';
 import 'package:flutter/material.dart';
 
@@ -14,55 +15,17 @@ class CustomTimerSettings extends StatefulWidget {
 }
 
 class _CustomTimerSettingsState extends State<CustomTimerSettings> {
-  List<Exercise> _customExercises = [];
-  final _fields = <int, DurationInput>{};
+  late final _exercises =
+      (db.exercises.select()
+            ..where(
+              (exercise) =>
+                  exercise.defaultRestDurationMs.isNotNull() &
+                  exercise.archived.equals(false),
+            )
+            ..orderBy([(exercise) => OrderingTerm.asc(exercise.name)]))
+          .watch();
 
-  @override
-  void initState() {
-    super.initState();
-    _loadExercisesWithCustomTimers();
-  }
-
-  Future<void> _loadExercisesWithCustomTimers() async {
-    final exercises =
-        await (db.exercises.select()
-              ..where(
-                (exercise) =>
-                    exercise.defaultRestDurationMs.isNotNull() &
-                    exercise.archived.equals(false),
-              )
-              ..orderBy([(exercise) => OrderingTerm.asc(exercise.name)]))
-            .get();
-    if (!mounted) return;
-
-    setState(() {
-      _customExercises = exercises;
-
-      for (final exercise in exercises) {
-        _fields[exercise.id] = DurationInput(
-          initial: Duration(milliseconds: exercise.defaultRestDurationMs!),
-        );
-      }
-    });
-  }
-
-  Future<void> _updateExerciseRestTime(
-    int exerciseId,
-    Duration duration,
-  ) async {
-    final durationMs = duration > Duration.zero
-        ? duration.inMilliseconds
-        : null;
-    await (db.exercises.update()
-          ..where((exercise) => exercise.id.equals(exerciseId)))
-        .write(ExercisesCompanion(defaultRestDurationMs: Value(durationMs)));
-    if (!mounted || durationMs != null) return;
-    final input = _fields.remove(exerciseId);
-    setState(() => _customExercises.removeWhere((e) => e.id == exerciseId));
-    WidgetsBinding.instance.addPostFrameCallback((_) => input?.dispose());
-  }
-
-  Widget _buildPerExerciseSection() {
+  Widget _buildPerExerciseSection(List<Exercise> exercises) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
       child: Column(
@@ -91,71 +54,82 @@ class _CustomTimerSettingsState extends State<CustomTimerSettings> {
             ),
           ),
           const SizedBox(height: 16),
-          ..._customExercises.map((exercise) {
-            final fields = _fields[exercise.id];
-            if (fields == null) return const SizedBox();
-
-            return Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outlineVariant.withValues(alpha: 0.35),
-                  ),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            exercise.name,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: () => _updateExerciseRestTime(
-                            exercise.id,
-                            Duration.zero,
-                          ),
-                          tooltip: context.l10n.removeCustomTimer,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    fields.settingsFields(
-                      context,
-                      minutesLabel: context.l10n.minutesLabel,
-                      gap: 12,
-                      onChanged: (duration) =>
-                          _updateExerciseRestTime(exercise.id, duration),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
+          for (final exercise in exercises)
+            _ExerciseTimerField(key: ValueKey(exercise.id), exercise: exercise),
         ],
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) => _customExercises.isEmpty
-      ? const SizedBox.shrink()
-      : _buildPerExerciseSection();
+  Widget build(BuildContext context) => StreamBuilder(
+    stream: _exercises,
+    builder: (context, snapshot) {
+      if (snapshot.hasError) return const AppErrorState();
+      final exercises = snapshot.data;
+      return exercises == null || exercises.isEmpty
+          ? const SizedBox.shrink()
+          : _buildPerExerciseSection(exercises);
+    },
+  );
+}
+
+class _ExerciseTimerField extends StatelessWidget {
+  const _ExerciseTimerField({super.key, required this.exercise});
+
+  final Exercise exercise;
+
+  Future<void> _update(Duration duration) =>
+      (db.exercises.update()..where((row) => row.id.equals(exercise.id))).write(
+        ExercisesCompanion(
+          defaultRestDurationMs: Value(
+            duration > Duration.zero ? duration.inMilliseconds : null,
+          ),
+        ),
+      );
 
   @override
-  void dispose() {
-    for (final fields in _fields.values) {
-      fields.dispose();
-    }
-    super.dispose();
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.35),
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    exercise.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _update(Duration.zero),
+                  tooltip: context.l10n.removeCustomTimer,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            DurationSettingsFields(
+              duration: Duration(milliseconds: exercise.defaultRestDurationMs!),
+              minutesLabel: context.l10n.minutesLabel,
+              gap: 12,
+              onChanged: _update,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

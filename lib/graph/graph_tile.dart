@@ -12,7 +12,6 @@ class GraphTile extends StatelessWidget {
   final GraphExerciseSummary exerciseSet;
   final Set<String> selected;
   final Function(String) onSelect;
-  final TabController tabCtrl;
   final VoidCallback? onEdit;
   final Future<void> Function()? onDelete;
 
@@ -21,7 +20,6 @@ class GraphTile extends StatelessWidget {
     required this.selected,
     required this.onSelect,
     required this.exerciseSet,
-    required this.tabCtrl,
     this.onEdit,
     this.onDelete,
   });
@@ -48,16 +46,12 @@ class GraphTile extends StatelessWidget {
       selected: selected.contains(exerciseSet.selectionKey),
       selectionActive: selected.isNotEmpty,
       onSelect: () => onSelect(exerciseSet.selectionKey),
-      onOpen: () async {
-        final data = await getInitialGraphData(exerciseSet);
-        if (!context.mounted) return;
+      onOpen: () {
         Navigator.of(context).push(
           FlexPageRoute(
             builder: (context) => ExerciseGraphPage(
               initialName: exerciseSet.name,
               initialUnit: exerciseSet.unit,
-              initialData: data,
-              tabCtrl: tabCtrl,
               cardio: exerciseSet.cardio && !exerciseSet.bodyWeight,
               bodyWeight: exerciseSet.bodyWeight,
             ),

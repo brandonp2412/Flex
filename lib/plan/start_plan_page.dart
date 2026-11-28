@@ -69,23 +69,14 @@ class _StartPlanPageState extends State<StartPlanPage>
   bool _saving = false;
   DateTime? _lastSavedAt;
   String _unit = 'kg';
-  StartPlanData? _data;
   late Stream<StartPlanData> _stream;
 
-  int get _selected {
-    final exercises =
-        _data?.exercises ?? widget.initial ?? const <PlanExerciseEntry>[];
+  int _selectedIndex(List<PlanExerciseEntry> exercises) {
     final index = exercises.indexWhere(
       (entry) => entry.exercise.id == _selectedExerciseId,
     );
     return index < 0 ? 0 : index;
   }
-
-  Exercise? get _currentExercise =>
-      _data?.exercises.elementAtOrNull(_selected)?.exercise ??
-      widget.initial?.firstOrNull?.exercise;
-  bool get _cardio => _currentExercise?.kind == 'cardio';
-  String? get _image => _currentExercise?.image;
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +89,7 @@ class _StartPlanPageState extends State<StartPlanPage>
         if (exercises == null || snapshot.hasError) {
           return Scaffold(
             appBar: AppBar(
-              title: Text(_displayTitle(context)),
+              title: Text(_displayTitle(context, data?.plan ?? widget.plan)),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => Navigator.pop(context),
@@ -111,6 +102,11 @@ class _StartPlanPageState extends State<StartPlanPage>
             ),
           );
         }
+
+        final selected = _selectedIndex(exercises);
+        final exercise = exercises.elementAtOrNull(selected)?.exercise;
+        final cardio = exercise?.kind == 'cardio';
+        Future<void> save() => _save(data, selected);
 
         final desktop = isDesktopLayout(context);
         final colors = Theme.of(context).colorScheme;
@@ -137,8 +133,9 @@ class _StartPlanPageState extends State<StartPlanPage>
               )
             : StartList(
                 exercises: exercises,
-                selected: _selected,
-                onSelect: (index) async => _select(index),
+                selected: selected,
+                onSelect: (index) async =>
+                    setState(() => _select(exercises, data?.defaults, index)),
                 sets: data?.sets ?? const {},
                 workoutId: workout?.id,
               );
@@ -148,7 +145,7 @@ class _StartPlanPageState extends State<StartPlanPage>
               FloatingActionButtonAnimator.noAnimation,
           resizeToAvoidBottomInset: true,
           appBar: AppBar(
-            title: Text(_displayTitle(context)),
+            title: Text(_displayTitle(context, data?.plan ?? widget.plan)),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () => Navigator.pop(context),
@@ -161,7 +158,7 @@ class _StartPlanPageState extends State<StartPlanPage>
               ),
               if (desktop && exercises.isNotEmpty)
                 DesktopEditorSaveButton(
-                  onPressed: _save,
+                  onPressed: save,
                   label: context.l10n.saveSet,
                 ),
             ],
@@ -190,8 +187,8 @@ class _StartPlanPageState extends State<StartPlanPage>
                                 children: [
                                   Text(
                                     exercises.isNotEmpty &&
-                                            _selected < exercises.length
-                                        ? exercises[_selected].exercise.name
+                                            selected < exercises.length
+                                        ? exercises[selected].exercise.name
                                         : context.l10n.setDetails,
                                     style: Theme.of(context)
                                         .textTheme
@@ -199,26 +196,26 @@ class _StartPlanPageState extends State<StartPlanPage>
                                         ?.copyWith(fontWeight: FontWeight.w700),
                                   ),
                                   const SizedBox(height: 16),
-                                  if (!_cardio) ...strengthFields(),
-                                  if (_cardio) ...cardioFields(),
+                                  if (!cardio)
+                                    ...strengthFields(exercise, save),
+                                  if (cardio) ...cardioFields(exercise, save),
                                   unitSelector(),
-                                  notesField(),
+                                  notesField(save),
                                   if (workout != null &&
                                       exercises.isNotEmpty &&
-                                      _selected < exercises.length) ...[
+                                      selected < exercises.length) ...[
                                     const SizedBox(height: 16),
                                     SessionSets(
                                       exerciseId:
-                                          exercises[_selected].exercise.id,
+                                          exercises[selected].exercise.id,
                                       workoutId: workout.id,
                                       previous:
-                                          data?.previous[exercises[_selected]
+                                          data?.previous[exercises[selected]
                                               .exercise
                                               .id],
                                       onPreviousSetTap: _fillPreviousSet,
                                       sets:
-                                          data?.sets[_currentExercise?.id] ??
-                                          const [],
+                                          data?.sets[exercise?.id] ?? const [],
                                     ),
                                   ],
                                 ],
@@ -244,10 +241,10 @@ class _StartPlanPageState extends State<StartPlanPage>
                     )
                   : Column(
                       children: [
-                        if (!_cardio) ...strengthFields(),
-                        if (_cardio) ...cardioFields(),
+                        if (!cardio) ...strengthFields(exercise, save),
+                        if (cardio) ...cardioFields(exercise, save),
                         unitSelector(),
-                        notesField(),
+                        notesField(save),
                         Expanded(child: exerciseList()),
                       ],
                     ),
@@ -260,7 +257,7 @@ class _StartPlanPageState extends State<StartPlanPage>
               desktop ||
                   workout == null ||
                   exercises.isEmpty ||
-                  _selected >= exercises.length
+                  selected >= exercises.length
               ? null
               : Padding(
                   key: const Key('start-plan-floating-row'),
@@ -284,13 +281,12 @@ class _StartPlanPageState extends State<StartPlanPage>
                             maxHeight: double.infinity,
                             child: SessionSets(
                               key: const Key('start-plan-set-preview'),
-                              exerciseId: exercises[_selected].exercise.id,
+                              exerciseId: exercises[selected].exercise.id,
                               workoutId: workout.id,
                               previous: data
-                                  ?.previous[exercises[_selected].exercise.id],
+                                  ?.previous[exercises[selected].exercise.id],
                               onPreviousSetTap: _fillPreviousSet,
-                              sets:
-                                  data?.sets[_currentExercise?.id] ?? const [],
+                              sets: data?.sets[exercise?.id] ?? const [],
                               compact: true,
                             ),
                           ),
@@ -302,7 +298,7 @@ class _StartPlanPageState extends State<StartPlanPage>
                             : 8,
                       ),
                       AppFab(
-                        onPressed: () async => await _save(),
+                        onPressed: () async => await save(),
                         label: Text(context.l10n.actionSave),
                         icon: const Icon(Icons.save),
                         bottomPadding: 0,
@@ -315,7 +311,7 @@ class _StartPlanPageState extends State<StartPlanPage>
     );
   }
 
-  List<Widget> strengthFields() {
+  List<Widget> strengthFields(Exercise? exercise, AsyncCallback save) {
     return [
       _input.field(
         context,
@@ -326,11 +322,11 @@ class _StartPlanPageState extends State<StartPlanPage>
         onSubmitted: (_) => _focusAndSelect(_weightFocus, _input.weight),
       ),
       const SizedBox(height: 8.0),
-      _weightField(),
+      _weightField(exercise, save),
     ];
   }
 
-  List<Widget> cardioFields() {
+  List<Widget> cardioFields(Exercise? exercise, AsyncCallback save) {
     final showNotes = context.read<Setting>().showNotes;
 
     return [
@@ -352,7 +348,7 @@ class _StartPlanPageState extends State<StartPlanPage>
       Row(
         children: [
           if (isWeightUnit(_unit))
-            Expanded(child: _weightField())
+            Expanded(child: _weightField(exercise, save))
           else
             Expanded(
               child: _input.field(
@@ -375,7 +371,7 @@ class _StartPlanPageState extends State<StartPlanPage>
                 if (showNotes) {
                   _focusAndSelect(_notesFocus, _notes);
                 } else {
-                  await _save();
+                  await save();
                 }
               },
             ),
@@ -385,10 +381,11 @@ class _StartPlanPageState extends State<StartPlanPage>
     ];
   }
 
-  WorkoutNumberField _weightField() {
-    final exerciseName = _currentExercise?.name ?? '';
+  WorkoutNumberField _weightField(Exercise? exercise, AsyncCallback save) {
+    final exerciseName = exercise?.name ?? '';
+    final cardio = exercise?.kind == 'cardio';
     final showNotes = context.read<Setting>().showNotes;
-    final hasNextField = _cardio || showNotes;
+    final hasNextField = cardio || showNotes;
 
     return _input.field(
       context,
@@ -409,12 +406,12 @@ class _StartPlanPageState extends State<StartPlanPage>
       ),
       action: hasNextField ? TextInputAction.next : TextInputAction.done,
       onSubmitted: (_) async {
-        if (_cardio) {
+        if (cardio) {
           _focusAndSelect(_inclineFocus, _input.incline);
         } else if (showNotes) {
           _focusAndSelect(_notesFocus, _notes);
         } else {
-          await _save();
+          await save();
         }
       },
     );
@@ -426,7 +423,7 @@ class _StartPlanPageState extends State<StartPlanPage>
     onChanged: (value) => setState(() => _unit = value),
   );
 
-  Widget notesField() {
+  Widget notesField(AsyncCallback save) {
     return Selector<Setting, bool>(
       selector: (context, settings) => settings.showNotes,
       builder: (context, showNotes, child) => Visibility(
@@ -441,7 +438,7 @@ class _StartPlanPageState extends State<StartPlanPage>
               maxLines: 3,
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(labelText: context.l10n.notesLabel),
-              onFieldSubmitted: (_) async => await _save(),
+              onFieldSubmitted: (_) async => await save(),
             ),
           ],
         ),
@@ -458,7 +455,7 @@ class _StartPlanPageState extends State<StartPlanPage>
     final settings = context.read<Setting>();
     final difference = DateTime.now().difference(_lastSavedAt!);
 
-    if (_cardio && settings.durationEstimation) {
+    if (_minutesFocus.context != null && settings.durationEstimation) {
       _input.durationInput.fill(difference);
     }
   }
@@ -500,16 +497,12 @@ class _StartPlanPageState extends State<StartPlanPage>
   Stream<StartPlanData> _watchData() =>
       watchStartPlanData(db, widget.plan.id).map((data) {
         if (!mounted) return data;
-        _data = data;
         if (data.plan == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) Navigator.of(context).maybePop();
           });
         }
-        final index = data.exercises.indexWhere(
-          (entry) => entry.exercise.id == _selectedExerciseId,
-        );
-        _select(index < 0 ? _selected : index, rebuild: false);
+        _select(data.exercises, data.defaults, _selectedIndex(data.exercises));
         return data;
       });
 
@@ -517,8 +510,7 @@ class _StartPlanPageState extends State<StartPlanPage>
     if (mounted) setState(() => _stream = _watchData());
   }
 
-  String _displayTitle(BuildContext context) {
-    final plan = _data?.plan ?? widget.plan;
+  String _displayTitle(BuildContext context, Plan plan) {
     if (plan.title?.isNotEmpty == true) return plan.title!;
     return plan.days
         .split(',')
@@ -544,8 +536,7 @@ class _StartPlanPageState extends State<StartPlanPage>
     _notes.text = exerciseSet.notes ?? "";
   }
 
-  Future<void> _save() async {
-    final data = _data;
+  Future<void> _save(StartPlanData? data, int selected) async {
     if (data == null) return;
     final exercises = data.exercises;
     if (_saving) return;
@@ -553,15 +544,29 @@ class _StartPlanPageState extends State<StartPlanPage>
     try {
       if (!_key.currentState!.validate()) return;
       if (exercises.isEmpty) return;
-      if (_selected >= exercises.length) return;
+      if (selected >= exercises.length) return;
 
-      final workout = _data?.workout;
-      if (workout == null) return;
+      final workout = data.workout;
       if (!mounted) return;
 
-      final entry = exercises[_selected];
+      final entry = exercises[selected];
       final exerciseId = entry.exercise.id;
       final exercise = entry.exercise.name;
+      final restMs = entry.exercise.defaultRestDurationMs;
+      final draft = _input.apply(
+        context,
+        ExerciseSetView(
+          cardio: entry.exercise.kind == 'cardio',
+          category: data.categories[exerciseId],
+          created: DateTime.now().toLocal(),
+          image: entry.exercise.image,
+          name: exercise,
+          notes: _notes.text,
+          planId: widget.plan.id,
+          restMs: restMs,
+          unit: _unit,
+        ),
+      );
       double? bodyWeight;
       double? bodyWeightKg;
       final settings = context.read<Setting>();
@@ -570,7 +575,7 @@ class _StartPlanPageState extends State<StartPlanPage>
         final weightEntry = await getLatestBodyWeight(db);
         if (weightEntry != null) {
           bodyWeightKg = weightEntry.weightKg;
-          bodyWeight = displayLoad(_unit, weightEntry.weightKg);
+          bodyWeight = displayLoad(draft.unit, weightEntry.weightKg);
         }
       }
       if (settings.showBodyWeight && bodyWeight == null) {
@@ -597,28 +602,8 @@ class _StartPlanPageState extends State<StartPlanPage>
 
       if (!mounted) return;
       final max = entry.planExercise.maxSets;
-      final restMs = entry.exercise.defaultRestDurationMs;
       final warmupSets = entry.planExercise.warmupSets ?? 0;
       final peTimers = entry.planExercise.timers;
-
-      final created = DateTime.now().toLocal();
-      final category = _data?.categories[exerciseId];
-      if (!mounted) return;
-      final draft = _input.apply(
-        context,
-        ExerciseSetView(
-          bodyWeight: bodyWeight ?? 0,
-          cardio: _cardio,
-          category: category,
-          created: created,
-          image: _image,
-          name: exercise,
-          notes: _notes.text,
-          planId: widget.plan.id,
-          restMs: restMs,
-          unit: _unit,
-        ),
-      );
 
       final count = (data.sets[exerciseId]?.length ?? 0) + 1;
 
@@ -632,23 +617,27 @@ class _StartPlanPageState extends State<StartPlanPage>
       }
 
       final finished =
-          count == (max ?? settings.maxSets) &&
-          _selected < exercises.length - 1;
+          count == (max ?? settings.maxSets) && selected < exercises.length - 1;
 
       final exerciseSet = await insertExerciseSet(
         db,
-        exerciseSet: draft,
+        exerciseSet: draft.copyWith(
+          bodyWeight: bodyWeight,
+          created: DateTime.now().toLocal(),
+        ),
         exerciseId: exerciseId,
         workoutId: workout.id,
         bodyWeightKg: bodyWeightKg,
       );
       if (!mounted) return;
       final messages = positiveReinforcementMessages(context.l10n);
-      setState(() {
-        _update(exerciseSet);
-        _lastSavedAt = DateTime.now();
-      });
-      if (finished) _select(_selected + 1);
+      _lastSavedAt = DateTime.now();
+      if (_selectedExerciseId == exerciseId) {
+        setState(() {
+          _update(exerciseSet);
+          if (finished) _select(exercises, data.defaults, selected + 1);
+        });
+      }
 
       if (!settings.notifications) return;
 
@@ -663,36 +652,30 @@ class _StartPlanPageState extends State<StartPlanPage>
     }
   }
 
-  void _select(int index, {bool rebuild = true}) {
-    final exercises =
-        _data?.exercises ?? widget.initial ?? const <PlanExerciseEntry>[];
-    void select() {
-      if (exercises.isEmpty) {
-        _selectedExerciseId = null;
-        _clear();
-        return;
-      }
-      final selected = index.clamp(0, exercises.length - 1);
-      final exercise = exercises[selected].exercise;
-      if (_selectedExerciseId == exercise.id) return;
-      _selectedExerciseId = exercise.id;
-      final defaults = _data?.defaults[exercise.id];
-      if (defaults != null) {
-        _update(defaults);
-      } else {
-        _clear();
-        final settings = context.read<Setting>();
-        _unit =
-            exercise.kind == 'strength' && settings.strengthUnit != 'last-entry'
-            ? settings.strengthUnit
-            : exercise.displayUnit;
-      }
+  void _select(
+    List<PlanExerciseEntry> exercises,
+    Map<int, ExerciseSetView>? defaults,
+    int index,
+  ) {
+    if (exercises.isEmpty) {
+      _selectedExerciseId = null;
+      _clear();
+      return;
     }
-
-    if (rebuild) {
-      setState(select);
+    final selected = index.clamp(0, exercises.length - 1);
+    final exercise = exercises[selected].exercise;
+    if (_selectedExerciseId == exercise.id) return;
+    _selectedExerciseId = exercise.id;
+    final previous = defaults?[exercise.id];
+    if (previous != null) {
+      _update(previous);
     } else {
-      select();
+      _clear();
+      final settings = context.read<Setting>();
+      _unit =
+          exercise.kind == 'strength' && settings.strengthUnit != 'last-entry'
+          ? settings.strengthUnit
+          : exercise.displayUnit;
     }
   }
 

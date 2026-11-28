@@ -11,12 +11,14 @@ class SearchListScaffold extends StatelessWidget {
     required this.onAdd,
     required this.scroll,
     required this.body,
+    this.showAdd = true,
   });
 
   final String title, addLabel;
   final VoidCallback onAdd;
   final ScrollController scroll;
   final Widget body;
+  final bool showAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -28,19 +30,20 @@ class SearchListScaffold extends StatelessWidget {
           ? AppBar(
               title: Text(title),
               actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: FilledButton.icon(
-                    onPressed: onAdd,
-                    icon: const Icon(Icons.add_rounded),
-                    label: Text(addLabel),
+                if (showAdd)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: FilledButton.icon(
+                      onPressed: onAdd,
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(addLabel),
+                    ),
                   ),
-                ),
               ],
             )
           : null,
       body: body,
-      floatingActionButton: desktop
+      floatingActionButton: desktop || !showAdd
           ? null
           : AppFab(
               onPressed: onAdd,

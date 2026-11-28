@@ -667,6 +667,10 @@
   "@whatsNewTitle": {
     "description": "Title for the in-app changelog page."
   },
+  "viewReleases": "View releases",
+  "@viewReleases": {
+    "description": "Button opening the list of downloadable app versions"
+  },
   "seeReleaseNotes": "See our release notes",
   "@seeReleaseNotes": {
     "description": "Description for the in-app changelog action."

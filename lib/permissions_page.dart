@@ -1,3 +1,4 @@
+import 'package:flex/responsive.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/app_fab.dart';
 import 'package:flex/database/database.dart';
@@ -28,64 +29,69 @@ class _PermissionsPageState extends State<PermissionsPage> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(title: Text(context.l10n.missingPermissions)),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ListView(
-            children: [
-              ListTile(
-                title: Text(context.l10n.restTimersPermissionsMissing),
-                subtitle: Text(context.l10n.restTimersPermissionsOptional),
-              ),
-              ListTile(
-                title: Text(context.l10n.restTimers),
-                onTap: () {
-                  db.settings.update().write(
-                    SettingsCompanion(restTimers: Value(!settings.restTimers)),
-                  );
-                },
-                trailing: Switch(
-                  value: settings.restTimers,
-                  onChanged: (value) => db.settings.update().write(
-                    SettingsCompanion(restTimers: Value(value)),
+        child: ResponsiveContent(
+          maxWidth: 800,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListView(
+              children: [
+                ListTile(
+                  title: Text(context.l10n.restTimersPermissionsMissing),
+                  subtitle: Text(context.l10n.restTimersPermissionsOptional),
+                ),
+                ListTile(
+                  title: Text(context.l10n.restTimers),
+                  onTap: () {
+                    db.settings.update().write(
+                      SettingsCompanion(
+                        restTimers: Value(!settings.restTimers),
+                      ),
+                    );
+                  },
+                  trailing: Switch(
+                    value: settings.restTimers,
+                    onChanged: (value) => db.settings.update().write(
+                      SettingsCompanion(restTimers: Value(value)),
+                    ),
                   ),
                 ),
-              ),
-              ListTile(
-                title: Text(context.l10n.disableBatteryOptimizations),
-                subtitle: Text(context.l10n.batteryOptimizationWarning),
-                onTap: () async => await requestPermission(
-                  Permission.ignoreBatteryOptimizations,
-                ),
-                trailing: Switch(
-                  value: _ignore,
-                  onChanged: (_) async => await requestPermission(
+                ListTile(
+                  title: Text(context.l10n.disableBatteryOptimizations),
+                  subtitle: Text(context.l10n.batteryOptimizationWarning),
+                  onTap: () async => await requestPermission(
                     Permission.ignoreBatteryOptimizations,
                   ),
+                  trailing: Switch(
+                    value: _ignore,
+                    onChanged: (_) async => await requestPermission(
+                      Permission.ignoreBatteryOptimizations,
+                    ),
+                  ),
                 ),
-              ),
-              ListTile(
-                title: Text(context.l10n.scheduleExactAlarm),
-                subtitle: Text(context.l10n.exactAlarmWarning),
-                onTap: () async =>
-                    await requestPermission(Permission.scheduleExactAlarm),
-                trailing: Switch(
-                  value: _schedule,
-                  onChanged: (_) async =>
+                ListTile(
+                  title: Text(context.l10n.scheduleExactAlarm),
+                  subtitle: Text(context.l10n.exactAlarmWarning),
+                  onTap: () async =>
                       await requestPermission(Permission.scheduleExactAlarm),
+                  trailing: Switch(
+                    value: _schedule,
+                    onChanged: (_) async =>
+                        await requestPermission(Permission.scheduleExactAlarm),
+                  ),
                 ),
-              ),
-              ListTile(
-                title: Text(context.l10n.postNotifications),
-                subtitle: Text(context.l10n.notificationBarDescription),
-                onTap: () async =>
-                    await requestPermission(Permission.notification),
-                trailing: Switch(
-                  value: _notify,
-                  onChanged: (_) async =>
+                ListTile(
+                  title: Text(context.l10n.postNotifications),
+                  subtitle: Text(context.l10n.notificationBarDescription),
+                  onTap: () async =>
                       await requestPermission(Permission.notification),
+                  trailing: Switch(
+                    value: _notify,
+                    onChanged: (_) async =>
+                        await requestPermission(Permission.notification),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

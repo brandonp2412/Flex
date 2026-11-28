@@ -1,10 +1,7 @@
-import 'package:flex/constants.dart';
-import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../integration_test/support/mock_tab_controller.dart';
 import '../integration_test/support/graph_fixtures.dart';
 import 'support/test_app.dart';
 
@@ -32,17 +29,8 @@ Future<void> pumpCardioPage(
       length: 1,
       child: ExerciseGraphPage(
         cardio: true,
-        tabCtrl: MockTabController(),
         initialName: 'Run',
         initialUnit: 'km',
-        initialData: await getCardioData(
-          target: 'km',
-          name: 'Run',
-          metric: CardioMetric.pace,
-          period: Period.day,
-          start: null,
-          end: null,
-        ),
       ),
     ),
     surfaceSize: surfaceSize,

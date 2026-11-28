@@ -11,6 +11,36 @@ Future<List<BodyWeight>> getBodyWeightHistory(
   DateTime? end,
   OrderingMode order = OrderingMode.desc,
 }) {
+  return _bodyWeightHistory(
+    database,
+    limit: limit,
+    start: start,
+    end: end,
+    order: order,
+  ).get();
+}
+
+Stream<List<BodyWeight>> watchBodyWeightHistory(
+  AppDatabase database, {
+  int? limit = 20,
+  DateTime? start,
+  DateTime? end,
+  OrderingMode order = OrderingMode.desc,
+}) => _bodyWeightHistory(
+  database,
+  limit: limit,
+  start: start,
+  end: end,
+  order: order,
+).watch();
+
+Selectable<BodyWeight> _bodyWeightHistory(
+  AppDatabase database, {
+  required int? limit,
+  required DateTime? start,
+  required DateTime? end,
+  required OrderingMode order,
+}) {
   final query = database.bodyWeights.select()
     ..orderBy([
       (row) => OrderingTerm(expression: row.timestamp, mode: order),
@@ -20,7 +50,7 @@ Future<List<BodyWeight>> getBodyWeightHistory(
     query.where((row) => row.timestamp.isBiggerOrEqualValue(start));
   if (end != null) query.where((row) => row.timestamp.isSmallerThanValue(end));
   if (limit != null) query.limit(limit);
-  return query.get();
+  return query;
 }
 
 Future<int> recordBodyWeight(

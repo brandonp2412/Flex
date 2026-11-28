@@ -115,6 +115,24 @@ void main() {
     expect(find.widgetWithText(ListTile, 'Show units'), findsOne);
   });
 
+  testWidgets('Plan settings fields reflect database changes while open', (
+    tester,
+  ) async {
+    final harness = await render(tester, surfaceSize: const Size(1200, 900));
+    await tester.tap(find.text('Plans'));
+    await tester.pumpAndSettle();
+
+    await harness.database.settings.update().write(
+      const SettingsCompanion(maxSets: Value(12), warmupSets: Value(4)),
+    );
+    await tester.pumpAndSettle();
+
+    final values = tester
+        .widgetList<TextField>(find.byType(TextField))
+        .map((field) => field.controller?.text);
+    expect(values, containsAll(['12', '4']));
+  });
+
   testWidgets('Settings search finds 1RM and backup actions', (tester) async {
     await render(tester);
     final search = find.descendant(

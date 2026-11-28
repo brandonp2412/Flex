@@ -3,7 +3,6 @@ import 'package:drift/drift.dart' hide isNull;
 import 'package:flex/app_search.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
-import 'package:flex/graph/strength_data.dart';
 import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/main.dart';
@@ -15,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import '../integration_test/support/mock_tab_controller.dart';
 import '../integration_test/support/fixtures.dart';
 import 'support/test_app.dart';
 
@@ -163,23 +161,19 @@ void main() {
     final harness = await FlexTestHarness.create();
     const exercise = 'User entered press';
     final now = DateTime.now().toLocal();
+    for (final (daysAgo, reps, weight) in [(1, 8.0, 90.0), (0, 6.0, 95.0)]) {
+      await insertExerciseSetFixture(
+        harness.database,
+        exercise,
+        reps: reps,
+        weight: weight,
+        created: now.subtract(Duration(days: daysAgo)),
+      );
+    }
 
     await harness.pump(
       tester,
-      ExerciseGraphPage(
-        initialName: exercise,
-        initialUnit: 'kg',
-        initialData: [
-          StrengthData(
-            created: now.subtract(const Duration(days: 1)),
-            reps: 8,
-            unit: 'kg',
-            value: 90,
-          ),
-          StrengthData(created: now, reps: 6, unit: 'kg', value: 95),
-        ],
-        tabCtrl: MockTabController(),
-      ),
+      ExerciseGraphPage(initialName: exercise, initialUnit: 'kg'),
       locale: locale,
       surfaceSize: _narrowSurface,
       textScaler: _largeText,

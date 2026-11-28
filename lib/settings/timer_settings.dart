@@ -9,15 +9,12 @@ import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
 import 'package:flex/settings/progress_position_setting.dart';
-import 'package:flex/timer/timer_state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 List<Widget> getTimerSettings(
   String term,
   Setting settings,
-  DurationInput rest,
   SafeAudioPlayer player,
   BuildContext context,
 ) {
@@ -89,12 +86,7 @@ List<Widget> getTimerSettings(
         value: settings.keepScreenOn,
         icon: Icons.light_mode,
         outlinedIcon: Icons.light_mode_outlined,
-        onChanged: (value) {
-          db.settings.update().write(
-            SettingsCompanion(keepScreenOn: Value(value)),
-          );
-          context.read<TimerState>().setKeepScreenOn(value);
-        },
+        update: (value) => SettingsCompanion(keepScreenOn: Value(value)),
       ),
     ]),
     if (matches([
@@ -124,8 +116,8 @@ List<Widget> getTimerSettings(
                 ],
               ),
               const SizedBox(height: 16),
-              rest.settingsFields(
-                context,
+              DurationSettingsFields(
+                duration: Duration(milliseconds: settings.timerDuration),
                 minutesLabel: l10n.restMinutes,
                 gap: 8,
                 onChanged: (duration) => db.settings.update().write(

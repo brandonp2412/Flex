@@ -1,4 +1,5 @@
 import 'package:flex/platform_page_route.dart';
+import 'package:flex/home_page.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/settings/settings_content.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,21 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final _navigatorKey = GlobalKey<NavigatorState>();
+  VoidCallback? _unregister;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (isDesktopLayout(context) && Navigator.of(context).canPop()) {
+      _unregister ??= HomePage.registerNestedSettings(context);
+    }
+  }
+
+  @override
+  void dispose() {
+    _unregister?.call();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

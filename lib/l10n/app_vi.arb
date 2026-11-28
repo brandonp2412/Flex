@@ -645,6 +645,7 @@
   "@whatsNewTitle": {
     "description": "Title for the in-app changelog page."
   },
+  "viewReleases": "Xem các bản phát hành",
   "seeReleaseNotes": "Xem ghi chú phát hành của chúng tôi",
   "@seeReleaseNotes": {
     "description": "Description for the in-app changelog action."

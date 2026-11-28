@@ -24,7 +24,8 @@ class PlansPageWidget extends StatefulWidget {
 }
 
 class _PlansPageWidgetState extends State<PlansPageWidget> {
-  String _search = '';
+  final _searchController = TextEditingController();
+  String get _search => _searchController.text;
   late Stream<List<PlanOverview>> _plansStream;
   late Stream<List<PlanExerciseEntry>> _exerciseStream;
 
@@ -41,6 +42,7 @@ class _PlansPageWidgetState extends State<PlansPageWidget> {
   @override
   void dispose() {
     dbVersion.removeListener(_onDatabaseChanged);
+    _searchController.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -92,6 +94,7 @@ class _PlansPageWidgetState extends State<PlansPageWidget> {
                 title: context.l10n.navPlans,
                 addLabel: context.l10n.newPlan,
                 onAdd: _addPlan,
+                showAdd: !plansSnapshot.hasData || filtered.isNotEmpty,
                 scroll: _scroll,
                 body: plansSnapshot.hasError || exercisesSnapshot.hasError
                     ? const AppErrorState()
@@ -146,7 +149,10 @@ class _PlansPageWidgetState extends State<PlansPageWidget> {
                             );
                             if (mounted) setState(_selection.clear);
                           },
-                          onChange: (value) => setState(() => _search = value),
+                          textController: _searchController,
+                          onChange: (_) => setState(() {}),
+                          onClearSelection: () => setState(() {}),
+
                           onDelete: () async {
                             final selectedIds = _selection.toList();
                             setState(_selection.clear);

@@ -1,7 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/graph/graphs_page.dart';
 import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flex/main.dart' as app;
@@ -228,23 +226,11 @@ void main() {
           screenshotName: '5_$storeLocale',
           localeIdentifier: appLocale,
           navigateToPage: (context) async {
-            final data = await getStrengthData(
-              target: 'kg',
-              name: screenshotExercise,
-              metric: StrengthMetric.bestWeight,
-              period: Period.day,
-              start: null,
-              end: null,
-              limit: 11,
-            );
-            if (!context.mounted) return;
             navigateTo(
               context: context,
               page: ExerciseGraphPage(
-                tabCtrl: MockTabController(),
-                initialName: 'Shoulder press',
+                initialName: screenshotExercise,
                 initialUnit: 'kg',
-                initialData: data,
               ),
             );
           },

@@ -23,7 +23,9 @@ enum _AppSearchMenuAction {
 
 class AppSearch extends StatefulWidget {
   final Set<Object> controller;
+  final TextEditingController? textController;
   final ValueChanged<String> onChange;
+  final VoidCallback? onClearSelection;
   final VoidCallback onSelectAll;
   final Future<void> Function()? onMerge;
   final Future<void> Function() onDelete;
@@ -31,11 +33,14 @@ class AppSearch extends StatefulWidget {
   final Future<void> Function() onShare;
   final Widget? filter;
   final String? confirmText;
+  final Future<String> Function()? loadConfirmText;
   final String? hintText;
 
   const AppSearch({
     super.key,
     required this.controller,
+    this.textController,
+    this.onClearSelection,
     required this.onChange,
     required this.onSelectAll,
     this.onMerge,
@@ -44,6 +49,7 @@ class AppSearch extends StatefulWidget {
     required this.onShare,
     this.filter,
     this.confirmText,
+    this.loadConfirmText,
     this.hintText,
   });
 
@@ -52,12 +58,19 @@ class AppSearch extends StatefulWidget {
 }
 
 class _AppSearchState extends State<AppSearch> {
-  final TextEditingController _ctrl = TextEditingController();
+  TextEditingController? _ownedController;
+  TextEditingController get _ctrl =>
+      widget.textController ?? (_ownedController ??= TextEditingController());
   final FocusNode _focusNode = FocusNode();
 
   void _clearSelection() {
     widget.controller.clear();
-    widget.onChange(_ctrl.text);
+    final onClear = widget.onClearSelection;
+    if (onClear == null) {
+      widget.onChange(_ctrl.text);
+    } else {
+      onClear();
+    }
   }
 
   Future<void> _handleMenuAction(_AppSearchMenuAction? action) async {
@@ -228,12 +241,16 @@ class _AppSearchState extends State<AppSearch> {
         icon: const Icon(Icons.delete),
         tooltip: context.l10n.deleteSelected,
         onPressed: () async {
+          final loadConfirmText = widget.loadConfirmText;
+          final message = loadConfirmText == null
+              ? widget.confirmText ??
+                    context.l10n.deleteRecordsConfirmation(sel.length)
+              : await loadConfirmText();
+          if (!context.mounted) return;
           final confirmed = await showAppConfirmation(
             context,
             title: context.l10n.confirmDelete,
-            message:
-                widget.confirmText ??
-                context.l10n.deleteRecordsConfirmation(sel.length),
+            message: message,
             actionLabel: context.l10n.actionDelete,
             destructive: true,
           );
@@ -323,7 +340,7 @@ class _AppSearchState extends State<AppSearch> {
   @override
   void dispose() {
     _focusNode.dispose();
-    _ctrl.dispose();
+    _ownedController?.dispose();
     super.dispose();
   }
 }

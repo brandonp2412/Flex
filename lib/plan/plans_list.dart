@@ -109,17 +109,18 @@ class PlansList extends StatelessWidget {
         padding: padding,
         itemBuilder: item,
         onReorderItem: (int old, int idx) async {
-          final temp = filteredPlans[old];
-          filteredPlans.removeAt(old);
-          filteredPlans.insert(idx, temp);
+          final reordered = filteredPlans.toList();
+          final moved = reordered.removeAt(old);
+          reordered.insert(idx, moved);
 
-          await db.transaction(() async {
-            for (int i = 0; i < filteredPlans.length; i++) {
-              final plan = filteredPlans[i];
-              final updated = plan
-                  .toCompanion(false)
-                  .copyWith(sequence: drift.Value(i));
-              await db.update(db.plans).replace(updated);
+          final database = db;
+          await database.batch((batch) {
+            for (var i = 0; i < reordered.length; i++) {
+              batch.update(
+                database.plans,
+                PlansCompanion(sequence: drift.Value(i)),
+                where: (plan) => plan.id.equals(reordered[i].id),
+              );
             }
           });
         },

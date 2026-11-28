@@ -1,11 +1,8 @@
 import 'package:drift/drift.dart';
-import 'package:flex/constants.dart';
-import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../integration_test/support/mock_tab_controller.dart';
 import '../integration_test/support/graph_fixtures.dart';
 import 'support/test_app.dart';
 
@@ -25,18 +22,8 @@ Future<void> pumpStrengthPage(
     DefaultTabController(
       length: 1,
       child: ExerciseGraphPage(
-        tabCtrl: MockTabController(),
         initialName: screenshotExercise,
         initialUnit: 'kg',
-        initialData: await getStrengthData(
-          target: 'kg',
-          name: screenshotExercise,
-          metric: StrengthMetric.bestWeight,
-          period: Period.day,
-          start: null,
-          end: null,
-          limit: 11,
-        ),
         bodyWeight: bodyWeight,
       ),
     ),

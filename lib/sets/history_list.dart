@@ -103,7 +103,7 @@ class _HistoryListState extends HistoryListState<HistoryList> {
   Widget build(BuildContext context) {
     final wide =
         isDesktopLayout(context) && MediaQuery.sizeOf(context).width >= 1200;
-    if (wide) {
+    if (wide && !bodyWeight) {
       final rows = <(int, int?)>[];
       for (var index = 0; index < _current.length; index++) {
         if (index == 0 ||
@@ -181,7 +181,7 @@ class _HistoryListState extends HistoryListState<HistoryList> {
       );
     }
 
-    return ListView.builder(
+    final list = ListView.builder(
       padding: EdgeInsets.only(
         top: widget.topPadding,
         bottom: isDesktopLayout(context) ? 32 : fabListPadding,
@@ -192,5 +192,8 @@ class _HistoryListState extends HistoryListState<HistoryList> {
         return _buildListItem(_current[index], index);
       },
     );
+    return wide && bodyWeight
+        ? ResponsiveContent(maxWidth: 800, child: list)
+        : list;
   }
 }

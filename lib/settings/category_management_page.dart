@@ -14,21 +14,39 @@ class CategoryManagementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final desktop = isDesktopLayout(context);
     final dockVisible =
         !isDesktopLayout(context) &&
         Navigator.of(context) != Navigator.of(context, rootNavigator: true);
     return Scaffold(
       floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-      appBar: AppBar(title: Text(l10n.manageCategories)),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: dockVisible ? bottomNavHeight : 0),
-        child: FloatingActionButton.extended(
-          heroTag: null,
-          onPressed: () => _showCategoryEditor(context),
-          icon: const Icon(Icons.add),
-          label: Text(l10n.newCategory),
-        ),
+      appBar: AppBar(
+        title: Text(l10n.manageCategories),
+        actions: [
+          if (desktop)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: FilledButton.icon(
+                onPressed: () => _showCategoryEditor(context),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.newCategory),
+              ),
+            ),
+        ],
       ),
+      floatingActionButton: desktop
+          ? null
+          : Padding(
+              padding: EdgeInsets.only(
+                bottom: dockVisible ? bottomNavHeight : 0,
+              ),
+              child: FloatingActionButton.extended(
+                heroTag: null,
+                onPressed: () => _showCategoryEditor(context),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.newCategory),
+              ),
+            ),
       body: StreamBuilder<List<CategorySummary>>(
         stream: watchCategorySummaries(),
         builder: (context, snapshot) {

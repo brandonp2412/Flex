@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/app_search.dart';
@@ -21,7 +22,6 @@ import 'package:flex/settings/category_management_page.dart';
 import 'package:flex/settings/settings_category_page.dart';
 import 'package:flex/settings/tab_settings.dart';
 import 'package:flex/settings/whats_new.dart';
-import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/graph/exercise_graph_page.dart';
@@ -35,7 +35,6 @@ import 'package:integration_test/integration_test.dart';
 import 'package:provider/provider.dart';
 
 import 'support/graph_fixtures.dart';
-import 'support/mock_tab_controller.dart';
 import 'support/screenshot_helpers.dart';
 
 class _ScreenshotPermissions extends PermissionHandlerPlatform {
@@ -99,7 +98,7 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
     scene('category-create', 'PlansPage', (tester, context) async {
       navigateTo(context: context, page: const CategoryManagementPage());
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(FloatingActionButton).last);
+      await tester.tap(find.text(context.l10n.newCategory).last);
     });
     scene('about', 'PlansPage', (tester, context) async {
       Navigator.of(
@@ -116,6 +115,13 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
       ).push(MaterialPageRoute(builder: (_) => const PermissionsPage()));
     });
     testWidgets('database-error', (tester) async {
+      tester.binding.platformDispatcher.platformBrightnessTestValue =
+          kIsWeb && Uri.base.queryParameters['theme'] == 'light'
+          ? Brightness.light
+          : Brightness.dark;
+      addTearDown(
+        tester.binding.platformDispatcher.clearPlatformBrightnessTestValue,
+      );
       await appWrapper(tester, localeIdentifier: 'en');
       await tester.pumpAndSettle();
       await tester.pumpWidget(
@@ -155,32 +161,25 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
     route(
       'global-progress',
       'GraphsPage',
-      () async => GlobalProgressPage(tabController: MockTabController()),
+      () async => const GlobalProgressPage(),
     );
     route(
       'exercise-history',
       'GraphsPage',
-      () async => GraphHistoryPage(
-        name: screenshotExercise,
-        initialSets: await getGraphHistory(
-          screenshotExercise,
-          bodyWeight: false,
-        ),
-        tabController: MockTabController(),
-      ),
+      () async => GraphHistoryPage(name: screenshotExercise),
     );
     scene('exercise-notes', 'GraphsPage', (tester, context) async {
-      final notes = TextEditingController(
-        text:
-            'Keep shoulders stable. Increase weight when all sets reach 12 reps.',
-      );
       final navigator = Navigator.of(
         context,
         rootNavigator: !isDesktopLayout(context),
       );
       navigator.push(
         MaterialPageRoute(
-          builder: (_) => GraphNotesPage(controller: notes, onChanged: () {}),
+          builder: (_) => GraphNotesPage(
+            initialNotes:
+                'Keep shoulders stable. Increase weight when all sets reach 12 reps.',
+            onSave: (_) {},
+          ),
         ),
       );
     });
@@ -213,22 +212,17 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('language-setting-dropdown')));
+      await tester.pumpAndSettle();
+      if (kIsWeb) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(seconds: 4)),
+        );
+        await tester.pumpAndSettle();
+      }
     });
 
-    Future<ExerciseGraphPage> strengthGraph() async => ExerciseGraphPage(
-      initialName: screenshotExercise,
-      initialUnit: 'kg',
-      initialData: await getStrengthData(
-        target: 'kg',
-        name: screenshotExercise,
-        metric: StrengthMetric.bestWeight,
-        period: Period.day,
-        start: null,
-        end: null,
-        limit: 11,
-      ),
-      tabCtrl: MockTabController(),
-    );
+    Future<ExerciseGraphPage> strengthGraph() async =>
+        ExerciseGraphPage(initialName: screenshotExercise, initialUnit: 'kg');
 
     scene('graph-options', 'GraphsPage', (tester, context) async {
       final page = await strengthGraph();
@@ -253,12 +247,7 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
     route(
       'graph-empty-exercise',
       'GraphsPage',
-      () async => ExerciseGraphPage(
-        initialName: 'Squat',
-        initialUnit: 'kg',
-        initialData: [],
-        tabCtrl: MockTabController(),
-      ),
+      () async => ExerciseGraphPage(initialName: 'Squat', initialUnit: 'kg'),
     );
     scene('history-filters', 'HistoryPage', (tester, context) async {
       await tester.tap(find.byIcon(Icons.filter_list).first);
@@ -424,8 +413,6 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
       return ExerciseGraphPage(
         initialName: summary.name,
         initialUnit: summary.unit,
-        initialData: await getInitialGraphData(summary),
-        tabCtrl: MockTabController(),
         cardio: true,
       );
     });
@@ -435,26 +422,13 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
       () async => ExerciseGraphPage(
         initialName: 'Weight',
         initialUnit: 'kg',
-        initialData: await getBodyWeightData(
-          target: 'kg',
-          period: Period.day,
-          start: null,
-          end: null,
-          limit: 20,
-        ),
-        tabCtrl: MockTabController(),
         bodyWeight: true,
       ),
     );
     route(
       'body-weight-history',
       'GraphsPage',
-      () async => GraphHistoryPage(
-        name: 'Weight',
-        initialSets: await getBodyWeightGraphHistory(),
-        tabController: MockTabController(),
-        bodyWeight: true,
-      ),
+      () async => GraphHistoryPage(name: 'Weight', bodyWeight: true),
     );
     scene('timer-idle', 'TimerPage', (tester, context) async {
       await context.read<TimerState>().stopTimer();

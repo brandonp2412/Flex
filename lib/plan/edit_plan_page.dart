@@ -119,7 +119,13 @@ class _EditPlanPageState extends State<EditPlanPage>
                     onChanged: (_) => markDirty(),
                   ),
                   const SizedBox(height: 16),
-                  DaySelector(daySwitches: _days, onChanged: markDirty),
+                  DaySelector(
+                    daySwitches: _days,
+                    onToggle: (index) {
+                      markDirty();
+                      setState(() => _days[index] = !_days[index]);
+                    },
+                  ),
                 ],
               ),
             ),

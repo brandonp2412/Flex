@@ -1,11 +1,95 @@
 import 'package:flex/database/exercise_set_view.dart';
 import 'package:flex/plan/session_sets.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/test_app.dart';
 
 void main() {
+  for (final current in [false, true]) {
+    testWidgets(
+      'mouse wheel scrolls ${current ? 'current' : 'previous'} sets horizontally',
+      (tester) async {
+        final harness = await FlexTestHarness.create();
+        final sets = List.generate(
+          12,
+          (id) => ExerciseSetView(
+            bodyWeight: 0,
+            cardio: false,
+            created: DateTime(2026, 11, 4),
+            distance: 0,
+            duration: 0,
+            id: id,
+            name: 'Bench press',
+            reps: 8,
+            unit: 'kg',
+            weight: 100,
+          ),
+        );
+        final parent = ScrollController();
+        addTearDown(parent.dispose);
+        await harness.pump(
+          tester,
+          Scaffold(
+            body: SingleChildScrollView(
+              controller: parent,
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: 380,
+                    height: 80,
+                    child: SessionSets(
+                      exerciseId: 1,
+                      workoutId: 1,
+                      sets: current ? sets : const [],
+                      previous: current ? null : sets,
+                    ),
+                  ),
+                  const SizedBox(height: 1600),
+                ],
+              ),
+            ),
+          ),
+          surfaceSize: const Size(1000, 800),
+        );
+        await tester.pumpAndSettle();
+        final strip = find.byKey(
+          Key(current ? 'session-set-scroll' : 'previous-set-scroll'),
+        );
+        final position = tester
+            .state<ScrollableState>(
+              find.descendant(of: strip, matching: find.byType(Scrollable)),
+            )
+            .position;
+        position.jumpTo(0);
+        await tester.pumpAndSettle();
+        Future<void> wheel(double dy, {double dx = 0}) async {
+          await tester.sendEventToBinding(
+            PointerScrollEvent(
+              kind: PointerDeviceKind.mouse,
+              position: tester.getCenter(strip),
+              scrollDelta: Offset(dx, dy),
+            ),
+          );
+          await tester.pumpAndSettle();
+        }
+
+        await wheel(240);
+        expect(position.pixels, 240);
+        expect(parent.offset, 0);
+        await wheel(-120);
+        expect(position.pixels, 120);
+        await wheel(0, dx: 60);
+        expect(position.pixels, 180);
+        position.jumpTo(position.maxScrollExtent);
+        await tester.pumpAndSettle();
+        await wheel(120);
+        expect(parent.offset, 120);
+      },
+    );
+  }
+
   testWidgets('next pending set aligns with the preview edge after saving', (
     tester,
   ) async {

@@ -70,7 +70,7 @@ class _EditSetPageState extends State<EditSetPage>
   var _categoryCtrl = TextEditingController();
   DateTime _created = DateTime.now().toLocal();
   TextEditingController? _nameCtrl;
-  List<String> _options = [];
+  late final _exerciseNames = watchExerciseNames(db);
   int? restMs;
   String? _image;
   String? _category;
@@ -190,7 +190,11 @@ class _EditSetPageState extends State<EditSetPage>
                 hasFab: !isDesktopLayout(context),
               ),
               children: [
-                autocomplete(showBodyWeight),
+                StreamBuilder<List<String>>(
+                  stream: _exerciseNames,
+                  builder: (context, snapshot) =>
+                      autocomplete(showBodyWeight, snapshot.data ?? const []),
+                ),
                 ...exerciseFields(),
                 const SizedBox(height: 12.0),
                 if (showBodyWeight) ...[
@@ -376,10 +380,10 @@ class _EditSetPageState extends State<EditSetPage>
     onSecondsSubmitted: (_) => selectAll(_input.incline),
   );
 
-  Autocomplete<String> autocomplete(bool showBodyWeight) {
+  Autocomplete<String> autocomplete(bool showBodyWeight, List<String> options) {
     return Autocomplete<String>(
       optionsBuilder: (textEditingValue) =>
-          filterExerciseNameOptions(_options, textEditingValue.text),
+          filterExerciseNameOptions(options, textEditingValue.text),
       onSelected: (option) => onSelected(option, showBodyWeight),
       initialValue: TextEditingValue(text: _name),
       fieldViewBuilder:
@@ -452,11 +456,6 @@ class _EditSetPageState extends State<EditSetPage>
 
     updateFields(widget.exerciseSet, formatOrm: false, rebuild: false);
     _created = widget.exerciseSet.created;
-
-    getExerciseNames(db).then((names) {
-      if (!mounted) return;
-      _options = names;
-    });
   }
 
   void pick() async {

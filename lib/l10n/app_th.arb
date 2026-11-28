@@ -645,6 +645,7 @@
   "@whatsNewTitle": {
     "description": "Title for the in-app changelog page."
   },
+  "viewReleases": "ดูรุ่นที่เผยแพร่",
   "seeReleaseNotes": "ดูบันทึกประจำรุ่น",
   "@seeReleaseNotes": {
     "description": "Description for the in-app changelog action."

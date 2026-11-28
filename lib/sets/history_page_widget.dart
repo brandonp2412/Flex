@@ -42,35 +42,37 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
   final _selection = <int>{};
   final _historyGroups = HistoryGroupingCache();
 
-  String search = '';
+  final _searchController = TextEditingController();
+  String get search => _searchController.text;
   int limit = 100;
 
   @override
   Widget build(BuildContext context) {
-    return SearchListScaffold(
-      title: context.l10n.navHistory,
-      addLabel: context.l10n.addSet,
-      onAdd: onAdd,
-      scroll: scroll,
-      body: ResponsiveContent(
-        maxWidth: dataMaxWidth,
-        desktopPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: StreamBuilder(
-          stream: stream,
-          builder: (context, snapshot) {
-            final rows = snapshot.data;
-            final groupHistory = context.select<Setting, bool>(
-              (settings) => settings.groupHistory,
-            );
-            void select(int id) => setState(() {
-              if (!_selection.remove(id)) _selection.add(id);
-            });
-            void next() {
-              limit += 100;
-              setStream();
-            }
+    return StreamBuilder(
+      stream: stream,
+      builder: (context, snapshot) {
+        final rows = snapshot.data;
+        final groupHistory = context.select<Setting, bool>(
+          (settings) => settings.groupHistory,
+        );
+        void select(int id) => setState(() {
+          if (!_selection.remove(id)) _selection.add(id);
+        });
+        void next() {
+          limit += 100;
+          setStream();
+        }
 
-            return searchListBody(
+        return SearchListScaffold(
+          title: context.l10n.navHistory,
+          addLabel: context.l10n.addSet,
+          onAdd: onAdd,
+          showAdd: search.trim().isEmpty || rows == null || rows.isNotEmpty,
+          scroll: scroll,
+          body: ResponsiveContent(
+            maxWidth: dataMaxWidth,
+            desktopPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            child: searchListBody(
               list: snapshot.hasError
                   ? const AppErrorState()
                   : rows == null
@@ -84,7 +86,7 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
                         message: context.l10n.historyEmptyMessage,
                         actionLabel: context.l10n.addSet,
                         actionIcon: Icons.add_rounded,
-                        onAction: onAdd,
+                        onAction: search.trim().isEmpty ? null : onAdd,
                       ),
                     )
                   : groupHistory
@@ -133,13 +135,12 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
                     _selection.clear();
                   });
                 },
-                onChange: (value) {
-                  setState(() {
-                    search = value;
-                    limit = 100;
-                  });
+                textController: _searchController,
+                onChange: (_) {
+                  limit = 100;
                   setStream();
                 },
+                onClearSelection: () => setState(() {}),
                 onDelete: () async {
                   await deleteExerciseSets(db, _selection);
                   setState(() {
@@ -154,10 +155,10 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
                   ),
                 ),
               ),
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -213,6 +214,7 @@ class _HistoryPageWidgetState extends State<HistoryPageWidget> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     _filters.dispose();
     scroll.dispose();
     super.dispose();

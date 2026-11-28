@@ -1,3 +1,4 @@
+import 'package:flex/desktop_nav_item.dart';
 import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/graph/graph_notes_page.dart';
 import 'package:flex/graph/global_progress_page.dart';
@@ -95,11 +96,7 @@ void main() {
 
     await tester.tap(find.text('Bench press'));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.byWidgetPredicate(
-        (widget) => widget is TextField && widget.readOnly,
-      ),
-    );
+    await tester.tap(find.text('Exercise notes'));
     await tester.pumpAndSettle();
     expectInTab(find.byType(GraphNotesPage));
     navigator.pop();
@@ -130,6 +127,18 @@ void main() {
 
     await tester.tap(find.byKey(const Key('desktop-search-settings')));
     await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<DesktopNavItem>(find.byKey(const Key('desktop-settings')))
+          .selected,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<DesktopNavItem>(find.byKey(const Key('GraphsPage')))
+          .selected,
+      isFalse,
+    );
     expect(find.byType(BackButton), findsOneWidget);
 
     await tester.tap(find.text('Appearance'));

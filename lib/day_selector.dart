@@ -2,23 +2,15 @@ import 'package:flex/constants.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-class DaySelector extends StatefulWidget {
+class DaySelector extends StatelessWidget {
   final List<bool> daySwitches;
-  final VoidCallback? onChanged;
+  final ValueChanged<int> onToggle;
 
-  const DaySelector({super.key, required this.daySwitches, this.onChanged});
-
-  @override
-  State<DaySelector> createState() => _DaySelectorState();
-}
-
-class _DaySelectorState extends State<DaySelector> {
-  void _toggleDay(int index) {
-    setState(() {
-      widget.daySwitches[index] = !widget.daySwitches[index];
-    });
-    widget.onChanged?.call();
-  }
+  const DaySelector({
+    super.key,
+    required this.daySwitches,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +18,7 @@ class _DaySelectorState extends State<DaySelector> {
 
     return Row(
       children: List.generate(weekdays.length, (index) {
-        final isSelected = widget.daySwitches[index];
+        final isSelected = daySwitches[index];
         final dayLabel = localizedWeekday(
           context.l10n,
           weekdays[index],
@@ -57,7 +49,7 @@ class _DaySelectorState extends State<DaySelector> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () => _toggleDay(index),
+                  onTap: () => onToggle(index),
                   child: Center(
                     child: AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 200),

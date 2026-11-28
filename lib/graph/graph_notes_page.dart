@@ -1,21 +1,41 @@
+import 'dart:async';
+
 import 'package:flex/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
-/// A full-screen editor for an exercise's notes.
-///
-/// The text field fills the page and the keyboard sits beneath it, so editing
-/// notes never squashes the graph behind it. Edits are written straight to the
-/// shared [controller]; [onChanged] fires on each keystroke so the caller can
-/// persist them.
-class GraphNotesPage extends StatelessWidget {
-  final TextEditingController controller;
-  final VoidCallback onChanged;
+class GraphNotesPage extends StatefulWidget {
+  final String initialNotes;
+  final ValueChanged<String> onSave;
 
   const GraphNotesPage({
     super.key,
-    required this.controller,
-    required this.onChanged,
+    required this.initialNotes,
+    required this.onSave,
   });
+
+  @override
+  State<GraphNotesPage> createState() => _GraphNotesPageState();
+}
+
+class _GraphNotesPageState extends State<GraphNotesPage> {
+  final _debounceDuration = const Duration(milliseconds: 600);
+  late final _controller = TextEditingController(text: widget.initialNotes);
+  Timer? _debounce;
+
+  void _edit(String text) {
+    _debounce?.cancel();
+    _debounce = Timer(_debounceDuration, () => widget.onSave(text));
+  }
+
+  @override
+  void dispose() {
+    if (_debounce?.isActive == true) {
+      _debounce!.cancel();
+      widget.onSave(_controller.text);
+    }
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +52,8 @@ class GraphNotesPage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: TextField(
-            controller: controller,
-            onChanged: (_) => onChanged(),
+            controller: _controller,
+            onChanged: _edit,
             autofocus: true,
             expands: true,
             maxLines: null,

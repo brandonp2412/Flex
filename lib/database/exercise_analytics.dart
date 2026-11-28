@@ -79,6 +79,7 @@ DateTime _weekStart(DateTime date) {
 }
 
 Future<({Set<_CategoryPeriod> keys, DateTime? cutoff})> _latestGlobalBuckets({
+  required AppDatabase database,
   required Period period,
   required DateTime? start,
   required DateTime? end,
@@ -92,41 +93,41 @@ Future<({Set<_CategoryPeriod> keys, DateTime? cutoff})> _latestGlobalBuckets({
   var offset = 0;
 
   while (keys.length < limit) {
-    final query = db.selectOnly(db.exerciseSets)
+    final query = database.selectOnly(database.exerciseSets)
       ..join([
         innerJoin(
-          db.exercises,
-          db.exercises.id.equalsExp(db.exerciseSets.exerciseId),
+          database.exercises,
+          database.exercises.id.equalsExp(database.exerciseSets.exerciseId),
         ),
         innerJoin(
-          db.categories,
-          db.categories.id.equalsExp(db.exercises.categoryId),
+          database.categories,
+          database.categories.id.equalsExp(database.exercises.categoryId),
         ),
       ])
       ..addColumns([
-        db.exerciseSets.id,
-        db.exerciseSets.timestamp,
-        db.categories.name,
+        database.exerciseSets.id,
+        database.exerciseSets.timestamp,
+        database.categories.name,
       ])
       ..orderBy([
-        OrderingTerm.desc(db.exerciseSets.timestamp),
-        OrderingTerm.desc(db.exerciseSets.id),
+        OrderingTerm.desc(database.exerciseSets.timestamp),
+        OrderingTerm.desc(database.exerciseSets.id),
       ])
       ..limit(pageSize, offset: offset);
 
     if (start != null) {
-      query.where(db.exerciseSets.timestamp.isBiggerOrEqualValue(start));
+      query.where(database.exerciseSets.timestamp.isBiggerOrEqualValue(start));
     }
     if (end != null) {
-      query.where(db.exerciseSets.timestamp.isSmallerThanValue(end));
+      query.where(database.exerciseSets.timestamp.isSmallerThanValue(end));
     }
 
     final rows = await query.get();
     if (rows.isEmpty) break;
 
     for (final row in rows) {
-      final created = row.read(db.exerciseSets.timestamp)!;
-      final category = row.read(db.categories.name)!;
+      final created = row.read(database.exerciseSets.timestamp)!;
+      final category = row.read(database.categories.name)!;
       final key = _categoryPeriodKey(category, created, period);
       if (!keys.add(key)) continue;
 
@@ -263,6 +264,15 @@ Future<List<StrengthData>> getBodyWeightData({
     end: end,
     order: OrderingMode.asc,
   );
+  return _bodyWeightPoints(rows, target, period, limit);
+}
+
+List<StrengthData> _bodyWeightPoints(
+  List<BodyWeight> rows,
+  String target,
+  Period period,
+  int limit,
+) {
   return _groupPeriods(rows, (row) => row.timestamp, period, limit).map((
     group,
   ) {
@@ -276,24 +286,41 @@ Future<List<StrengthData>> getBodyWeightData({
   }).toList();
 }
 
-Future<List<List<ExerciseSetView>>> _exerciseBuckets({
+ExerciseSetQuery _exerciseSeriesQuery({
   required String name,
   required bool cardio,
-  required Period period,
   required DateTime? start,
   required DateTime? end,
-  required int limit,
-}) async {
-  final sets = await ExerciseSetQuery(
-    db,
-    exerciseName: name,
-    cardio: cardio,
-    startDate: start,
-    endDateExclusive: end,
-    order: OrderingMode.asc,
-  ).get();
-  return _groupPeriods(sets, (set) => set.created, period, limit);
-}
+}) => ExerciseSetQuery(
+  db,
+  exerciseName: name,
+  cardio: cardio,
+  startDate: cardio ? start ?? DateTime(0) : start,
+  endDateExclusive: cardio
+      ? end ?? DateTime.now().toLocal().add(const Duration(days: 1))
+      : end,
+  order: OrderingMode.asc,
+);
+
+List<GraphData> _exercisePoints(
+  List<ExerciseSetView> sets,
+  String target,
+  Enum metric,
+  Period period,
+  int limit,
+) => [
+  for (final group in _groupPeriods(sets, (set) => set.created, period, limit))
+    switch (metric) {
+      CardioMetric value => _cardioBucket(group, metric: value, target: target),
+      StrengthMetric value => _strengthBucket(
+        group,
+        metric: value,
+        target: target,
+        category: group.first.category,
+      ),
+      _ => throw ArgumentError.value(metric, 'metric'),
+    },
+];
 
 Future<List<StrengthData>> getStrengthData({
   required String target,
@@ -304,23 +331,19 @@ Future<List<StrengthData>> getStrengthData({
   required DateTime? end,
   required int limit,
 }) async {
-  final groups = await _exerciseBuckets(
+  final sets = await _exerciseSeriesQuery(
     name: name,
     cardio: false,
-    period: period,
     start: start,
     end: end,
-    limit: limit,
-  );
-  return [
-    for (final group in groups)
-      _strengthBucket(
-        group,
-        metric: metric,
-        target: target,
-        category: group.first.category,
-      ),
-  ];
+  ).get();
+  return _exercisePoints(
+    sets,
+    target,
+    metric,
+    period,
+    limit,
+  ).cast<StrengthData>();
 }
 
 double _averageIncline(List<ExerciseSetView> sets) {
@@ -370,21 +393,23 @@ Future<List<CardioData>> getCardioData({
   DateTime? end,
   int limit = 11,
 }) async {
-  final groups = await _exerciseBuckets(
+  final sets = await _exerciseSeriesQuery(
     name: name,
     cardio: true,
-    period: period,
-    start: start ?? DateTime(0),
-    end: end ?? DateTime.now().toLocal().add(const Duration(days: 1)),
-    limit: limit,
-  );
-  return [
-    for (final group in groups)
-      _cardioBucket(group, metric: metric, target: target),
-  ];
+    start: start,
+    end: end,
+  ).get();
+  return _exercisePoints(
+    sets,
+    target,
+    metric,
+    period,
+    limit,
+  ).cast<CardioData>();
 }
 
 Future<List<StrengthData>> getGlobalData({
+  AppDatabase? database,
   required String target,
   required StrengthMetric metric,
   required Period period,
@@ -392,7 +417,9 @@ Future<List<StrengthData>> getGlobalData({
   required DateTime? end,
   required int limit,
 }) async {
+  final source = database ?? db;
   final window = await _latestGlobalBuckets(
+    database: source,
     period: period,
     start: start,
     end: end,
@@ -404,7 +431,7 @@ Future<List<StrengthData>> getGlobalData({
       ? start
       : window.cutoff;
   final allSets = await ExerciseSetQuery(
-    db,
+    source,
     startDate: fetchStart,
     endDateExclusive: end,
   ).get();
@@ -529,76 +556,31 @@ Stream<List<GraphExerciseSummary>> watchGraphs() {
       );
 }
 
-Future<List<ExerciseSetView>> getGraphHistory(
-  String name, {
-  required bool bodyWeight,
-  int limit = 20,
-}) => bodyWeight
-    ? getBodyWeightGraphHistory(limit: limit)
-    : ExerciseSetQuery(db, exerciseName: name, limit: limit).get();
-
 Future<List<ExerciseSetView>> getBodyWeightGraphHistory({
   int limit = 20,
 }) async {
   final rows = await getBodyWeightHistory(db, limit: limit);
-  return rows
-      .map(
-        (row) => ExerciseSetView(
-          id: row.id,
-          cardio: false,
-          created: row.timestamp.toLocal(),
-          image: row.photo,
-          name: 'Weight',
-          reps: 1,
-          unit: 'kg',
-          weight: row.weightKg,
-        ),
-      )
-      .toList();
+  return _bodyWeightHistoryViews(rows);
 }
 
-Future<List<GraphData>> getExerciseGraphData({
-  required String name,
-  required String target,
-  required Enum metric,
-  bool bodyWeight = false,
-  Period period = Period.day,
-  DateTime? start,
-  DateTime? end,
-  required int limit,
-}) => bodyWeight
-    ? getBodyWeightData(
-        target: target,
-        period: period,
-        start: start,
-        end: end,
-        limit: limit,
-      )
-    : switch (metric) {
-        CardioMetric value => getCardioData(
-          name: name,
-          target: target,
-          metric: value,
-          period: period,
-          start: start,
-          end: end,
-          limit: limit,
-        ),
-        StrengthMetric value => getStrengthData(
-          name: name,
-          target: target,
-          metric: value,
-          period: period,
-          start: start,
-          end: end,
-          limit: limit,
-        ),
-        _ => throw ArgumentError.value(metric, 'metric'),
-      };
+List<ExerciseSetView> _bodyWeightHistoryViews(List<BodyWeight> rows) => rows
+    .map(
+      (row) => ExerciseSetView(
+        id: row.id,
+        cardio: false,
+        created: row.timestamp.toLocal(),
+        image: row.photo,
+        name: 'Weight',
+        reps: 1,
+        unit: 'kg',
+        weight: row.weightKg,
+      ),
+    )
+    .toList();
 
-Future<List<GraphData>> getInitialGraphData(GraphExerciseSummary summary) {
+Stream<List<GraphData>> watchInitialGraphData(GraphExerciseSummary summary) {
   final cardio = summary.cardio && !summary.bodyWeight;
-  return getExerciseGraphData(
+  return watchExerciseGraphData(
     name: summary.name,
     target: summary.unit,
     bodyWeight: summary.bodyWeight,
@@ -608,3 +590,75 @@ Future<List<GraphData>> getInitialGraphData(GraphExerciseSummary summary) {
     limit: cardio ? 11 : 20,
   );
 }
+
+Stream<List<ExerciseSetView>> watchGraphHistory(
+  String name, {
+  required bool bodyWeight,
+  required int limit,
+}) => bodyWeight
+    ? watchBodyWeightHistory(db, limit: limit).map(_bodyWeightHistoryViews)
+    : ExerciseSetQuery(db, exerciseName: name, limit: limit).watch();
+
+Stream<List<GraphData>> watchExerciseGraphData({
+  required String name,
+  required String target,
+  required Enum metric,
+  bool bodyWeight = false,
+  Period period = Period.day,
+  DateTime? start,
+  DateTime? end,
+  required int limit,
+}) => bodyWeight
+    ? watchBodyWeightHistory(
+        db,
+        limit: null,
+        start: start,
+        end: end,
+        order: OrderingMode.asc,
+      ).map((rows) => _bodyWeightPoints(rows, target, period, limit))
+    : _exerciseSeriesQuery(
+        name: name,
+        cardio: metric is CardioMetric,
+        start: start,
+        end: end,
+      ).watch().map(
+        (sets) => _exercisePoints(sets, target, metric, period, limit),
+      );
+
+Stream<({List<StrengthData> data, List<String> categories})> watchGlobalData({
+  required AppDatabase database,
+  required String target,
+  required StrengthMetric metric,
+  required Period period,
+  required DateTime? start,
+  required DateTime? end,
+  required int limit,
+}) => database
+    .customSelect(
+      'SELECT 1',
+      readsFrom: {
+        database.exerciseSets,
+        database.exercises,
+        database.categories,
+      },
+    )
+    .watch()
+    .asyncMap(
+      (_) => database.transaction(() async {
+        final data = await getGlobalData(
+          database: database,
+          target: target,
+          metric: metric,
+          period: period,
+          start: start,
+          end: end,
+          limit: limit,
+        );
+        final categories =
+            await (database.categories.select()
+                  ..orderBy([(row) => OrderingTerm.asc(row.name)]))
+                .map((row) => row.name)
+                .get();
+        return (data: data, categories: categories);
+      }),
+    );

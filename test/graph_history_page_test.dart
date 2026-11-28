@@ -1,13 +1,11 @@
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/database/body_weight_repository.dart';
-import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/weight_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flex/graph/graph_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../integration_test/support/mock_tab_controller.dart';
 import '../integration_test/support/fixtures.dart';
 import 'support/test_app.dart';
 
@@ -30,21 +28,7 @@ void main() {
         weight: 5,
         created: testNow,
       );
-      final sets = (await ExerciseSetQuery(
-        harness.database,
-        search: 'Graph history test',
-      ).get()).where((set) => set.name == 'Graph history test').toList();
-      final tabController = MockTabController();
-      addTearDown(tabController.dispose);
-
-      await harness.pump(
-        tester,
-        GraphHistoryPage(
-          name: 'Graph history test',
-          initialSets: sets,
-          tabController: tabController,
-        ),
-      );
+      await harness.pump(tester, GraphHistoryPage(name: 'Graph history test'));
       await tester.pumpAndSettle();
 
       final list = tester.widget<ListView>(find.byType(ListView));
@@ -76,10 +60,10 @@ void main() {
     },
   );
   testWidgets(
-    'refresh keeps exact exercise history when similar names are newer',
+    'watch updates exact exercise history when similar names are newer',
     (WidgetTester tester) async {
       final harness = await FlexTestHarness.create();
-      final exact = await insertExerciseSetFixture(
+      await insertExerciseSetFixture(
         harness.database,
         'Press',
         reps: 5,
@@ -96,30 +80,18 @@ void main() {
         );
       }
 
-      final initialSets = await ExerciseSetQuery(
+      await harness.pump(tester, const GraphHistoryPage(name: 'Press'));
+      await tester.pumpAndSettle();
+      await insertExerciseSetFixture(
         harness.database,
-        exerciseName: 'Press',
-      ).get();
-      expect(initialSets.map((set) => set.id), contains(exact.id));
-
-      final tabController = TabController(
-        length: 4,
-        initialIndex: 1,
-        vsync: tester,
+        'Press',
+        reps: 10,
+        weight: 90,
+        created: testNow,
       );
-      addTearDown(tabController.dispose);
-
-      await harness.pump(
-        tester,
-        GraphHistoryPage(
-          name: 'Press',
-          initialSets: initialSets,
-          tabController: tabController,
-        ),
-      );
-      tabController.animateTo(2, duration: const Duration(milliseconds: 1));
       await tester.pumpAndSettle();
 
+      expect(find.text('10 × 90 kg'), findsOneWidget);
       expect(find.text('5 × 100 kg'), findsOneWidget);
       expect(find.text('No history yet for Press'), findsNothing);
     },
@@ -142,16 +114,9 @@ void main() {
     );
     expect(unrelated.id, weightId);
 
-    final tabController = MockTabController();
-    addTearDown(tabController.dispose);
     await harness.pump(
       tester,
-      GraphHistoryPage(
-        name: 'Weight',
-        initialSets: await getBodyWeightGraphHistory(),
-        tabController: tabController,
-        bodyWeight: true,
-      ),
+      GraphHistoryPage(name: 'Weight', bodyWeight: true),
     );
     await tester.pumpAndSettle();
 
@@ -210,16 +175,9 @@ void main() {
       weightKg: 80,
     );
     expect(unrelated.id, weightId);
-    final tabController = MockTabController();
-    addTearDown(tabController.dispose);
     await harness.pump(
       tester,
-      GraphHistoryPage(
-        name: 'Weight',
-        initialSets: await getBodyWeightGraphHistory(),
-        tabController: tabController,
-        bodyWeight: true,
-      ),
+      GraphHistoryPage(name: 'Weight', bodyWeight: true),
       surfaceSize: const Size(1200, 800),
     );
     await tester.pumpAndSettle();

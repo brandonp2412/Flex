@@ -1,6 +1,7 @@
 import 'package:flex/constants.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/plan/set_chip.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -103,6 +104,28 @@ class _SessionSetsState extends State<SessionSets> {
     );
   }
 
+  void _scrollWithMouseWheel(BuildContext context, PointerSignalEvent event) {
+    if (event is! PointerScrollEvent ||
+        event.kind != PointerDeviceKind.mouse ||
+        event.scrollDelta.dx != 0 ||
+        event.scrollDelta.dy == 0) {
+      return;
+    }
+    final position = Scrollable.of(context).position;
+    if (!position.physics.shouldAcceptUserOffset(position)) return;
+    final delta = position.axisDirection == AxisDirection.left
+        ? -event.scrollDelta.dy
+        : event.scrollDelta.dy;
+    final target = (position.pixels + delta).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if (target == position.pixels) return;
+    GestureBinding.instance.pointerSignalResolver.register(event, (_) {
+      position.pointerScroll(delta);
+    });
+  }
+
   // The scrolling region fills the space beside Save. When the keyboard is
   // visible, short strips must align their actual cards to its trailing edge;
   // otherwise a blank viewport can remain between the cards and the FAB.
@@ -120,17 +143,23 @@ class _SessionSetsState extends State<SessionSets> {
         controller: controller,
         scrollDirection: Axis.horizontal,
         padding: padding,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: alignToSave && viewport.hasBoundedWidth
-                ? viewport.maxWidth
-                : 0,
-          ),
-          child: Row(
-            mainAxisAlignment: alignToSave
-                ? MainAxisAlignment.end
-                : MainAxisAlignment.start,
-            children: children,
+        child: Builder(
+          builder: (context) => Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerSignal: (event) => _scrollWithMouseWheel(context, event),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: alignToSave && viewport.hasBoundedWidth
+                    ? viewport.maxWidth
+                    : 0,
+              ),
+              child: Row(
+                mainAxisAlignment: alignToSave
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
+                children: children,
+              ),
+            ),
           ),
         ),
       ),

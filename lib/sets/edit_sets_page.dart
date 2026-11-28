@@ -40,19 +40,39 @@ class _EditSetsPageState extends State<EditSetsPage>
   bool _unitChanged = false;
   bool _saving = false;
   String? _category;
-  String? _oldNames;
-  String? _oldReps;
-  String? _oldWeights;
-  String? _oldBody;
-  String? _oldCreated;
-  String? _oldDist;
-  String? _oldMin;
-  String? _oldSec;
-  String? _oldInc;
-  String? _oldCat;
+  late final _examples = ExerciseSetQuery(
+    db,
+    ids: widget.ids,
+    limit: 3,
+  ).watch();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => StreamBuilder<List<ExerciseSetView>>(
+    stream: _examples,
+    builder: (context, snapshot) =>
+        _buildEditor(context, snapshot.data ?? const []),
+  );
+
+  Widget _buildEditor(BuildContext context, List<ExerciseSetView> examples) {
+    final units = examples.map((set) => set.unit).toSet();
+    final unit = _unitChanged
+        ? _unit
+        : (units.length == 1 ? units.single : null);
+    final cardio = _kindChanged ? _cardio : examples.firstOrNull?.cardio;
+    final dateFormat = context.select<Setting, String>(
+      (settings) => settings.longDateFormat,
+    );
+
+    String? hint(Object? Function(ExerciseSetView) value) {
+      final text = examples.map(value).nonNulls.join(', ');
+      return text.isEmpty ? null : text;
+    }
+
+    final names = examples.map((set) => set.name).toSet().join(', ');
+    final dates = examples
+        .map((set) => formatWorkoutDate(context, set.created, dateFormat))
+        .toSet()
+        .join(', ');
     final l10n = context.l10n;
     return guardUnsavedChanges(
       child: editorScaffold(
@@ -78,7 +98,7 @@ class _EditSetsPageState extends State<EditSetsPage>
             },
           ),
         ],
-        onSave: save,
+        onSave: () => save(cardio: cardio == true, unit: unit),
         body: editorFields(
           context,
           formKey: _key,
@@ -87,13 +107,13 @@ class _EditSetsPageState extends State<EditSetsPage>
               controller: _name,
               decoration: InputDecoration(
                 labelText: l10n.nameLabel,
-                hintText: _oldNames,
+                hintText: names,
               ),
               textCapitalization: TextCapitalization.sentences,
               onChanged: (_) => markDirty(),
             ),
             const SizedBox(height: 12),
-            exerciseKindSelector(context, _cardio, (value) {
+            exerciseKindSelector(context, cardio, (value) {
               markDirty();
               setState(() {
                 _kindChanged = true;
@@ -101,54 +121,54 @@ class _EditSetsPageState extends State<EditSetsPage>
               });
             }, allowEmpty: true),
             const SizedBox(height: 12),
-            if (_cardio == true) ...[
-              if (isWeightUnit(_unit))
+            if (cardio == true) ...[
+              if (isWeightUnit(unit))
                 _input.field(
                   context,
                   WorkoutMetric.weight,
-                  hint: _oldWeights,
+                  hint: hint((set) => set.weight),
                   onChanged: (_) => markDirty(),
                 )
               else
                 _input.field(
                   context,
                   WorkoutMetric.distance,
-                  hint: _oldDist,
+                  hint: hint((set) => set.distance),
                   onChanged: (_) => markDirty(),
                 ),
               const SizedBox(height: 12),
               _input.durationFields(
                 context,
-                minutesHint: _oldMin,
-                secondsHint: _oldSec,
+                minutesHint: hint((set) => set.duration.floor()),
+                secondsHint: hint((set) => ((set.duration * 60) % 60).floor()),
                 onChanged: (_) => markDirty(),
               ),
               const SizedBox(height: 12),
               _input.field(
                 context,
                 WorkoutMetric.incline,
-                hint: _oldInc,
+                hint: hint((set) => set.incline),
                 onChanged: (_) => markDirty(),
               ),
             ],
-            if (_cardio == false || _cardio == null) ...[
+            if (cardio != true) ...[
               _input.field(
                 context,
                 WorkoutMetric.reps,
-                hint: _oldReps,
+                hint: hint((set) => set.reps),
                 onChanged: (_) => markDirty(),
               ),
               const SizedBox(height: 12),
               _input.field(
                 context,
                 WorkoutMetric.weight,
-                label: switch (_unit) {
+                label: switch (unit) {
                   null => l10n.weightLabel,
-                  _ when isWeightUnit(_unit) => l10n.weightLabel,
-                  'kcal' => l10n.amountWithUnit(_unit!),
-                  _ => l10n.distanceWithUnit(_unit!),
+                  _ when isWeightUnit(unit) => l10n.weightLabel,
+                  'kcal' => l10n.amountWithUnit(unit),
+                  _ => l10n.distanceWithUnit(unit),
                 },
-                hint: _oldWeights,
+                hint: hint((set) => set.weight),
                 onChanged: (_) => markDirty(),
               ),
             ],
@@ -160,7 +180,7 @@ class _EditSetsPageState extends State<EditSetsPage>
                   controller: _body,
                   decoration: InputDecoration(
                     labelText: l10n.bodyWeightLabel,
-                    hintText: _oldBody,
+                    hintText: hint((set) => set.bodyWeight),
                   ),
                   onChanged: (_) => markDirty(),
                 ),
@@ -169,7 +189,7 @@ class _EditSetsPageState extends State<EditSetsPage>
             ),
             const SizedBox(height: 12),
             WorkoutUnitField(
-              unit: _unit,
+              unit: unit,
               onChanged: (value) {
                 markDirty();
                 setState(() {
@@ -181,14 +201,14 @@ class _EditSetsPageState extends State<EditSetsPage>
             const SizedBox(height: 12),
             WorkoutCategoryField(
               initial: _category,
-              hint: _oldCat,
+              hint: hint((set) => set.category),
               keepHidden: true,
               onChanged: (value) {
                 markDirty();
                 setState(() => _category = value);
               },
             ),
-            workoutDateField(context, _created, _selectDate, hint: _oldCreated),
+            workoutDateField(context, _created, _selectDate, hint: dates),
           ],
         ),
       ),
@@ -204,42 +224,7 @@ class _EditSetsPageState extends State<EditSetsPage>
     super.dispose();
   }
 
-  @override
-  void initState() {
-    super.initState();
-    final settings = context.read<Setting>();
-
-    ExerciseSetQuery(db, ids: widget.ids, limit: 3).get().then((exerciseSets) {
-      if (!mounted || exerciseSets.isEmpty) return;
-      setState(() {
-        if (!_kindChanged) _cardio = exerciseSets.first.cardio;
-        final units = exerciseSets
-            .map((exerciseSet) => exerciseSet.unit)
-            .toSet();
-        if (!_unitChanged) _unit = units.length == 1 ? units.single : null;
-        String? hint(Object? Function(ExerciseSetView) value) {
-          final text = exerciseSets.map(value).nonNulls.join(', ');
-          return text.isEmpty ? null : text;
-        }
-
-        _oldNames = hint((set) => set.name);
-        _oldReps = hint((set) => set.reps);
-        _oldWeights = hint((set) => set.weight);
-        _oldBody = hint((set) => set.bodyWeight);
-        _oldCreated = hint(
-          (set) =>
-              formatWorkoutDate(context, set.created, settings.longDateFormat),
-        );
-        _oldDist = hint((set) => set.distance);
-        _oldMin = hint((set) => set.duration.floor());
-        _oldSec = hint((set) => ((set.duration * 60) % 60).floor());
-        _oldInc = hint((set) => set.incline);
-        _oldCat = hint((set) => set.category);
-      });
-    });
-  }
-
-  Future<void> save() async {
+  Future<void> save({required bool cardio, required String? unit}) async {
     if (_saving || !_key.currentState!.validate()) return;
     _saving = true;
     final navigator = Navigator.of(context, rootNavigator: true);
@@ -256,7 +241,6 @@ class _EditSetsPageState extends State<EditSetsPage>
       final name = _name.text.trim();
       final category = _category?.trim();
       final preferredStrengthUnit = context.read<Setting>().strengthUnit;
-      final cardio = _cardio == true;
       await bulkEditExerciseSets(
         db,
         widget.ids,
@@ -266,10 +250,10 @@ class _EditSetsPageState extends State<EditSetsPage>
         category: category == null || category.isEmpty ? null : category,
         timestamp: _created,
         reps: cardio ? null : parseDisplayNumber(context, _input.reps.text),
-        weight: !cardio || isWeightUnit(_unit)
+        weight: !cardio || isWeightUnit(unit)
             ? parseDisplayNumber(context, _input.weight.text)
             : null,
-        distance: cardio && !isWeightUnit(_unit)
+        distance: cardio && !isWeightUnit(unit)
             ? parseDisplayNumber(context, _input.distance.text)
             : null,
         durationMs: cardio && !_input.durationInput.isEmpty

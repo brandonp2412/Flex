@@ -1,4 +1,5 @@
 import 'package:flex/graph/graph_data.dart';
+import 'package:flex/graph/flex_line_chart.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/app_search.dart';
 import 'package:flex/bottom_nav.dart';
@@ -312,24 +313,24 @@ void main() {
     }
     await pumpGraphsPage(tester, harness, surfaceSize: const Size(1400, 900));
 
-    Future<List<dynamic>> peekFuture() => tester
-        .widget<FutureBuilder<List<GraphData>>>(
-          find.byType(FutureBuilder<List<GraphData>>),
+    Stream<List<GraphData>> peekStream() => tester
+        .widget<StreamBuilder<List<GraphData>>>(
+          find.byType(StreamBuilder<List<GraphData>>),
         )
-        .future!;
+        .stream!;
 
-    final initial = peekFuture();
+    final initial = peekStream();
     await tester.enterText(find.byType(TextField).first, 'Ben');
     await tester.pumpAndSettle();
-    expect(identical(initial, peekFuture()), isTrue);
+    expect(identical(initial, peekStream()), isTrue);
 
     await tester.enterText(find.byType(TextField).first, 'Squat');
     await tester.pumpAndSettle();
-    expect(identical(initial, peekFuture()), isFalse);
+    expect(identical(initial, peekStream()), isFalse);
 
     await tester.enterText(find.byType(TextField).first, 'Bench');
     await tester.pumpAndSettle();
-    final benchBeforeUpdate = peekFuture();
+    final benchBeforeUpdate = peekStream();
     await insertExerciseSetFixture(
       harness.database,
       'Bench',
@@ -338,7 +339,12 @@ void main() {
       created: DateTime(2026, 9, 3),
     );
     await tester.pumpAndSettle();
-    expect(identical(benchBeforeUpdate, peekFuture()), isFalse);
+    expect(identical(benchBeforeUpdate, peekStream()), isTrue);
+    final preview = find.descendant(
+      of: find.byKey(const Key('graphs-peek-preview')),
+      matching: find.byType(FlexLineChart),
+    );
+    expect(tester.widget<FlexLineChart>(preview).points.last.y, 105);
   });
 
   testWidgets('GraphsPage settings', (WidgetTester tester) async {

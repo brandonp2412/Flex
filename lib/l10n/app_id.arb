@@ -645,6 +645,7 @@
   "@whatsNewTitle": {
     "description": "Title for the in-app changelog page."
   },
+  "viewReleases": "Lihat rilis",
   "seeReleaseNotes": "Lihat catatan rilis kami",
   "@seeReleaseNotes": {
     "description": "Description for the in-app changelog action."

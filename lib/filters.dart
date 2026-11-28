@@ -41,7 +41,7 @@ class _FiltersState extends State<Filters> {
       builder: (context) => AlertDialog(
         title: Text(context.l10n.filters),
         content: SizedBox(
-          width: double.maxFinite,
+          width: 440,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,

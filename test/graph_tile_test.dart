@@ -4,7 +4,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../integration_test/support/mock_tab_controller.dart';
 import 'support/test_app.dart';
 
 void main() {
@@ -15,7 +14,6 @@ void main() {
       Scaffold(
         resizeToAvoidBottomInset: false,
         body: GraphTile(
-          tabCtrl: MockTabController(),
           onSelect: (value) => null,
           selected: const {},
           exerciseSet: GraphExerciseSummary(
@@ -46,7 +44,6 @@ void main() {
       tester,
       Scaffold(
         body: GraphTile(
-          tabCtrl: MockTabController(),
           onSelect: (value) => null,
           selected: const {},
           exerciseSet: GraphExerciseSummary(
@@ -83,7 +80,6 @@ void main() {
       tester,
       Scaffold(
         body: GraphTile(
-          tabCtrl: MockTabController(),
           onSelect: (value) => null,
           onEdit: () => edited = true,
           onDelete: () async {},

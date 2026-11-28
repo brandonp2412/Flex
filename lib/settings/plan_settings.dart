@@ -12,8 +12,6 @@ List<Widget> getPlanSettings(
   BuildContext context,
   String term,
   Setting settings,
-  TextEditingController max,
-  TextEditingController warmup,
 ) {
   final l10n = context.l10n;
   bool matches(Iterable<String> values) => settingMatches(term, values);
@@ -23,11 +21,10 @@ List<Widget> getPlanSettings(
         padding: settingsPadding,
         child: Tooltip(
           message: l10n.warmupSetsDescription,
-          child: TextField(
-            controller: warmup,
-            decoration: InputDecoration(labelText: l10n.warmupSets),
-            keyboardType: const TextInputType.numberWithOptions(decimal: false),
-            onTap: () => selectAll(warmup),
+          child: _SetCountField(
+            key: const ValueKey('warmupSets'),
+            value: settings.warmupSets ?? 0,
+            label: l10n.warmupSets,
             onChanged: (value) => db.settings.update().write(
               SettingsCompanion(warmupSets: Value(int.tryParse(value) ?? 0)),
             ),
@@ -39,11 +36,10 @@ List<Widget> getPlanSettings(
         padding: settingsPadding,
         child: Tooltip(
           message: l10n.setsPerExerciseDescription,
-          child: TextField(
-            controller: max,
-            decoration: InputDecoration(labelText: l10n.setsPerExerciseMax),
-            keyboardType: const TextInputType.numberWithOptions(decimal: false),
-            onTap: () => selectAll(max),
+          child: _SetCountField(
+            key: const ValueKey('maxSets'),
+            value: settings.maxSets,
+            label: l10n.setsPerExerciseMax,
             onChanged: (value) {
               final parsed = int.tryParse(value);
               if (parsed != null && parsed > 0 && parsed <= 20) {
@@ -154,4 +150,60 @@ List<Widget> getPlanSettings(
         ),
       ),
   ];
+}
+
+class _SetCountField extends StatefulWidget {
+  const _SetCountField({
+    super.key,
+    required this.value,
+    required this.label,
+    required this.onChanged,
+  });
+
+  final int value;
+  final String label;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_SetCountField> createState() => _SetCountFieldState();
+}
+
+class _SetCountFieldState extends State<_SetCountField> {
+  late final _controller = TextEditingController(text: widget.value.toString());
+  final _focus = FocusNode();
+
+  void _sync() {
+    if (!_focus.hasFocus && int.tryParse(_controller.text) != widget.value) {
+      _controller.text = widget.value.toString();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(_sync);
+  }
+
+  @override
+  void didUpdateWidget(_SetCountField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value) _sync();
+  }
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    controller: _controller,
+    focusNode: _focus,
+    decoration: InputDecoration(labelText: widget.label),
+    keyboardType: const TextInputType.numberWithOptions(decimal: false),
+    onTap: () => selectAll(_controller),
+    onChanged: widget.onChanged,
+  );
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 }

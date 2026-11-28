@@ -645,6 +645,7 @@
   "@whatsNewTitle": {
     "description": "Title for the in-app changelog page."
   },
+  "viewReleases": "مشاهده نسخه‌ها",
   "seeReleaseNotes": "یادداشت‌های انتشار را ببینید",
   "@seeReleaseNotes": {
     "description": "Description for the in-app changelog action."

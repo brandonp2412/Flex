@@ -1,4 +1,5 @@
-import 'package:flex/database/categories.dart';
+import 'package:flex/error_state.dart';
+import 'package:flex/main.dart';
 import 'package:flex/graph/graph_metric_chips.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
@@ -17,9 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class GlobalProgressPage extends StatefulWidget {
-  final TabController tabController;
-
-  const GlobalProgressPage({super.key, required this.tabController});
+  const GlobalProgressPage({super.key});
 
   @override
   State<GlobalProgressPage> createState() => _GlobalProgressPageState();
@@ -27,26 +26,26 @@ class GlobalProgressPage extends StatefulWidget {
 
 class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
   StrengthMetric metric = StrengthMetric.bestWeight;
-  List<StrengthData> data = [];
-  List<String?> categories = [];
-  Map<StrengthDataLookupKey, StrengthData> _tooltipData = const {};
+  late Stream<({List<StrengthData> data, List<String> categories})> _data;
   Period period = Period.day;
+
+  @override
+  int limit = 100;
+
+  @override
+  void onLimitChanged(int value) => limit = value;
 
   @override
   void initState() {
     super.initState();
     targetUnit = 'kg';
-    limit = 100;
     setData();
   }
 
   @override
-  TabController get graphTabController => widget.tabController;
-
-  @override
-  Future<void> setData() async {
-    final request = beginDataRequest();
-    final newData = await getGlobalData(
+  void setData() {
+    _data = watchGlobalData(
+      database: db,
       target: targetUnit,
       metric: metric,
       period: period,
@@ -54,13 +53,6 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
       end: end,
       limit: limit,
     );
-    final newCategories = await getCategories();
-    if (!isCurrentDataRequest(request)) return;
-    setState(() {
-      data = newData;
-      categories = newCategories;
-      _tooltipData = indexStrengthDataByCategoryAndDate(newData);
-    });
   }
 
   List<Color> generateChartColors(BuildContext context, int count) {
@@ -77,7 +69,22 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => StreamBuilder(
+    stream: _data,
+    builder: (context, snapshot) => _buildProgress(
+      context,
+      snapshot.data?.data ?? const [],
+      snapshot.data?.categories ?? const [],
+      snapshot.hasError,
+    ),
+  );
+
+  Widget _buildProgress(
+    BuildContext context,
+    List<StrengthData> data,
+    List<String> categories,
+    bool hasError,
+  ) {
     final settings = context.watch<Setting>();
 
     final chartColors = generateChartColors(context, categories.length);
@@ -94,7 +101,7 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
       final categoryData = dataByCategory[category] ?? const <StrengthData>[];
       chartSeries.add(
         FlexLineChartSeries(
-          name: category ?? context.l10n.none,
+          name: category,
           color: chartColors[index],
           points: [
             for (final row in categoryData)
@@ -108,6 +115,7 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
       );
     }
 
+    final tooltipData = indexStrengthDataByCategoryAndDate(data);
     final lineChart = FlexGroupedLineChart(
       series: chartSeries,
       xLabels: [
@@ -115,7 +123,7 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
           formatDisplayDate(context, date, settings.shortDateFormat),
       ],
       tooltipText: (seriesIndex, xIndex) =>
-          tooltipText(seriesIndex, xIndex, allDates),
+          tooltipText(seriesIndex, xIndex, allDates, categories, tooltipData),
     );
 
     final desktop = isDesktopLayout(context);
@@ -205,7 +213,9 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
               const SizedBox(height: 8),
               Expanded(
                 flex: 3,
-                child: data.isEmpty
+                child: hasError
+                    ? const AppErrorState()
+                    : data.isEmpty
                     ? AppEmptyState(
                         icon: Icons.show_chart_rounded,
                         title: context.l10n.noDataYet,
@@ -253,35 +263,34 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
               Flexible(
                 child: SingleChildScrollView(
                   child: Wrap(
-                    spacing: 16.0,
-                    runSpacing: 8.0,
+                    spacing: 8.0,
+                    runSpacing: 4.0,
                     alignment: WrapAlignment.center,
                     children: chartColors
                         .asMap()
                         .entries
                         .map(
                           (entry) => SizedBox(
-                            width: 120,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                RadioGroup<int>(
-                                  groupValue: 1,
-                                  onChanged: (value) {},
-                                  child: Radio<int>(
-                                    value: 1,
-                                    fillColor: WidgetStateProperty.resolveWith(
-                                      (states) => entry.value,
+                            width: desktop ? 120 : 100,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.radio_button_checked,
+                                    color: entry.value,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      categories[entry.key],
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                ),
-                                Flexible(
-                                  child: Text(
-                                    categories[entry.key] ?? context.l10n.none,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         )
@@ -306,7 +315,13 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
       ? strengthUnitMenuItems(context.l10n)
       : const [];
 
-  String tooltipText(int seriesIndex, int xIndex, List<DateTime> allDates) {
+  String tooltipText(
+    int seriesIndex,
+    int xIndex,
+    List<DateTime> allDates,
+    List<String> categories,
+    Map<StrengthDataLookupKey, StrengthData> tooltipData,
+  ) {
     if (seriesIndex < 0 ||
         seriesIndex >= categories.length ||
         xIndex < 0 ||
@@ -316,7 +331,7 @@ class _GlobalProgressPageState extends GraphFilterState<GlobalProgressPage> {
 
     final category = categories[seriesIndex];
     final touchedDate = allDates[xIndex];
-    final row = _tooltipData[(category: category, created: touchedDate)];
+    final row = tooltipData[(category: category, created: touchedDate)];
     if (row == null) return '';
     final formattedValue = formatDisplayNumber(
       context,

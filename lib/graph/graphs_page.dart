@@ -80,23 +80,12 @@ class GraphsPageState extends State<GraphsPage>
     with AutomaticKeepAliveClientMixin {
   late final Stream<List<GraphExerciseSummary>> _stream = watchGraphs();
 
-  GraphExerciseSummary? _peekSummary;
-  Future<List<GraphData>>? _peekFuture;
-
-  Future<List<GraphData>> _peekData(GraphExerciseSummary summary) {
-    if (!identical(_peekSummary, summary)) {
-      _peekSummary = summary;
-      _peekFuture = getInitialGraphData(summary);
-    }
-    return _peekFuture!;
-  }
-
   final _selection = <String>{};
   final GlobalKey<NavigatorState> navKey = GlobalKey<NavigatorState>();
-  String _search = '';
+  final _searchController = TextEditingController();
+  String get _search => _searchController.text;
   String? _category;
   final _scroll = ScrollController();
-  int _total = 0;
   GraphSort _sort = GraphSort.dateDesc;
 
   @override
@@ -104,6 +93,7 @@ class GraphsPageState extends State<GraphsPage>
 
   @override
   void dispose() {
+    _searchController.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -118,18 +108,6 @@ class GraphsPageState extends State<GraphsPage>
       tabController: widget.tabController,
       builder: (context) => graphsPage(),
     );
-  }
-
-  Future<List<GraphExerciseSummary>> _selectedSummaries() async {
-    final keys = Set<String>.of(_selection);
-    return filterGraphSummariesBySelection(await _stream.first, keys);
-  }
-
-  Future<void> onDelete() async {
-    final summaries = await _selectedSummaries();
-    if (!mounted) return;
-    setState(_selection.clear);
-    await _deleteSummaries(summaries);
   }
 
   Future<void> _deleteSummaries(List<GraphExerciseSummary> summaries) async {
@@ -156,9 +134,6 @@ class GraphsPageState extends State<GraphsPage>
       }
     });
   }
-
-  Future<int> _countSelectedGraphRecords() async =>
-      _countRecords(await _selectedSummaries());
 
   Future<int> _countRecords(List<GraphExerciseSummary> summaries) async {
     var count = await countExerciseSetsForExercises(
@@ -263,21 +238,19 @@ class GraphsPageState extends State<GraphsPage>
   }
 
   Widget _peekPreview(GraphExerciseSummary summary, String dateFormat) {
-    return FutureBuilder<List<GraphData>>(
-      future: _peekData(summary),
-      builder: (context, snapshot) {
-        final data = snapshot.data;
-        if (snapshot.connectionState != ConnectionState.done ||
-            data == null ||
-            data.length < 2) {
-          return const SizedBox.shrink();
-        }
-        return SizedBox(
-          key: const Key('graphs-peek-preview'),
-          height: MediaQuery.sizeOf(context).height * 0.15,
-          child: getPeek(summary, data, dateFormat),
-        );
-      },
+    return _GraphPreview(
+      key: ValueKey((
+        summary.selectionKey,
+        summary.name,
+        summary.unit,
+        summary.cardio,
+      )),
+      summary: summary,
+      builder: (data) => SizedBox(
+        key: const Key('graphs-peek-preview'),
+        height: MediaQuery.sizeOf(context).height * 0.15,
+        child: getPeek(summary, data, dateFormat),
+      ),
     );
   }
 
@@ -285,64 +258,65 @@ class GraphsPageState extends State<GraphsPage>
     void add() => navKey.currentState!.push(
       FlexPageRoute(builder: (context) => const ExerciseEditorPage.add()),
     );
-    return SearchListScaffold(
-      title: context.l10n.navGraphs,
-      addLabel: context.l10n.addExercise,
-      onAdd: add,
-      scroll: _scroll,
-      body: ResponsiveContent(
-        maxWidth: dataMaxWidth,
-        desktopPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: StreamBuilder(
-          stream: _stream,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return const AppErrorState();
-            }
-            if (!snapshot.hasData) return const SizedBox();
+    return StreamBuilder(
+      stream: _stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const AppErrorState();
+        }
+        if (!snapshot.hasData) return const SizedBox();
 
-            final exerciseSets = filterGraphSummaries(
-              snapshot.data!,
-              _search,
-              _category,
-            );
-            applyGraphSortToNewestFirstSummaries(exerciseSets, _sort);
-            return searchListBody(
-              list: Selector<Setting, bool>(
-                selector: (context, settings) => settings.showGlobalProgress,
-                builder: (context, showGlobal, child) {
-                  final showProgress =
-                      showGlobal &&
-                      _category == null &&
-                      '${context.l10n.globalProgress} ${context.l10n.navGraphs}'
-                          .toLowerCase()
-                          .contains(_search.toLowerCase());
-                  return exerciseSets.isEmpty && !showProgress
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: appSearchHeight),
-                          child: AppEmptyState(
-                            icon: Icons.search_off_rounded,
-                            title: context.l10n.noGraphsFound,
-                            message: _search.trim().isEmpty
-                                ? context.l10n.completeSetForFirstGraph
-                                : context.l10n.nothingMatchesGraphSearch(
-                                    _search.trim(),
-                                  ),
-                            actionLabel: _search.trim().isEmpty
-                                ? context.l10n.addExercise
-                                : context.l10n.addNamed(_search.trim()),
-                            actionIcon: Icons.add_rounded,
-                            onAction: () => Navigator.of(context).push(
-                              FlexPageRoute(
-                                builder: (context) =>
-                                    ExerciseEditorPage.add(name: _search),
+        final summaries = snapshot.data!;
+        final exerciseSets = filterGraphSummaries(
+          summaries,
+          _search,
+          _category,
+        );
+        List<GraphExerciseSummary> selectedSummaries() =>
+            filterGraphSummariesBySelection(summaries, _selection);
+        applyGraphSortToNewestFirstSummaries(exerciseSets, _sort);
+        final showProgress =
+            context.select<Setting, bool>(
+              (settings) => settings.showGlobalProgress,
+            ) &&
+            _category == null &&
+            '${context.l10n.globalProgress} ${context.l10n.navGraphs}'
+                .toLowerCase()
+                .contains(_search.toLowerCase());
+        return SearchListScaffold(
+          title: context.l10n.navGraphs,
+          addLabel: context.l10n.addExercise,
+          onAdd: add,
+          showAdd: exerciseSets.isNotEmpty || showProgress,
+          scroll: _scroll,
+          body: ResponsiveContent(
+            maxWidth: dataMaxWidth,
+            desktopPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            child: searchListBody(
+              list: exerciseSets.isEmpty && !showProgress
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: appSearchHeight),
+                      child: AppEmptyState(
+                        icon: Icons.search_off_rounded,
+                        title: context.l10n.noGraphsFound,
+                        message: _search.trim().isEmpty
+                            ? context.l10n.completeSetForFirstGraph
+                            : context.l10n.nothingMatchesGraphSearch(
+                                _search.trim(),
                               ),
-                            ),
+                        actionLabel: _search.trim().isEmpty
+                            ? context.l10n.addExercise
+                            : context.l10n.addNamed(_search.trim()),
+                        actionIcon: Icons.add_rounded,
+                        onAction: () => Navigator.of(context).push(
+                          FlexPageRoute(
+                            builder: (context) =>
+                                ExerciseEditorPage.add(name: _search),
                           ),
-                        )
-                      : graphList(context, exerciseSets, showProgress);
-                },
-              ),
+                        ),
+                      ),
+                    )
+                  : graphList(context, exerciseSets, showProgress),
               search: AppSearch(
                 hintText: context.l10n.searchGraphs,
                 controller: _selection,
@@ -360,44 +334,40 @@ class GraphsPageState extends State<GraphsPage>
                     });
                   },
                 ),
-                onShare: onShare,
-                onMerge: _openMergeGraphs,
-                onChange: (value) {
-                  setState(() {
-                    _search = value;
-                  });
+                onShare: () => _share(selectedSummaries()),
+                onMerge: () => _openMergeGraphs(selectedSummaries()),
+                textController: _searchController,
+                onChange: (_) => setState(() {}),
+                onClearSelection: () => setState(() {}),
+                onDelete: () async {
+                  final selected = selectedSummaries();
+                  setState(_selection.clear);
+                  await _deleteSummaries(selected);
                 },
-                onDelete: () async => onDelete(),
-                onSelectAll: () async {
-                  setState(() {
-                    _selection.addAll(
-                      exerciseSets.map(
-                        (exerciseSet) => exerciseSet.selectionKey,
-                      ),
-                    );
-                  });
-                  final total = await _countSelectedGraphRecords();
-                  if (!mounted) return;
-                  setState(() => _total = total);
-                },
+                onSelectAll: () => setState(() {
+                  _selection.addAll(
+                    exerciseSets.map((summary) => summary.selectionKey),
+                  );
+                }),
                 onEdit: () async {
-                  final summaries = await _selectedSummaries();
-                  if (summaries.isNotEmpty)
-                    await _editGraphSummary(summaries.first);
+                  final selected = selectedSummaries().firstOrNull;
+                  if (selected != null) await _editGraphSummary(selected);
                 },
-                confirmText: context.l10n.deleteGraphRecordsConfirmation(
-                  _total,
-                ),
+                loadConfirmText: () async {
+                  final l10n = context.l10n;
+                  return l10n.deleteGraphRecordsConfirmation(
+                    await _countRecords(selectedSummaries()),
+                  );
+                },
               ),
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Future<void> _openMergeGraphs() async {
-    final summaries = await _selectedSummaries();
+  Future<void> _openMergeGraphs(List<GraphExerciseSummary> summaries) async {
     if (summaries.length < 2 || !mounted) return;
     final merged = await navKey.currentState!.push<bool>(
       FlexPageRoute(
@@ -407,13 +377,9 @@ class GraphsPageState extends State<GraphsPage>
     if (merged == true && mounted) setState(_selection.clear);
   }
 
-  Future<void> onShare() async {
+  Future<void> _share(List<GraphExerciseSummary> sets) async {
     final l10n = context.l10n;
-    final copy = Set<String>.of(_selection);
-    setState(() {
-      _selection.clear();
-    });
-    final sets = filterGraphSummariesBySelection(await _stream.first, copy);
+    setState(_selection.clear);
     final text = sets
         .map(
           (exerciseSet) =>
@@ -464,21 +430,16 @@ class GraphsPageState extends State<GraphsPage>
     final preview = exerciseSets
         .where((summary) => summary.hasData)
         .firstOrNull;
-    final showPeek = context.read<Setting>().peekGraph && preview != null;
+    final showPeek = preview != null;
 
     Widget tile(BuildContext context, int index) {
       final summary = exerciseSets[index];
       final tile = GraphTile(
         selected: _selection,
         exerciseSet: summary,
-        onSelect: (key) async {
-          setState(() {
-            if (!_selection.remove(key)) _selection.add(key);
-          });
-          final total = await _countSelectedGraphRecords();
-          if (mounted) setState(() => _total = total);
-        },
-        tabCtrl: widget.tabController,
+        onSelect: (key) => setState(() {
+          if (!_selection.remove(key)) _selection.add(key);
+        }),
         onEdit: summary.bodyWeight ? null : () => _editGraphSummary(summary),
         onDelete: () => _deleteGraphSummary(summary),
       );
@@ -546,12 +507,9 @@ class GraphsPageState extends State<GraphsPage>
         ),
         subtitle: Text(context.l10n.chartGroupedByCategory),
         trailing: desktop ? const Icon(Icons.chevron_right_rounded) : null,
-        onTap: () => Navigator.of(context).push(
-          FlexPageRoute(
-            builder: (context) =>
-                GlobalProgressPage(tabController: widget.tabController),
-          ),
-        ),
+        onTap: () => Navigator.of(
+          context,
+        ).push(FlexPageRoute(builder: (context) => const GlobalProgressPage())),
         onLongPress: desktop ? null : longPressGlobal,
       ),
     );
@@ -572,4 +530,35 @@ class GraphsPageState extends State<GraphsPage>
             ),
           );
   }
+}
+
+class _GraphPreview extends StatefulWidget {
+  const _GraphPreview({
+    super.key,
+    required this.summary,
+    required this.builder,
+  });
+
+  final GraphExerciseSummary summary;
+  final Widget Function(List<GraphData>) builder;
+
+  @override
+  State<_GraphPreview> createState() => _GraphPreviewState();
+}
+
+class _GraphPreviewState extends State<_GraphPreview> {
+  late final Stream<List<GraphData>> _data = watchInitialGraphData(
+    widget.summary,
+  );
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder(
+    stream: _data,
+    builder: (context, snapshot) {
+      final data = snapshot.data;
+      return data == null || data.length < 2
+          ? const SizedBox.shrink()
+          : widget.builder(data);
+    },
+  );
 }

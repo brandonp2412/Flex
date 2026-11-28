@@ -26,6 +26,10 @@ class HomePage extends StatefulWidget {
 
   @override
   State<HomePage> createState() => _HomePageState();
+
+  static VoidCallback? registerNestedSettings(BuildContext context) => context
+      .findAncestorStateOfType<_HomePageState>()
+      ?.registerNestedSettings();
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
@@ -34,6 +38,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final TimerState _timerState;
   final GlobalKey<PlansPageState> _plansPageKey = GlobalKey<PlansPageState>();
   bool _desktopSettingsOpen = false;
+  final Set<String> _nestedSettingsTabs = {};
+
+  void Function()? registerNestedSettings() {
+    final tab = context.read<Setting>().tabs.split(',')[_controller.index];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _nestedSettingsTabs.add(tab));
+    });
+    return () => WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _nestedSettingsTabs.remove(tab));
+    });
+  }
+
   bool? _lastDesktopLayout;
 
   @override
@@ -382,6 +398,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       onSettingsTap: _openDesktopSettings,
                       settingsSelected:
                           _desktopSettingsOpen ||
+                          _nestedSettingsTabs.contains(
+                            tabs[_controller.index.clamp(0, tabs.length - 1)],
+                          ) ||
                           tabs[_controller.index.clamp(0, tabs.length - 1)] ==
                               'SettingsPage',
                     ),

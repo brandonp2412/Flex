@@ -7,55 +7,31 @@ import 'package:flex/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class TabSettings extends StatefulWidget {
+class TabSettings extends StatelessWidget {
   const TabSettings({super.key});
 
-  @override
-  createState() => _TabSettingsState();
-}
+  Future<void> _writeTabs(AppDatabase database, List<String> tabs) => database
+      .settings
+      .update()
+      .write(SettingsCompanion(tabs: Value(tabs.join(','))));
 
-typedef TabSetting = ({String name, bool enabled});
-
-class _TabSettingsState extends State<TabSettings> {
-  List<TabSetting> _tabs = [
-    (name: 'HistoryPage', enabled: false),
-    (name: 'PlansPage', enabled: false),
-    (name: 'GraphsPage', enabled: false),
-    (name: 'TimerPage', enabled: false),
-    (name: 'SettingsPage', enabled: false),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    final settings = context.read<Setting>();
-    final tabSplit = settings.tabs.split(',');
-
-    final enabled = tabSplit.map((tab) => (name: tab, enabled: true)).toList();
-    final disabled = _tabs
-        .where((tab) => !tabSplit.contains(tab.name))
-        .toList();
-
-    _tabs = enabled + disabled;
-  }
-
-  void setTab(String name, bool enabled) {
-    if (!enabled && _tabs.where((tab) => tab.enabled == true).length == 1) {
-      showAppMessage(context.l10n.atLeastOneTab);
-      return;
-    }
-    final index = _tabs.indexWhere((tappedTab) => tappedTab.name == name);
-    setState(() {
-      _tabs[index] = (name: name, enabled: enabled);
+  Future<void> _setTab(BuildContext context, String name, bool enabled) async {
+    final database = db;
+    await database.transaction(() async {
+      final settings = await (database.settings.select()..limit(1)).getSingle();
+      final tabs = settings.tabs.split(',');
+      if (enabled == tabs.contains(name)) return;
+      if (!enabled && tabs.length == 1) {
+        if (context.mounted) showAppMessage(context.l10n.atLeastOneTab);
+        return;
+      }
+      if (enabled) {
+        tabs.add(name);
+      } else {
+        tabs.remove(name);
+      }
+      await _writeTabs(database, tabs);
     });
-
-    (db.settings.update().write(
-      SettingsCompanion(
-        tabs: Value(
-          _tabs.where((tab) => tab.enabled).map((tab) => tab.name).join(','),
-        ),
-      ),
-    ));
   }
 
   @override
@@ -68,6 +44,12 @@ class _TabSettingsState extends State<TabSettings> {
       'TimerPage': (Icons.timer_outlined, context.l10n.navTimer),
       'SettingsPage': (Icons.settings_outlined, context.l10n.navSettings),
     };
+
+    final enabled = settings.tabs.split(',');
+    final tabs = [
+      ...enabled,
+      ...labels.keys.where((name) => !enabled.contains(name)),
+    ];
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -95,49 +77,48 @@ class _TabSettingsState extends State<TabSettings> {
             physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(vertical: 8),
             buildDefaultDragHandles: false,
-            itemCount: _tabs.length,
-            onReorderItem: (oldIndex, newIndex) {
-              setState(() {
-                final moved = _tabs.removeAt(oldIndex);
-                _tabs.insert(newIndex, moved);
+            itemCount: tabs.length,
+            onReorderItem: (oldIndex, newIndex) async {
+              if (oldIndex >= enabled.length) return;
+              final reordered = enabled.toList();
+              final moved = reordered.removeAt(oldIndex);
+              reordered.insert(newIndex.clamp(0, reordered.length), moved);
+              final database = db;
+              await database.transaction(() async {
+                final current = await (database.settings.select()..limit(1))
+                    .getSingle();
+                if (current.tabs == settings.tabs)
+                  await _writeTabs(database, reordered);
               });
-              db.settings.update().write(
-                SettingsCompanion(
-                  tabs: Value(
-                    _tabs
-                        .where((tab) => tab.enabled)
-                        .map((tab) => tab.name)
-                        .join(','),
-                  ),
-                ),
-              );
             },
             itemBuilder: (context, index) {
-              final tab = _tabs[index];
-              final details = labels[tab.name];
+              final name = tabs[index];
+              final isEnabled = index < enabled.length;
+              final details = labels[name];
               if (details == null) {
                 return ListTile(
-                  key: Key(tab.name),
+                  key: Key(name),
                   title: Text(context.l10n.invalidTabSettings),
                 );
               }
               return ListTile(
-                key: Key(tab.name),
+                key: Key(name),
                 leading: Icon(details.$1),
                 title: Text(details.$2),
-                onTap: () => setTab(tab.name, !tab.enabled),
+                onTap: () => _setTab(context, name, !isEnabled),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Switch(
-                      value: tab.enabled,
-                      onChanged: (value) => setTab(tab.name, value),
+                      value: isEnabled,
+                      onChanged: (value) => _setTab(context, name, value),
                     ),
                     const SizedBox(width: 12),
-                    ReorderableDragStartListener(
-                      index: index,
-                      child: const Icon(Icons.drag_handle),
-                    ),
+                    if (isEnabled)
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: const Icon(Icons.drag_handle),
+                      ),
                   ],
                 ),
               );

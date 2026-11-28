@@ -5,6 +5,7 @@ import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/l10n/locale_preferences.dart';
+import 'package:flex/plan/set_chip.dart';
 import 'package:flex/plan/start_plan_page.dart';
 import 'package:flex/plan/start_list.dart';
 import 'package:flex/plan/workout_sessions.dart';
@@ -876,21 +877,35 @@ void main() {
       expect(find.text('6 × 95 kg'), findsOneWidget);
       expect(find.text('12 × 30 kg'), findsNothing);
 
-      Padding lastPreviousChip() {
-        final strip = tester.widget<SingleChildScrollView>(
-          find.byKey(const Key('previous-set-scroll')),
+      Padding lastChip(String key) {
+        final row = tester.widget<Row>(
+          find.descendant(
+            of: find.byKey(Key(key)),
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is Row &&
+                  widget.children.every(
+                    (child) => child is Padding && child.child is SetChip,
+                  ),
+            ),
+          ),
         );
-        return ((strip.child! as ConstrainedBox).child! as Row).children.last
-            as Padding;
+        return row.children.last as Padding;
       }
 
-      expect(lastPreviousChip().padding, const EdgeInsets.only(right: 8));
+      expect(
+        lastChip('previous-set-scroll').padding,
+        const EdgeInsets.only(right: 8),
+      );
       addTearDown(tester.view.resetViewInsets);
       tester.view.viewInsets = FakeViewPadding(
         bottom: 300 * tester.view.devicePixelRatio,
       );
       await tester.pumpAndSettle();
-      expect(lastPreviousChip().padding, const EdgeInsets.only(right: 4));
+      expect(
+        lastChip('previous-set-scroll').padding,
+        const EdgeInsets.only(right: 4),
+      );
       tester.view.resetViewInsets();
       await tester.pumpAndSettle();
 
@@ -954,20 +969,18 @@ void main() {
       expect(find.text('6 × 95 kg'), findsNothing);
       expect(find.byIcon(Icons.history_rounded), findsNothing);
 
-      Padding lastCurrentChip() {
-        final strip = tester.widget<SingleChildScrollView>(
-          find.byKey(const Key('session-set-scroll')),
-        );
-        return ((strip.child! as ConstrainedBox).child! as Row).children.last
-            as Padding;
-      }
-
-      expect(lastCurrentChip().padding, const EdgeInsets.only(right: 8));
+      expect(
+        lastChip('session-set-scroll').padding,
+        const EdgeInsets.only(right: 8),
+      );
       tester.view.viewInsets = FakeViewPadding(
         bottom: 300 * tester.view.devicePixelRatio,
       );
       await tester.pumpAndSettle();
-      expect(lastCurrentChip().padding, const EdgeInsets.only(right: 4));
+      expect(
+        lastChip('session-set-scroll').padding,
+        const EdgeInsets.only(right: 4),
+      );
       final currentSetCard = find.ancestor(
         of: find.text('7 × 95 kg'),
         matching: find.byType(Card),

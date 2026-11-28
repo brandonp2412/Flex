@@ -6,15 +6,27 @@ Future<Exercise?> getExerciseByName(
   AppDatabase database,
   String name, {
   bool includeArchived = false,
-}) =>
-    (database.exercises.select()..where(
-          (exercise) =>
-              exercise.name.equals(name) &
-              (includeArchived
-                  ? const Constant(true)
-                  : exercise.archived.equals(false)),
-        ))
-        .getSingleOrNull();
+}) => _exerciseByName(
+  database,
+  name,
+  includeArchived: includeArchived,
+).getSingleOrNull();
+
+Stream<Exercise?> watchExerciseByName(AppDatabase database, String name) =>
+    _exerciseByName(database, name).watchSingleOrNull();
+
+Selectable<Exercise> _exerciseByName(
+  AppDatabase database,
+  String name, {
+  bool includeArchived = false,
+}) => database.exercises.select()
+  ..where(
+    (exercise) =>
+        exercise.name.equals(name) &
+        (includeArchived
+            ? const Constant(true)
+            : exercise.archived.equals(false)),
+  );
 
 SimpleSelectStatement<$ExercisesTable, Exercise> _activeExercises(
   AppDatabase database,
@@ -22,8 +34,8 @@ SimpleSelectStatement<$ExercisesTable, Exercise> _activeExercises(
   ..where((exercise) => exercise.archived.equals(false))
   ..orderBy([(exercise) => OrderingTerm.asc(exercise.name)]);
 
-Future<List<String>> getExerciseNames(AppDatabase database) =>
-    _activeExercises(database).map((exercise) => exercise.name).get();
+Stream<List<String>> watchExerciseNames(AppDatabase database) =>
+    _activeExercises(database).map((exercise) => exercise.name).watch();
 
 Stream<List<Exercise>> watchExerciseCatalog(AppDatabase database) =>
     _activeExercises(database).watch();

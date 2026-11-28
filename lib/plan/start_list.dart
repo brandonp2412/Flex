@@ -4,7 +4,6 @@ import 'package:flex/bottom_nav.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/custom_set_indicator.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/exercise_modal.dart';
 import 'package:flex/plan/workout_sessions.dart';
@@ -44,27 +43,18 @@ class _StartListState extends State<StartList> {
 
   Tapped lastTap = (index: 0, dateTime: DateTime(0));
 
-  void tap(int index) async {
+  void tap(int index) {
     widget.onSelect(index);
-    if (widget.sets[widget.exercises[index].exercise.id]?.isNotEmpty != true)
-      return;
-
-    if (DateTime.now().difference(lastTap.dateTime) >=
-            const Duration(milliseconds: 300) ||
-        index != lastTap.index)
-      return setState(() {
-        lastTap = (index: index, dateTime: DateTime.now());
-      });
-
-    final workoutId = widget.workoutId;
-    if (workoutId == null) return;
-    final exerciseSet = await ExerciseSetQuery(
-      db,
-      workoutId: workoutId,
-      exerciseId: widget.exercises[index].exercise.id,
-    ).firstOrNull();
+    final exerciseSet =
+        widget.sets[widget.exercises[index].exercise.id]?.lastOrNull;
     if (exerciseSet == null) return;
-    if (!mounted) return;
+
+    final now = DateTime.now();
+    if (now.difference(lastTap.dateTime) >= const Duration(milliseconds: 300) ||
+        index != lastTap.index) {
+      lastTap = (index: index, dateTime: now);
+      return;
+    }
 
     Navigator.of(context).push(
       FlexPageRoute(
@@ -95,16 +85,16 @@ class _StartListState extends State<StartList> {
         itemBuilder: (context, index) =>
             itemBuilder(context, index, max, trailing),
         onReorderItem: (oldIndex, newIndex) async {
-          final item = widget.exercises.removeAt(oldIndex);
-          widget.exercises.insert(newIndex, item);
+          final ordered = widget.exercises.toList();
+          final item = ordered.removeAt(oldIndex);
+          ordered.insert(newIndex, item);
 
           await db.batch((batch) {
-            for (var i = 0; i < widget.exercises.length; i++) {
+            for (var i = 0; i < ordered.length; i++) {
               batch.update(
                 db.planExercises,
                 PlanExercisesCompanion(sequence: Value(i)),
-                where: (pe) =>
-                    pe.id.equals(widget.exercises[i].planExercise.id),
+                where: (pe) => pe.id.equals(ordered[i].planExercise.id),
               );
             }
           });

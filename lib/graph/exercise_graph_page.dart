@@ -1,9 +1,10 @@
-import 'dart:async';
+import 'package:drift/drift.dart' hide Column;
 
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/empty_state.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/graph/flex_line_chart.dart';
 import 'package:flex/graph/graph_data.dart';
 import 'package:flex/graph/exercise_editor_page.dart';
@@ -30,16 +31,12 @@ class ExerciseGraphPage extends StatefulWidget {
     super.key,
     required this.initialName,
     required this.initialUnit,
-    required this.initialData,
-    required this.tabCtrl,
     this.cardio = false,
     this.bodyWeight = false,
   });
 
   final String initialName;
   final String initialUnit;
-  final List<GraphData> initialData;
-  final TabController tabCtrl;
   final bool cardio;
   final bool bodyWeight;
 
@@ -47,22 +44,121 @@ class ExerciseGraphPage extends StatefulWidget {
   State<ExerciseGraphPage> createState() => _ExerciseGraphPageState();
 }
 
-class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
-  late String exerciseName;
-  late bool timeAxis;
-  late Enum metric;
-  late List<GraphData> data;
-  late Period period;
-  DateTime lastTap = DateTime(0);
-  Timer? _refreshTimer;
-  Timer? _notesDebounce;
-  final notesCtrl = TextEditingController();
+class _ExerciseGraphPageState extends State<ExerciseGraphPage> {
+  late String _name = widget.initialName;
+  late Stream<Exercise?> _exercise = watchExerciseByName(db, _name);
+
+  Future<void> _editGraph() async {
+    final name = await Navigator.of(context).push<String>(
+      FlexPageRoute(builder: (context) => ExerciseEditorPage.edit(name: _name)),
+    );
+    if (!mounted || name == null || name == _name) return;
+    setState(() {
+      _name = name;
+      _exercise = watchExerciseByName(db, name);
+    });
+  }
+
+  Widget _content(Exercise? exercise) => _ExerciseGraphContent(
+    name: _name,
+    unit: widget.initialUnit,
+    exercise: exercise,
+    bodyWeight: widget.bodyWeight,
+    initialCardio: widget.cardio,
+    onEdit: _editGraph,
+  );
 
   @override
-  TabController get graphTabController => widget.tabCtrl;
+  Widget build(BuildContext context) {
+    if (widget.bodyWeight) return _content(null);
+    return StreamBuilder<Exercise?>(
+      stream: _exercise,
+      builder: (context, snapshot) =>
+          snapshot.hasError ? const AppErrorState() : _content(snapshot.data),
+    );
+  }
+}
+
+class _ExerciseGraphContent extends StatefulWidget {
+  const _ExerciseGraphContent({
+    required this.name,
+    required this.unit,
+    required this.exercise,
+    required this.bodyWeight,
+    required this.initialCardio,
+    required this.onEdit,
+  });
+
+  final String name;
+  final String unit;
+  final Exercise? exercise;
+  final bool bodyWeight;
+  final bool initialCardio;
+  final VoidCallback onEdit;
+
+  @override
+  State<_ExerciseGraphContent> createState() => _ExerciseGraphContentState();
+}
+
+class _ExerciseGraphContentState
+    extends GraphFilterState<_ExerciseGraphContent> {
+  int? _localLimit;
+  bool? _localTimeAxis;
+  Period? _localPeriod;
+  String? _unitOverride;
+  late Stream<List<GraphData>> _data;
+  ({
+    String name,
+    String unit,
+    Enum metric,
+    Period period,
+    DateTime? start,
+    DateTime? end,
+    int limit,
+  })?
+  _query;
+  DateTime lastTap = DateTime(0);
+
+  String get exerciseName => widget.name;
   bool get bodyWeight => widget.bodyWeight;
-  bool get cardio => widget.cardio;
+  bool get cardio =>
+      !bodyWeight &&
+      (widget.exercise?.kind == 'cardio' ||
+          (widget.exercise == null && widget.initialCardio));
   bool get weightedCardio => isWeightUnit(targetUnit);
+  Setting get settings => context.read<Setting>();
+
+  @override
+  String get targetUnit =>
+      _unitOverride ??
+      (cardio ? widget.exercise?.displayUnit : null) ??
+      widget.unit;
+
+  @override
+  set targetUnit(String value) => _unitOverride = value;
+
+  @override
+  int get limit =>
+      widget.exercise?.graphLimit ?? _localLimit ?? settings.defaultGraphLimit;
+
+  bool get timeAxis =>
+      widget.exercise?.graphTimeBasedXAxis ??
+      _localTimeAxis ??
+      settings.defaultGraphTimeBasedXAxis;
+
+  Period get period => Period.values.firstWhere(
+    (value) =>
+        value.name ==
+        (widget.exercise?.graphPeriod ??
+            _localPeriod?.name ??
+            settings.defaultGraphPeriod),
+    orElse: () => Period.day,
+  );
+
+  Enum get metric => selectMetric(
+    (widget.exercise?.graphMetric ?? settings.defaultGraphMetric).split(','),
+    settings,
+  );
 
   Enum get fallbackMetric => !cardio
       ? StrengthMetric.bestWeight
@@ -80,17 +176,11 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
           CardioMetric.incline,
         ];
 
-  Enum selectMetric(
-    List<String> names,
-    Setting settings, {
-    bool initial = false,
-  }) {
+  Enum selectMetric(List<String> names, Setting settings) {
     if (cardio) {
-      if (initial && weightedCardio) return CardioMetric.weight;
       return CardioMetric.values.firstWhere(
         (value) =>
-            names.contains(value.name) &&
-            (initial || allowedCardioMetrics.contains(value)),
+            names.contains(value.name) && allowedCardioMetrics.contains(value),
         orElse: () => fallbackMetric as CardioMetric,
       );
     }
@@ -139,64 +229,46 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    exerciseName = widget.initialName;
-    targetUnit = widget.initialUnit;
-    data = widget.initialData;
-    final settings = context.read<Setting>();
-    timeAxis = settings.defaultGraphTimeBasedXAxis;
-    limit = settings.defaultGraphLimit;
-    metric = selectMetric(
-      [settings.defaultGraphMetric],
-      settings,
-      initial: true,
-    );
-    period = Period.values.firstWhere(
-      (p) => p.name == settings.defaultGraphPeriod,
-      orElse: () => Period.day,
-    );
-    if (!bodyWeight) loadPreferences();
+  void didUpdateWidget(_ExerciseGraphContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.exercise?.displayUnit != null &&
+        widget.exercise?.displayUnit != null &&
+        oldWidget.exercise?.displayUnit != widget.exercise?.displayUnit) {
+      _unitOverride = null;
+    }
+    if (oldWidget.exercise != widget.exercise) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) refreshOptions();
+      });
+    }
   }
 
   @override
-  Future<void> setData() async {
-    if (!mounted) return;
-    final request = beginDataRequest();
-    final rows = await getExerciseGraphData(
+  void setData() {
+    final query = (
       name: exerciseName,
-      target: targetUnit,
-      bodyWeight: bodyWeight,
+      unit: targetUnit,
       metric: metric,
       period: period,
       start: start,
       end: end,
       limit: limit,
     );
-    if (isCurrentDataRequest(request)) setState(() => data = rows);
-  }
-
-  Future<void> editGraph() async {
-    final name = await Navigator.of(context).push<String>(
-      FlexPageRoute(
-        builder: (context) => ExerciseEditorPage.edit(name: exerciseName),
-      ),
+    if (_query == query) return;
+    _query = query;
+    _data = watchExerciseGraphData(
+      name: query.name,
+      target: query.unit,
+      bodyWeight: bodyWeight,
+      metric: query.metric,
+      period: query.period,
+      start: query.start,
+      end: query.end,
+      limit: query.limit,
     );
-    if (!mounted || name == null) return;
-    final updated = cardio ? await getExerciseByName(db, name) : null;
-    if (!mounted) return;
-    setState(() {
-      exerciseName = name;
-      if (cardio) {
-        if (updated != null) targetUnit = updated.displayUnit;
-        if (!allowedCardioMetrics.contains(metric)) metric = fallbackMetric;
-      }
-    });
-    if (cardio) setData();
   }
 
-  String tooltip(int index, String format) {
-    final row = data[index];
+  String tooltip(GraphData row, String format) {
     final created = formatDisplayDate(context, row.created, format);
     final value = formatDisplayNumber(context, row.value, minDigits: 2);
     if (!cardio) {
@@ -219,33 +291,15 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
     return '$text\n$created';
   }
 
-  Future<void> loadPreferences() async {
-    final pref = await getExerciseByName(db, exerciseName);
-    if (pref == null || !mounted) return;
-    setState(() {
-      metric = selectMetric(
-        pref.graphMetric.split(','),
-        context.read<Setting>(),
-      );
-      period = Period.values.firstWhere(
-        (p) => p.name == pref.graphPeriod,
-        orElse: () => period,
-      );
-      limit = pref.graphLimit;
-      timeAxis = pref.graphTimeBasedXAxis;
-      notesCtrl.text = pref.notes ?? '';
-    });
-    setData();
-  }
-
   @override
   Widget build(BuildContext context) {
+    context.watch<Setting>();
+    setData();
     final shortDateFormat = context.select<Setting, String>(
       (settings) => settings.shortDateFormat,
     );
     final options = metricOptions;
     final palette = GraphMetricChips.palette(Theme.of(context).colorScheme);
-    final rows = data;
     final notesVisible =
         cardio ||
         context.select<Setting, bool>((settings) => settings.showNotes);
@@ -260,7 +314,7 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
         actions: [
           if (!bodyWeight)
             IconButton(
-              onPressed: editGraph,
+              onPressed: widget.onEdit,
               icon: const Icon(Icons.edit),
               tooltip: context.l10n.actionEdit,
             ),
@@ -277,65 +331,75 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              GraphPeriodPicker(
-                selected: period,
-                onChanged: (value) => changeSelection(() => period = value),
-              ),
+              GraphPeriodPicker(selected: period, onChanged: _changePeriod),
               if (!bodyWeight) ...[
                 const SizedBox(height: 8),
                 GraphMetricChips<Enum>(
                   options: options,
                   selected: metric,
                   onChanged: (value) {
-                    if (metric != value) changeSelection(() => metric = value);
+                    if (metric != value)
+                      _writePreference(
+                        ExercisesCompanion(graphMetric: Value(value.name)),
+                      );
                   },
                 ),
               ],
               const SizedBox(height: 8),
               Expanded(
-                child: rows.isEmpty
-                    ? AppEmptyState(
-                        icon: cardio
-                            ? Icons.monitor_heart_outlined
-                            : Icons.fitness_center_rounded,
-                        title: cardio
-                            ? context.l10n.noDataFor(exerciseName)
-                            : context.l10n.noDataYet,
-                        message: context.l10n.completeSetForChart,
-                      )
-                    : Padding(
-                        padding: EdgeInsets.only(
-                          top: 16,
-                          right: cardio ? 32 : 45,
-                        ),
-                        child: FlexLineChart(
-                          lineColor:
-                              palette[options.indexWhere(
-                                    (o) => o.$1 == metric,
-                                  ) %
-                                  palette.length],
-                          dates: rows.map((row) => row.created).toList(),
-                          points: [
-                            for (var i = 0; i < rows.length; i++)
-                              FlexLineChartPoint(
-                                timeAxis
-                                    ? rows[i].created.millisecondsSinceEpoch
-                                          .toDouble()
-                                    : i.toDouble(),
-                                cardio
-                                    ? double.parse(
-                                        rows[i].value.toStringAsFixed(1),
-                                      )
-                                    : rows[i].value,
-                                column: i,
-                              ),
-                          ],
-                          tooltipText: (index) =>
-                              tooltip(index, shortDateFormat),
-                          onPointSelected: touchLine,
-                          timeBasedXAxis: timeAxis,
-                        ),
-                      ),
+                child: StreamBuilder<List<GraphData>>(
+                  key: ValueKey(_query),
+                  stream: _data,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) return const AppErrorState();
+                    if (!snapshot.hasData) return const SizedBox.shrink();
+                    final rows = snapshot.data!;
+                    return rows.isEmpty
+                        ? AppEmptyState(
+                            icon: cardio
+                                ? Icons.monitor_heart_outlined
+                                : Icons.fitness_center_rounded,
+                            title: cardio
+                                ? context.l10n.noDataFor(exerciseName)
+                                : context.l10n.noDataYet,
+                            message: context.l10n.completeSetForChart,
+                          )
+                        : Padding(
+                            padding: EdgeInsets.only(
+                              top: 16,
+                              right: cardio ? 32 : 45,
+                            ),
+                            child: FlexLineChart(
+                              lineColor:
+                                  palette[options.indexWhere(
+                                        (o) => o.$1 == metric,
+                                      ) %
+                                      palette.length],
+                              dates: rows.map((row) => row.created).toList(),
+                              points: [
+                                for (var i = 0; i < rows.length; i++)
+                                  FlexLineChartPoint(
+                                    timeAxis
+                                        ? rows[i].created.millisecondsSinceEpoch
+                                              .toDouble()
+                                        : i.toDouble(),
+                                    cardio
+                                        ? double.parse(
+                                            rows[i].value.toStringAsFixed(1),
+                                          )
+                                        : rows[i].value,
+                                    column: i,
+                                  ),
+                              ],
+                              tooltipText: (index) =>
+                                  tooltip(rows[index], shortDateFormat),
+                              onPointSelected: (index) =>
+                                  touchLine(rows[index]),
+                              timeBasedXAxis: timeAxis,
+                            ),
+                          );
+                  },
+                ),
               ),
               const SizedBox(height: 8),
               GraphActionButtons(
@@ -346,16 +410,23 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
               if (notesVisible)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: TextField(
-                    controller: notesCtrl,
-                    readOnly: true,
+                  child: InkWell(
                     onTap: editNotes,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.exerciseNotes,
-                      hintText: context.l10n.notesForExercise,
+                    child: InputDecorator(
+                      isEmpty: widget.exercise?.notes?.isNotEmpty != true,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.exerciseNotes,
+                        hintText: context.l10n.notesForExercise,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 48),
+                        child: Text(
+                          widget.exercise?.notes ?? '',
+                          maxLines: 5,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
-                    minLines: 2,
-                    maxLines: 5,
                   ),
                 ),
               if (cardio) const SizedBox(height: 8),
@@ -366,96 +437,73 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
     );
   }
 
-  void changeSelection(VoidCallback change) {
-    setState(change);
-    setData();
-    savePreferences();
-  }
-
-  Future<void> savePreferences() async {
-    if (bodyWeight) return;
-    final exercise = await getExerciseByName(db, exerciseName);
+  Future<void> _writePreference(ExercisesCompanion update) async {
+    final exercise = widget.exercise;
     if (exercise == null) return;
-    await updateExerciseGraphPreferences(
-      db,
-      exerciseId: exercise.id,
-      metric: metric.name,
-      period: period.name,
-      limit: limit,
-      timeBasedXAxis: timeAxis,
-      notes: notesCtrl.text.isEmpty ? null : notesCtrl.text,
-    );
+    await (db.exercises.update()..where((row) => row.id.equals(exercise.id)))
+        .write(update);
   }
 
-  void _onNotesChanged() {
-    _notesDebounce?.cancel();
-    _notesDebounce = Timer(const Duration(milliseconds: 600), savePreferences);
+  void _changePeriod(Period value) {
+    if (widget.exercise == null) {
+      setState(() => _localPeriod = value);
+      return;
+    }
+    _writePreference(ExercisesCompanion(graphPeriod: Value(value.name)));
   }
 
   Future<void> editNotes() async {
+    final exercise = widget.exercise;
+    if (exercise == null) return;
+    final database = db;
     await Navigator.of(context, rootNavigator: !isDesktopLayout(context)).push(
       FlexPageRoute(
-        builder: (context) =>
-            GraphNotesPage(controller: notesCtrl, onChanged: _onNotesChanged),
-      ),
-    );
-    _notesDebounce?.cancel();
-    await savePreferences();
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    _notesDebounce?.cancel();
-    notesCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> showHistory() async {
-    final exerciseSets = await getGraphHistory(
-      exerciseName,
-      bodyWeight: bodyWeight,
-    );
-    if (!mounted) return;
-
-    final desktop = isDesktopLayout(context);
-    await Navigator.of(context).push(
-      FlexPageRoute(
-        builder: (context) => GraphHistoryPage(
-          name: exerciseName,
-          initialSets: exerciseSets,
-          tabController: graphTabController,
-          bodyWeight: bodyWeight,
+        builder: (context) => GraphNotesPage(
+          initialNotes: exercise.notes ?? '',
+          onSave: (text) =>
+              (database.exercises.update()
+                    ..where((row) => row.id.equals(exercise.id)))
+                  .write(
+                    ExercisesCompanion(
+                      notes: Value(text.isEmpty ? null : text),
+                    ),
+                  ),
         ),
       ),
     );
-    refreshAfterNavigation(desktop);
   }
 
-  void refreshAfterNavigation(bool desktop) {
-    if (!mounted) return;
-    _refreshTimer?.cancel();
-    if (desktop) {
-      setData();
-    } else {
-      _refreshTimer = Timer(kThemeAnimationDuration, setData);
-    }
+  Future<void> showHistory() async {
+    await Navigator.of(context).push(
+      FlexPageRoute(
+        builder: (context) =>
+            GraphHistoryPage(name: exerciseName, bodyWeight: bodyWeight),
+      ),
+    );
   }
 
   @override
   bool? get optionsTimeAxis => timeAxis;
 
   @override
-  void onLimitUpdated() => savePreferences();
+  void onLimitChanged(int value) {
+    if (widget.exercise == null) {
+      _localLimit = value;
+    } else {
+      _writePreference(ExercisesCompanion(graphLimit: Value(value)));
+    }
+  }
 
   @override
   void onTimeAxisUpdated(bool value) {
-    timeAxis = value;
-    savePreferences();
+    if (widget.exercise == null) {
+      _localTimeAxis = value;
+    } else {
+      _writePreference(ExercisesCompanion(graphTimeBasedXAxis: Value(value)));
+    }
   }
 
-  Future<void> touchLine(int index) async {
+  Future<void> touchLine(GraphData point) async {
     if (DateTime.now().difference(lastTap) >=
         const Duration(milliseconds: 300)) {
       lastTap = DateTime.now();
@@ -463,9 +511,7 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
     }
 
     if (bodyWeight) return;
-    if (index < 0 || index >= data.length) return;
-    final created = data[index].created;
-    final desktop = isDesktopLayout(context);
+    final created = point.created;
     final exerciseSet = await ExerciseSetQuery(
       db,
       exerciseName: exerciseName,
@@ -478,6 +524,5 @@ class _ExerciseGraphPageState extends GraphFilterState<ExerciseGraphPage> {
         builder: (context) => EditSetPage(exerciseSet: exerciseSet),
       ),
     );
-    refreshAfterNavigation(desktop);
   }
 }

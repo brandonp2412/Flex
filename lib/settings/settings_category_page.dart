@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/responsive.dart';
@@ -7,7 +8,7 @@ import 'package:flex/settings/data_settings.dart';
 import 'package:flex/settings/format_settings.dart';
 import 'package:flex/settings/plan_settings.dart';
 import 'package:flex/settings/settings_category.dart';
-import 'package:flex/settings/settings_inputs.dart';
+import 'package:flex/audio/safe_audio_player.dart';
 import 'package:flex/settings/timer_settings.dart';
 import 'package:flex/settings/workout_settings.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ List<Widget> settingsItems(
   BuildContext context,
   SettingsCategory category,
   Setting settings,
-  SettingsInputs inputs, {
+  SafeAudioPlayer player, {
   String? search,
 }) {
   final term = search ?? '';
@@ -34,25 +35,13 @@ List<Widget> settingsItems(
       search == null
           ? workoutSettingsSections(context, settings)
           : getWorkoutSettings(context, term, settings),
-    SettingsCategory.plans => getPlanSettings(
-      context,
-      term,
-      settings,
-      inputs.maxSets,
-      inputs.warmupSets,
-    ),
+    SettingsCategory.plans => getPlanSettings(context, term, settings),
     SettingsCategory.data => getDataSettings(term, settings, context),
     SettingsCategory.tabs => const [],
     SettingsCategory.timers =>
-      inputs.player.enabled
+      player.enabled
           ? [
-              ...getTimerSettings(
-                term,
-                settings,
-                inputs.rest,
-                inputs.player,
-                context,
-              ),
+              ...getTimerSettings(term, settings, player, context),
               if (search == null) const CustomTimerSettings(),
             ]
           : [
@@ -80,17 +69,11 @@ class SettingsCategoryPage extends StatefulWidget {
 }
 
 class _SettingsCategoryPageState extends State<SettingsCategoryPage> {
-  late final SettingsInputs _inputs;
-
-  @override
-  void initState() {
-    super.initState();
-    _inputs = SettingsInputs(context.read<Setting>());
-  }
+  final _player = SafeAudioPlayer(enabled: !kIsWeb);
 
   @override
   void dispose() {
-    _inputs.dispose();
+    _player.dispose();
     super.dispose();
   }
 
@@ -103,7 +86,7 @@ class _SettingsCategoryPageState extends State<SettingsCategoryPage> {
         context,
         widget.category,
         context.watch<Setting>(),
-        _inputs,
+        _player,
       ),
     ),
   );

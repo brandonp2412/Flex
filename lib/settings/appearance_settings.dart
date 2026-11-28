@@ -30,26 +30,55 @@ List<Widget> getAppearanceSettings(
         padding: const EdgeInsets.fromLTRB(4, 12, 4, 16),
         child: Column(
           children: [
-            DropdownButtonFormField<String>(
+            ListTile(
               key: const Key('language-setting-dropdown'),
-              initialValue: selectedLocale,
-              isExpanded: true,
-              decoration: InputDecoration(labelText: l10n.settingsLanguage),
-              items: [
-                DropdownMenuItem(
-                  value: '',
-                  child: Text(l10n.languageSystemDefault),
-                ),
-                ...selectableLocales.map(
-                  (locale) => DropdownMenuItem(
-                    value: localeTag(locale),
-                    child: Text(localeDisplayName(l10n, locale)),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.settingsLanguage),
+              subtitle: Text(
+                selectedLocale.isEmpty
+                    ? l10n.languageSystemDefault
+                    : localeDisplayName(
+                        l10n,
+                        selectableLocales.firstWhere(
+                          (locale) => localeTag(locale) == selectedLocale,
+                        ),
+                      ),
+              ),
+              trailing: const Icon(Icons.arrow_drop_down),
+              onTap: () async {
+                final value = await showDialog<String>(
+                  context: context,
+                  builder: (context) => SimpleDialog(
+                    title: Text(l10n.settingsLanguage),
+                    children: [
+                      for (final (tag, label) in [
+                        ('', l10n.languageSystemDefault),
+                        ...selectableLocales.map(
+                          (locale) => (
+                            localeTag(locale),
+                            localeDisplayName(l10n, locale),
+                          ),
+                        ),
+                      ])
+                        SimpleDialogOption(
+                          onPressed: () => Navigator.pop(context, tag),
+                          child: Row(
+                            children: [
+                              Icon(
+                                tag == selectedLocale
+                                    ? Icons.radio_button_checked
+                                    : Icons.radio_button_unchecked,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(label)),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ],
-              onChanged: (value) {
+                );
                 if (value == null) return;
-                db.settings.update().write(
+                await db.settings.update().write(
                   SettingsCompanion(
                     localeOverride: Value(value.isEmpty ? null : value),
                   ),
