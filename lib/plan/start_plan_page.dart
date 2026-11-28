@@ -5,7 +5,6 @@ import 'package:flex/sets/workout_unit_field.dart';
 import 'package:flex/sets/workout_number_field.dart';
 import 'dart:math';
 
-import 'package:flex/app_fab.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
@@ -18,8 +17,10 @@ import 'package:flex/permissions_page.dart';
 import 'package:flex/plan/edit_plan_page.dart';
 import 'package:flex/plan/session_sets.dart';
 import 'package:flex/plan/start_list.dart';
+import 'package:flex/plan/start_plan_compact_layout.dart';
 import 'package:flex/plan/start_plan_data.dart';
 import 'package:flex/plan/start_plan_dock_location.dart';
+import 'package:flex/plan/start_plan_wide_layout.dart';
 import 'package:flex/plan/workout_sessions.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
@@ -109,7 +110,6 @@ class _StartPlanPageState extends State<StartPlanPage>
         Future<void> save() => _save(data, selected);
 
         final desktop = isDesktopLayout(context);
-        final colors = Theme.of(context).colorScheme;
 
         Future<void> editPlan() async {
           final plan = data?.plan ?? widget.plan;
@@ -122,7 +122,7 @@ class _StartPlanPageState extends State<StartPlanPage>
           if (!mounted) return;
         }
 
-        Widget exerciseList() => exercises.isEmpty
+        final exerciseList = exercises.isEmpty
             ? AppEmptyState(
                 icon: Icons.fitness_center_rounded,
                 title: context.l10n.noExercisesYet,
@@ -138,6 +138,26 @@ class _StartPlanPageState extends State<StartPlanPage>
                     setState(() => _select(exercises, data?.defaults, index)),
                 sets: data?.sets ?? const {},
                 workoutId: workout?.id,
+              );
+
+        final fields = [
+          if (cardio)
+            ...cardioFields(exercise, save)
+          else
+            ...strengthFields(exercise, save),
+          unitSelector(),
+          notesField(save),
+        ];
+        final sessionSets = workout == null || exercise == null
+            ? null
+            : SessionSets(
+                key: desktop ? null : const Key('start-plan-set-preview'),
+                exerciseId: exercise.id,
+                workoutId: workout.id,
+                previous: data?.previous[exercise.id],
+                onPreviousSetTap: _fillPreviousSet,
+                sets: data?.sets[exercise.id] ?? const [],
+                compact: !desktop,
               );
 
         return Scaffold(
@@ -170,142 +190,24 @@ class _StartPlanPageState extends State<StartPlanPage>
             child: Form(
               key: _key,
               child: desktop
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(
-                          width: 420,
-                          child: SingleChildScrollView(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: colors.surfaceContainerLow,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    exercises.isNotEmpty &&
-                                            selected < exercises.length
-                                        ? exercises[selected].exercise.name
-                                        : context.l10n.setDetails,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  if (!cardio)
-                                    ...strengthFields(exercise, save),
-                                  if (cardio) ...cardioFields(exercise, save),
-                                  unitSelector(),
-                                  notesField(save),
-                                  if (workout != null &&
-                                      exercises.isNotEmpty &&
-                                      selected < exercises.length) ...[
-                                    const SizedBox(height: 16),
-                                    SessionSets(
-                                      exerciseId:
-                                          exercises[selected].exercise.id,
-                                      workoutId: workout.id,
-                                      previous:
-                                          data?.previous[exercises[selected]
-                                              .exercise
-                                              .id],
-                                      onPreviousSetTap: _fillPreviousSet,
-                                      sets:
-                                          data?.sets[exercise?.id] ?? const [],
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: colors.surfaceContainerLow,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              clipBehavior: Clip.none,
-                              child: exerciseList(),
-                            ),
-                          ),
-                        ),
-                      ],
+                  ? StartPlanWideLayout(
+                      title: exercise?.name ?? context.l10n.setDetails,
+                      fields: fields,
+                      exerciseList: exerciseList,
+                      sessionSets: sessionSets,
                     )
-                  : Column(
-                      children: [
-                        if (!cardio) ...strengthFields(exercise, save),
-                        if (cardio) ...cardioFields(exercise, save),
-                        unitSelector(),
-                        notesField(save),
-                        Expanded(child: exerciseList()),
-                      ],
+                  : StartPlanCompactLayout(
+                      fields: fields,
+                      exerciseList: exerciseList,
                     ),
             ),
           ),
           floatingActionButtonLocation: desktop
               ? FloatingActionButtonLocation.centerFloat
               : StartPlanDockLocation(MediaQuery.viewPaddingOf(context).bottom),
-          floatingActionButton:
-              desktop ||
-                  workout == null ||
-                  exercises.isEmpty ||
-                  selected >= exercises.length
+          floatingActionButton: desktop || sessionSets == null
               ? null
-              : Padding(
-                  key: const Key('start-plan-floating-row'),
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    // The dock location handles keyboard and nav clearance.
-                    // Keeping padding fixed prevents the row from resizing
-                    // mid-animation.
-                    bottom: 0,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 56,
-                          child: OverflowBox(
-                            alignment: Alignment.center,
-                            minHeight: 0,
-                            maxHeight: double.infinity,
-                            child: SessionSets(
-                              key: const Key('start-plan-set-preview'),
-                              exerciseId: exercises[selected].exercise.id,
-                              workoutId: workout.id,
-                              previous: data
-                                  ?.previous[exercises[selected].exercise.id],
-                              onPreviousSetTap: _fillPreviousSet,
-                              sets: data?.sets[exercise?.id] ?? const [],
-                              compact: true,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: MediaQuery.viewInsetsOf(context).bottom > 0
-                            ? 0
-                            : 8,
-                      ),
-                      AppFab(
-                        onPressed: () async => await save(),
-                        label: Text(context.l10n.actionSave),
-                        icon: const Icon(Icons.save),
-                        bottomPadding: 0,
-                      ),
-                    ],
-                  ),
-                ),
+              : StartPlanCompactDock(sessionSets: sessionSets, onSave: save),
         );
       },
     );

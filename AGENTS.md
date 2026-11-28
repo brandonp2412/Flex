@@ -1,15 +1,9 @@
-# Android Device Installation
-
-- For physical Android device installs, do not use `flutter run` or `flutter install`.
-- Build the APK first, then install or update it with `adb install -r <path-to.apk>` so the existing app data is preserved.
-- If `adb install -r` fails because of a signing-key mismatch, version downgrade, or another install error, report the failure and do not uninstall the existing app unless explicitly asked.
-
 # Required Flutter Completion Checks
 
 - After a fresh checkout, run `flutter pub get` and `dart run drift_dev schema generate --data-classes --companions drift_schemas/db test/drift/db/generated` to restore the generated migration test fixtures.
 - Before considering any work complete, run all of the following and ensure they pass:
-  1. `dart format .`
-  2. `flutter analyze`
+  1. `dart format lib test integration_test`
+  2. `flutter analyze lib test integration_test`
   3. `flutter test`
 
 # Drift Database Rules

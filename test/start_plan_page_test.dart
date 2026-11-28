@@ -226,6 +226,44 @@ void main() {
     expect(find.byIcon(Icons.check_circle_outline), findsNothing);
   });
 
+  testWidgets('resizing preserves draft workout fields', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 800);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final harness = await FlexTestHarness.create();
+    final database = harness.database;
+    final planId = await database.plans.insertOne(planFixture());
+    await insertPlanExerciseFixture(
+      database,
+      planId: planId,
+      exercise: 'Bench press',
+    );
+    final plan =
+        await (database.plans.select()..where((row) => row.id.equals(planId)))
+            .getSingle();
+    await harness.pump(tester, StartPlanPage(plan: plan));
+    await tester.pumpAndSettle();
+
+    final reps = textFieldWithLabel('Reps');
+    final weight = textFieldWithLabel('Weight (kg)');
+    await tester.enterText(reps, '7');
+    await tester.enterText(weight, '42');
+    await tester.pumpAndSettle();
+
+    for (final wide in [true, false]) {
+      tester.view.physicalSize = Size(wide ? 1400 : 800, 800);
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<EditableText>(reps).controller.text, '7');
+      expect(tester.widget<EditableText>(weight).controller.text, '42');
+      expect(
+        find.byKey(const Key('desktop-editor-save')),
+        wide ? findsOneWidget : findsNothing,
+      );
+    }
+  });
+
   for (final trailing in ['reorder', 'none']) {
     testWidgets('single desktop exercise has no outer spacing ($trailing)', (
       tester,

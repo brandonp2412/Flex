@@ -96,7 +96,12 @@ void main() {
 
     await tester.tap(find.text('Bench press'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Exercise notes'));
+    await tester.tap(
+      find.ancestor(
+        of: find.text('Exercise notes'),
+        matching: find.byType(InputDecorator),
+      ),
+    );
     await tester.pumpAndSettle();
     expectInTab(find.byType(GraphNotesPage));
     navigator.pop();

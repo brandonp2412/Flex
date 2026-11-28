@@ -3,6 +3,8 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/graph/graphs_page.dart';
+import 'package:flex/home_compact_layout.dart';
+import 'package:flex/home_wide_layout.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/plans_page.dart';
@@ -303,80 +305,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
     }).toList();
 
-    final content = Stack(
-      children: [
-        if (desktop)
-          PageView(
-            controller: _pages,
-            physics: const NeverScrollableScrollPhysics(),
-            onPageChanged: (index) {
-              if (_controller.index != index) _controller.index = index;
-            },
-            children: pages,
-          )
-        else
-          TabBarView(
-            controller: _controller,
-            physics: scrollableTabs
-                ? const AlwaysScrollableScrollPhysics()
-                : const NeverScrollableScrollPhysics(),
-            children: pages,
-          ),
-        if (!desktop && scrollableTabs) ...[
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 30,
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onHorizontalDragUpdate: (_) {},
-            ),
-          ),
-          Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: 30,
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onHorizontalDragUpdate: (_) {},
-            ),
-          ),
-        ],
-        if (!desktop)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: ValueListenableBuilder(
-              valueListenable: _controller.animation!,
-              builder: (context, value, child) {
-                return BottomNav(
-                  tabs: tabs,
-                  currentIndex: value.round(),
-                  onTap: _controller.animateTo,
-                  onLongPress: hideTab,
-                );
-              },
-            ),
-          ),
-        Consumer<Setting>(
-          builder: (context, settings, child) => Positioned(
-            top: settings.progressPosition == 'top' ? 8 : null,
-            bottom: switch (settings.progressPosition) {
-              'bottom' when desktop => 12,
-              'bottom' => 0,
-              _ => null,
-            },
-            left: desktop ? 24 : 48,
-            right: desktop ? 24 : 48,
-            child: settings.progressPosition != 'none'
-                ? const TimerProgressIndicator()
-                : const SizedBox(),
-          ),
-        ),
-      ],
+    final progress = Consumer<Setting>(
+      builder: (context, settings, child) => Positioned(
+        top: settings.progressPosition == 'top' ? 8 : null,
+        bottom: switch (settings.progressPosition) {
+          'bottom' when desktop => 12,
+          'bottom' => 0,
+          _ => null,
+        },
+        left: desktop ? 24 : 48,
+        right: desktop ? 24 : 48,
+        child: settings.progressPosition != 'none'
+            ? const TimerProgressIndicator()
+            : const SizedBox(),
+      ),
     );
 
     return Scaffold(
@@ -386,33 +328,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       body: SafeArea(
         maintainBottomViewPadding: true,
         child: desktop
-            ? Row(
-                children: [
-                  ListenableBuilder(
-                    listenable: _controller,
-                    builder: (context, child) => DesktopNav(
-                      tabs: tabs,
-                      currentIndex: _controller.index.clamp(0, tabs.length - 1),
-                      onTap: _selectDesktopTab,
-                      onSecondaryTap: hideTab,
-                      onSettingsTap: _openDesktopSettings,
-                      settingsSelected:
-                          _desktopSettingsOpen ||
-                          _nestedSettingsTabs.contains(
-                            tabs[_controller.index.clamp(0, tabs.length - 1)],
-                          ) ||
-                          tabs[_controller.index.clamp(0, tabs.length - 1)] ==
-                              'SettingsPage',
-                    ),
-                  ),
-                  Expanded(
-                    child: _desktopSettingsOpen
-                        ? const SettingsPage()
-                        : content,
-                  ),
-                ],
+            ? HomeWideLayout(
+                tabs: tabs,
+                tabController: _controller,
+                pageController: _pages,
+                pages: pages,
+                onSelectTab: _selectDesktopTab,
+                onHideTab: hideTab,
+                onOpenSettings: _openDesktopSettings,
+                settingsOpen: _desktopSettingsOpen,
+                nestedSettingsTabs: _nestedSettingsTabs,
+                progress: progress,
               )
-            : content,
+            : HomeCompactLayout(
+                tabs: tabs,
+                controller: _controller,
+                pages: pages,
+                scrollable: scrollableTabs,
+                onHideTab: hideTab,
+                progress: progress,
+              ),
       ),
     );
   }
