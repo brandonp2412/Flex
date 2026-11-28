@@ -1,3 +1,8 @@
+import 'package:flex/bottom_nav.dart';
+import 'package:flex/home_page.dart';
+import 'package:flex/graph/graphs_page.dart';
+import 'package:flex/settings/category_management_page.dart';
+import 'package:flex/database/categories.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/graph/merge_graphs_page.dart';
 import 'package:flutter/material.dart';
@@ -71,6 +76,56 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('mobile merge and category actions clear the floating dock', (
+    tester,
+  ) async {
+    final harness = await FlexTestHarness.create();
+    await createCategory('Legs');
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    await harness.pump(
+      tester,
+      const HomePage(),
+      surfaceSize: const Size(390, 800),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('GraphsPage')));
+    await tester.pumpAndSettle();
+    final navigator = tester
+        .state<GraphsPageState>(find.byType(GraphsPage))
+        .navKey
+        .currentState!;
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => MergeGraphsPage(summaries: mergeable),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final dock = find.byType(BottomNav);
+    final merge = find.byKey(const Key('confirm-merge-graphs'));
+    expect(
+      tester.getBottomLeft(merge).dy,
+      lessThanOrEqualTo(tester.getBottomLeft(dock).dy - bottomNavHeight),
+    );
+    expect(merge.hitTestable(), findsOneWidget);
+    navigator.pop();
+    await tester.pumpAndSettle();
+    navigator.push(
+      MaterialPageRoute<void>(builder: (_) => const CategoryManagementPage()),
+    );
+    await tester.pumpAndSettle();
+    final fab = find.byType(FloatingActionButton);
+    expect(
+      tester.getBottomLeft(fab).dy,
+      lessThanOrEqualTo(tester.getBottomLeft(dock).dy - bottomNavHeight),
+    );
+    await tester.tap(fab);
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+  });
 
   testWidgets('body weight cannot be merged with an exercise', (
     WidgetTester tester,

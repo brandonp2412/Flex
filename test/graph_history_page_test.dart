@@ -155,7 +155,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('1 × 80 kg'));
+    await tester.tap(find.text('80 kg'));
     await tester.pumpAndSettle();
     expect(find.byType(WeightPage), findsOneWidget);
     await tester.enterText(find.byType(TextFormField).first, '81');
@@ -170,9 +170,9 @@ void main() {
       ).firstOrNull())?.weight,
       50,
     );
-    expect(find.text('1 × 81 kg'), findsOneWidget);
+    expect(find.text('81 kg'), findsOneWidget);
 
-    await tester.tap(find.text('1 × 81 kg'));
+    await tester.tap(find.text('81 kg'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Delete'));
     await tester.pumpAndSettle();
@@ -225,7 +225,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final gesture = await tester.startGesture(
-      tester.getCenter(find.text('1 × 80 kg')),
+      tester.getCenter(find.text('80 kg')),
       kind: PointerDeviceKind.mouse,
       buttons: kSecondaryMouseButton,
     );

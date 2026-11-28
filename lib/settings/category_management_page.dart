@@ -1,3 +1,4 @@
+import 'package:flex/bottom_nav.dart';
 import 'package:flex/app_confirmation.dart';
 import 'package:flex/database/categories.dart';
 import 'package:flex/database/database.dart';
@@ -13,14 +14,20 @@ class CategoryManagementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final dockVisible =
+        !isDesktopLayout(context) &&
+        Navigator.of(context) != Navigator.of(context, rootNavigator: true);
     return Scaffold(
       floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
       appBar: AppBar(title: Text(l10n.manageCategories)),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: null,
-        onPressed: () => _showCategoryEditor(context),
-        icon: const Icon(Icons.add),
-        label: Text(l10n.newCategory),
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: dockVisible ? bottomNavHeight : 0),
+        child: FloatingActionButton.extended(
+          heroTag: null,
+          onPressed: () => _showCategoryEditor(context),
+          icon: const Icon(Icons.add),
+          label: Text(l10n.newCategory),
+        ),
       ),
       body: StreamBuilder<List<CategorySummary>>(
         stream: watchCategorySummaries(),
@@ -32,6 +39,7 @@ class CategoryManagementPage extends StatelessWidget {
             return Center(child: Text(l10n.noCategories));
           }
           return ResponsiveSettingsList(
+            bottomPadding: dockVisible ? fabListPadding : 116,
             children: [
               for (final summary in categories)
                 Builder(

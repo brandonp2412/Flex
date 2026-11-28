@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 class ResponsiveSettingsList extends StatelessWidget {
   final List<Widget> children;
   final double maxWidth;
+  final double bottomPadding;
 
   const ResponsiveSettingsList({
     super.key,
     required this.children,
     this.maxWidth = 800,
+    this.bottomPadding = 116,
   });
 
   @override
@@ -59,7 +61,7 @@ class ResponsiveSettingsList extends StatelessWidget {
               horizontal: isDesktopLayout(context) ? 32 : 20,
             ),
             child: ListView(
-              padding: const EdgeInsets.only(top: 12, bottom: 116),
+              padding: EdgeInsets.only(top: 12, bottom: bottomPadding),
               children: children,
             ),
           ),

@@ -106,6 +106,7 @@ abstract class HistoryListState<T extends StatefulWidget> extends State<T> {
       distance: set.distance,
       duration: set.duration,
       incline: set.incline,
+      bodyWeight: bodyWeight,
     ),
     created: set.created,
     image: set.image,

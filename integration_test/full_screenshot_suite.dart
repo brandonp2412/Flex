@@ -169,17 +169,21 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
         tabController: MockTabController(),
       ),
     );
-    route(
-      'exercise-notes',
-      'GraphsPage',
-      () async => GraphNotesPage(
-        controller: TextEditingController(
-          text:
-              'Keep shoulders stable. Increase weight when all sets reach 12 reps.',
+    scene('exercise-notes', 'GraphsPage', (tester, context) async {
+      final notes = TextEditingController(
+        text:
+            'Keep shoulders stable. Increase weight when all sets reach 12 reps.',
+      );
+      final navigator = Navigator.of(
+        context,
+        rootNavigator: !isDesktopLayout(context),
+      );
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) => GraphNotesPage(controller: notes, onChanged: () {}),
         ),
-        onChanged: () {},
-      ),
-    );
+      );
+    });
     route(
       'set-edit',
       'HistoryPage',
@@ -321,9 +325,17 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
         final position = tester.state<ScrollableState>(list).position;
         if (category == SettingsCategory.workouts) {
           final expansion = find.byType(ExpansionTile).last;
-          await tester.ensureVisible(expansion);
-          await tester.tap(expansion);
+          position.jumpTo(position.maxScrollExtent);
           await tester.pumpAndSettle();
+          await tester.ensureVisible(expansion);
+          await tester.tap(
+            find.descendant(
+              of: expansion,
+              matching: find.text(context.l10n.navGraphs),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.text(context.l10n.showGraphXAxisToggle), findsOneWidget);
         }
         position.jumpTo(position.maxScrollExtent);
         await tester.pumpAndSettle();

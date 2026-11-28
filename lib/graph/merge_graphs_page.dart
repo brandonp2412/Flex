@@ -1,3 +1,4 @@
+import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/l10n/l10n.dart';
@@ -81,6 +82,10 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final items = widget.summaries;
+    final desktop = isDesktopLayout(context);
+    final dockVisible =
+        !desktop &&
+        Navigator.of(context) != Navigator.of(context, rootNavigator: true);
     final chosenName = _isNewName
         ? context.l10n.mergeNewName
         : items[_selectedIndex].name;
@@ -91,10 +96,10 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
       body: ResponsiveContent(
         maxWidth: 680,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+          padding: EdgeInsets.fromLTRB(20, desktop ? 20 : 12, 20, 20),
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(desktop ? 24 : 16),
               decoration: BoxDecoration(
                 color: colors.primaryContainer.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(28),
@@ -104,22 +109,26 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
                 children: [
                   Icon(
                     Icons.merge_type_rounded,
-                    size: 38,
+                    size: desktop ? 38 : 26,
                     color: colors.primary,
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: desktop ? 18 : 8),
                   Text(
                     context.l10n.mergeGraphsIntro(items.length),
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style:
+                        (desktop
+                                ? theme.textTheme.headlineSmall
+                                : theme.textTheme.titleLarge)
+                            ?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: desktop ? 12 : 8),
                   Text(
                     context.l10n.mergeGraphsExplanation,
-                    style: theme.textTheme.bodyLarge,
+                    style: desktop
+                        ? theme.textTheme.bodyLarge
+                        : theme.textTheme.bodyMedium,
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: desktop ? 10 : 6),
                   Text(
                     context.l10n.mergeGraphsWarning,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -129,22 +138,22 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: desktop ? 28 : 16),
             Text(
               context.l10n.mergeNameLabel,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: desktop ? 14 : 8),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 180),
               child: Container(
                 key: ValueKey(_selectedIndex),
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                   horizontal: 20,
-                  vertical: 18,
+                  vertical: desktop ? 18 : 12,
                 ),
                 decoration: BoxDecoration(
                   color: colors.surfaceContainerHigh,
@@ -243,7 +252,7 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
                 ),
               ),
             ],
-            const SizedBox(height: 26),
+            SizedBox(height: desktop ? 26 : 12),
             Text(
               context.l10n.mergeGraphsIncluded,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -253,6 +262,7 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
             const SizedBox(height: 8),
             for (final item in items)
               ListTile(
+                dense: !desktop,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                 leading: Icon(switch (item) {
                   _ when item.bodyWeight => Icons.monitor_weight_outlined,
@@ -278,7 +288,12 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
         ),
       ),
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        minimum: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          dockVisible ? bottomNavHeight + 16 : 20,
+        ),
         child: Center(
           heightFactor: 1,
           child: ConstrainedBox(
