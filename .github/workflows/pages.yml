@@ -62,6 +62,9 @@ jobs:
           test -s site/screenshots/index.html
           for profile in phoneScreenshots sevenInchScreenshots tenInchScreenshots desktop; do
             test "$(find "site/screenshots/$profile" -maxdepth 1 -name '*.png' | wc -l)" -ge 54
+            for theme in light amoled; do
+              test "$(find "site/screenshots/$theme/$profile" -maxdepth 1 -name '*.png' | wc -l)" -ge 46
+            done
           done
 
       - name: Configure Pages

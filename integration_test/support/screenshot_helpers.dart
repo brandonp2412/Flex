@@ -27,9 +27,17 @@ Future<void> appWrapper(
     tester.view.padding = padding;
     tester.view.viewPadding = padding;
   }
+  final galleryTheme = kIsWeb && Uri.base.queryParameters['gallery'] == 'full'
+      ? Uri.base.queryParameters['theme']
+      : null;
+  final themeMode = switch (galleryTheme) {
+    'light' => ThemeMode.light.toString(),
+    'amoled' => 'ThemeMode.amoled',
+    _ => ThemeMode.dark.toString(),
+  };
   await app.db.settings.update().write(
     SettingsCompanion(
-      themeMode: Value(ThemeMode.dark.toString()),
+      themeMode: Value(themeMode),
       explainedPermissions: const Value(true),
       restTimers: const Value(true),
       systemColors: const Value(false),

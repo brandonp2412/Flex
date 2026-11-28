@@ -20,6 +20,7 @@ FULL_NAMES = {f"full-{name}.png" for name in (
     "cardio-set-edit", "cardio-exercise-edit", "cardio-graph",
     "body-weight-graph", "body-weight-history", "timer-idle",
 )}
+THEMES = {"dark": "Dark", "light": "Light", "amoled": "Black (AMOLED)"}
 MAX_BYTES = 8 * 1024 * 1024
 
 PROFILES = {
@@ -56,9 +57,12 @@ async def capture(browser, url, out, name, debug_dir, expected):
     w,h,scale = PROFILES[name]
     status_bar = name != "desktop"
     options = dict(viewport={"width":w,"height":h}, device_scale_factor=scale, reduced_motion="reduce", locale="en-US", timezone_id="UTC")
+    if "gallery=full" in url:
+        options["color_scheme"] = "light" if "theme=light" in url else "dark"
     if name == "phoneScreenshots":
         options.update(is_mobile=True, has_touch=True, user_agent="Mozilla/5.0 (Linux; Android 15; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36")
     context=await browser.new_context(**options)
+    debug_dir.mkdir(parents=True, exist_ok=True)
     dest=out/name
     dest.mkdir(parents=True,exist_ok=True)
     page=await context.new_page()
@@ -122,65 +126,78 @@ PROFILE_LABELS = {
 }
 
 
-def build_gallery(captures, destination):
-    entries = {}
-    for profile in PROFILES:
-        files = [
-            (captures / profile / f"{number}_en-US.png", f"{number:02}-{name}.png")
-            for number, name in enumerate(STORE_NAMES, 1)
-        ] + [
-            (captures / "full" / profile / name, name.removeprefix("full-"))
-            for name in sorted(FULL_NAMES)
-        ]
-        w, h, scale = PROFILES[profile]
-        for source, name in files:
-            validate_screenshot(source, (round(w * scale), round(h * scale)))
-        entries[profile] = files
+def full_directory(captures, theme):
+    return captures / "full" if theme == "dark" else captures / "full" / theme
 
+
+def build_gallery(captures, destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=destination.parent, prefix=".gallery-") as temp:
         gallery = Path(temp) / "gallery"
         gallery.mkdir()
-        root = ["# Flex screenshot gallery", "",
-                "Generated from the automated screenshot fixture with sample data.", "",
-                f"{sum(map(len, entries.values()))} screenshots across {len(entries)} device profiles.", ""]
         sections = []
-        for profile, files in entries.items():
+        root = ["# Flex screenshot gallery", "", "Generated from sample data.", ""]
+        for profile, (w, h, scale) in PROFILES.items():
             label = PROFILE_LABELS[profile]
-            root.append(f"- [{label} — {len(files)} screenshots]({profile}/)")
-            directory = gallery / profile
-            directory.mkdir()
-            markdown = [f"# {label}", "", "[All device profiles](../)", ""]
-            cards = []
-            w, h, scale = PROFILES[profile]
             image_width, image_height = round(w * scale), round(h * scale)
-            for source, filename in files:
-                shutil.copyfile(source, directory / filename)
-                title = filename.removesuffix(".png")
-                if title[:2].isdigit():
-                    title = title[3:]
-                title = title.replace("-", " ").capitalize()
-                width = 260 if profile == "phoneScreenshots" else 480
-                markdown.extend([f"### {title}", "", f'<a href="{filename}"><img src="{filename}" alt="{title}" width="{width}"/></a>', ""])
-                path = f"{profile}/{filename}"
-                cards.append(f'<a href="{path}"><img loading="lazy" src="{path}" width="{image_width}" height="{image_height}" alt="{html.escape(title)}"><span>{html.escape(title)}</span></a>')
-            (directory / "README.md").write_text("\n".join(markdown), encoding="utf-8")
-            sections.append(f'<section id="{profile}"><h2>{label} · {len(files)} screenshots</h2><div class="screens {profile}">{"".join(cards)}</div></section>')
+            panels = []
+            for theme, theme_label in THEMES.items():
+                directory = gallery / profile if theme == "dark" else gallery / theme / profile
+                directory.mkdir(parents=True)
+                files = [
+                    (full_directory(captures, theme) / profile / name, name.removeprefix("full-"))
+                    for name in sorted(FULL_NAMES)
+                ]
+                if theme == "dark":
+                    files = [
+                        (captures / profile / f"{number}_en-US.png", f"{number:02}-{name}.png")
+                        for number, name in enumerate(STORE_NAMES, 1)
+                    ] + files
+                relative = directory.relative_to(gallery).as_posix()
+                root.append(f"- [{label} · {theme_label} — {len(files)} screenshots]({relative}/)")
+                markdown = [f"# {label} · {theme_label}", "", "[All screenshots](" + ("../" if theme == "dark" else "../../") + ")", ""]
+                cards = []
+                for source, filename in files:
+                    validate_screenshot(source, (image_width, image_height))
+                    shutil.copyfile(source, directory / filename)
+                    title = filename.removesuffix(".png")
+                    if title[:2].isdigit():
+                        title = title[3:]
+                    title = title.replace("-", " ").capitalize()
+                    width = 260 if profile == "phoneScreenshots" else 480
+                    markdown.extend([f"### {title}", "", f'<a href="{filename}"><img src="{filename}" alt="{title}" width="{width}"/></a>', ""])
+                    path = f"{relative}/{filename}"
+                    cards.append(f'<a href="{path}"><img loading="lazy" src="{path}" width="{image_width}" height="{image_height}" alt="{html.escape(title)}"><span>{html.escape(title)}</span></a>')
+                (directory / "README.md").write_text("\n".join(markdown), encoding="utf-8")
+                panels.append(f'<div data-panel="{theme}"{" hidden" if theme != "dark" else ""}><h2>{label} · {len(files)} screenshots</h2><div class="screens {profile}">{"".join(cards)}</div></div>')
+            sections.append(f'<section id="{profile}">{"".join(panels)}</section>')
         (gallery / "README.md").write_text("\n".join(root) + "\n", encoding="utf-8")
         links = " ".join(f'<a href="#{profile}">{label}</a>' for profile, label in PROFILE_LABELS.items())
+        buttons = " ".join(f'<button type="button" data-choice="{theme}" aria-pressed="{str(theme == "dark").lower()}">{label}</button>' for theme, label in THEMES.items())
         (gallery / "index.html").write_text(
-            '<!doctype html><html lang="en"><meta charset="utf-8">'
+            '<!doctype html><html lang="en" data-theme="dark"><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             '<title>Flex screenshots</title><style>'
-            'body{font:16px system-ui;margin:24px;background:#17161b;color:#eee}'
-            'nav{display:flex;gap:20px;flex-wrap:wrap;position:sticky;top:0;z-index:1;background:#17161b;padding:12px 0}'
-            'a{color:#d3bfff;text-decoration:none}.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}'
+            ':root{color-scheme:dark;--bg:#17161b;--fg:#eee;--card:#25242b;--link:#d3bfff}'
+            ':root[data-theme=light]{color-scheme:light;--bg:#faf8ff;--fg:#201e26;--card:#eeeaf4;--link:#563598}'
+            ':root[data-theme=amoled]{--bg:#000;--fg:#eee;--card:#101010;--link:#d3bfff}'
+            'body{font:16px system-ui;margin:24px;background:var(--bg);color:var(--fg)}'
+            'nav{display:flex;gap:12px;flex-direction:column;position:sticky;top:0;z-index:1;background:var(--bg);padding:12px 0}'
+            'nav div{display:flex;gap:12px;align-items:center;flex-wrap:wrap}'
+            'button{font:inherit;color:var(--fg);background:var(--card);border:1px solid transparent;border-radius:999px;padding:7px 14px;cursor:pointer}'
+            'button[aria-pressed=true]{border-color:var(--link);color:var(--link)}'
+            'a{color:var(--link);text-decoration:none}.screens{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}'
             '.phoneScreenshots{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}'
-            '.screens a{display:flex;flex-direction:column;gap:8px;background:#25242b;border-radius:12px;padding:12px}'
-            'img{display:block;width:100%;height:auto;object-fit:contain;border-radius:5px;background:#17161b}section{scroll-margin-top:calc(var(--nav-height, 65px) + 12px)}'
+            '.screens a{display:flex;flex-direction:column;gap:8px;background:var(--card);border-radius:12px;padding:12px}'
+            'img{display:block;width:100%;height:auto;object-fit:contain;border-radius:5px;background:var(--bg)}section{scroll-margin-top:calc(var(--nav-height, 120px) + 12px)}'
             '@media(max-width:500px){.screens,.phoneScreenshots{grid-template-columns:1fr}}'
-            '</style><h1>Flex screenshots</h1><p>All device profiles · Sample data · Click any image for full resolution</p>'
-            f'<nav>{links}</nav>{"".join(sections)}<script>const nav=document.querySelector("nav");const resize=()=>document.documentElement.style.setProperty("--nav-height",nav.offsetHeight+"px");resize();new ResizeObserver(resize).observe(nav);</script></html>',
+            '</style><h1>Flex screenshots</h1><p>All device profiles · Sample data · Click any image for full resolution. Store screenshots are included in Dark only.</p>'
+            f'<nav><div role="group" aria-label="Screenshot theme">{buttons}</div><div>{links}</div></nav>{"".join(sections)}'
+            '<script>const nav=document.querySelector("nav");const resize=()=>document.documentElement.style.setProperty("--nav-height",nav.offsetHeight+"px");resize();new ResizeObserver(resize).observe(nav);'
+            'const choices=[...document.querySelectorAll("[data-choice]")];function select(theme){document.documentElement.dataset.theme=theme;'
+            'for(const panel of document.querySelectorAll("[data-panel]"))panel.hidden=panel.dataset.panel!==theme;'
+            'for(const button of choices)button.setAttribute("aria-pressed",String(button.dataset.choice===theme));}'
+            'for(const button of choices)button.addEventListener("click",()=>{const section=[...document.querySelectorAll("section")].reverse().find(s=>s.getBoundingClientRect().top<=nav.getBoundingClientRect().bottom+24);select(button.dataset.choice);if(section)section.scrollIntoView();});</script></html>',
             encoding="utf-8",
         )
         if destination.exists():
@@ -190,6 +207,7 @@ def build_gallery(captures, destination):
 
 async def main(args):
     expected = FULL_NAMES if args.full else EXPECTED_NAMES
+    themes = args.themes or (list(THEMES) if args.full else ["dark"])
     args.output.mkdir(parents=True, exist_ok=True)
     handler=functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(args.web))
     server=http.server.ThreadingHTTPServer(("127.0.0.1",0),handler)
@@ -202,18 +220,20 @@ async def main(args):
                     headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"]
                 )
                 try:
-                    for name in args.profiles:
-                        url = f"http://127.0.0.1:{server.server_port}/" + ("?gallery=full" if args.full else "")
-                        await capture(browser, url, staged, name, args.output, expected)
+                    for theme in themes:
+                        for name in args.profiles:
+                            url = f"http://127.0.0.1:{server.server_port}/"
+                            if args.full:
+                                url += f"?gallery=full&theme={theme}"
+                            await capture(browser, url, staged / theme, name, (args.output / theme if args.full else args.output), expected)
                 finally:
                     await browser.close()
-            for name in args.profiles:
-                destination = args.output / name
-                destination.mkdir(parents=True, exist_ok=True)
-                for filename in sorted(expected):
-                    target = args.output / "full" / name if filename in FULL_NAMES else destination
+            for theme in themes:
+                for name in args.profiles:
+                    target = (full_directory(args.output, theme) if args.full else args.output) / name
                     target.mkdir(parents=True, exist_ok=True)
-                    shutil.copyfile(staged / name / filename, target / filename)
+                    for filename in sorted(expected):
+                        shutil.copyfile(staged / theme / name / filename, target / filename)
             if args.gallery:
                 build_gallery(args.output, args.gallery)
     finally:
@@ -222,11 +242,14 @@ async def main(args):
 if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument("--full", action="store_true")
+    parser.add_argument("--themes", nargs="+", choices=THEMES, help="Limit full-suite captures to selected themes")
     parser.add_argument("--gallery", type=Path, help="Build the full gallery after capture")
     parser.add_argument("--web",type=Path,required=True)
     parser.add_argument("--output",type=Path,required=True)
     parser.add_argument("profiles",nargs="*",default=list(PROFILES))
     args = parser.parse_args()
+    if args.themes and not args.full:
+        parser.error("--themes requires --full")
     if args.gallery and not args.full:
         parser.error("--gallery requires --full")
     if any(name not in PROFILES for name in args.profiles):
