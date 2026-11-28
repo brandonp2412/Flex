@@ -22,11 +22,17 @@ class AboutPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.only(bottom: 116),
           children: [
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Image(
-                image: AssetImage('assets/ic_launcher.png'),
-                height: 150,
+            Padding(
+              padding: const EdgeInsets.all(pagePadding),
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: const Image(
+                    image: AssetImage('assets/ic_launcher.png'),
+                    width: 96,
+                    height: 96,
+                  ),
+                ),
               ),
             ),
             const Center(child: MadeInNewZealandBadge()),

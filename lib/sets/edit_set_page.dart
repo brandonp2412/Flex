@@ -1,15 +1,10 @@
-import 'package:flex/sets/workout_input.dart';
-import 'package:flex/app_message.dart';
-import 'package:flex/sets/workout_category_field.dart';
-import 'package:flex/sets/workout_editor_fields.dart';
-import 'package:flex/sets/workout_unit_field.dart';
-import 'package:flex/sets/workout_number_field.dart';
 import 'dart:async';
 import 'dart:math';
 
 import 'package:drift/drift.dart' hide Column, View;
 import 'package:file_picker/file_picker.dart';
 import 'package:flex/app_confirmation.dart';
+import 'package:flex/app_message.dart';
 import 'package:flex/constants.dart';
 import 'package:flex/database/body_weight_repository.dart';
 import 'package:flex/database/database.dart';
@@ -22,6 +17,11 @@ import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
 import 'package:flex/responsive.dart';
 import 'package:flex/sets/keyboard_close_observer.dart';
+import 'package:flex/sets/workout_category_field.dart';
+import 'package:flex/sets/workout_editor_fields.dart';
+import 'package:flex/sets/workout_input.dart';
+import 'package:flex/sets/workout_number_field.dart';
+import 'package:flex/sets/workout_unit_field.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flex/unsaved_changes.dart';
 import 'package:flex/utils.dart';
@@ -196,24 +196,30 @@ class _EditSetPageState extends State<EditSetPage>
                       autocomplete(showBodyWeight, snapshot.data ?? const []),
                 ),
                 ...exerciseFields(),
-                const SizedBox(height: 12.0),
+                const SizedBox(height: formFieldSpacing),
                 if (showBodyWeight) ...[
                   bodyFields(showBodyWeight),
-                  const SizedBox(height: 12.0),
+                  const SizedBox(height: formFieldSpacing),
                 ],
                 if (showUnits) ...[
                   unitSelector(),
-                  const SizedBox(height: 12.0),
+                  const SizedBox(height: formFieldSpacing),
                 ],
                 if (showCategories) ...[categorySelector()],
-                if (showNotes) ...[notesField(), const SizedBox(height: 12.0)],
+                if (showNotes) ...[
+                  notesField(),
+                  const SizedBox(height: formFieldSpacing),
+                ],
                 dateSelector(),
-                const SizedBox(height: 12),
+                const SizedBox(height: formFieldSpacing),
                 exerciseKindSelector(context, _cardio, (value) {
                   markDirty();
                   setState(() => _cardio = value!);
                 }),
-                if (showImages) ...[const SizedBox(height: 12), imageField()],
+                if (showImages) ...[
+                  const SizedBox(height: formFieldSpacing),
+                  imageField(),
+                ],
               ],
             );
           },
@@ -229,11 +235,11 @@ class _EditSetPageState extends State<EditSetPage>
 
   List<Widget> buildStrengthFields() {
     return [
-      const SizedBox(height: 12.0),
+      const SizedBox(height: formFieldSpacing),
       buildRepsField(),
-      const SizedBox(height: 12.0),
+      const SizedBox(height: formFieldSpacing),
       buildWeightField(),
-      const SizedBox(height: 12.0),
+      const SizedBox(height: formFieldSpacing),
       if (isWeightUnit(_unit)) buildORMField(),
     ];
   }
@@ -276,11 +282,11 @@ class _EditSetPageState extends State<EditSetPage>
 
   List<Widget> buildCardioFields() {
     return [
-      SizedBox(height: 12.0),
+      SizedBox(height: formFieldSpacing),
       buildDistanceField(),
-      SizedBox(height: 12.0),
+      SizedBox(height: formFieldSpacing),
       duration(),
-      SizedBox(height: 12.0),
+      SizedBox(height: formFieldSpacing),
       buildInclineField(),
     ];
   }

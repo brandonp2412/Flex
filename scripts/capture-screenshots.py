@@ -9,7 +9,7 @@ FULL_NAMES = {f"full-{name}.png" for name in (
     "settings-appearance", "settings-data", "settings-formats", "settings-plans",
     "settings-tabs", "settings-timers", "settings-workouts", "categories",
     "category-create", "about", "whats-new", "permissions", "database-error",
-    "plan-create", "plan-exercise-settings", "exercise-create", "exercise-edit",
+    "plan-create", "swap-workout", "plan-exercise-settings", "exercise-create", "exercise-edit",
     "global-progress", "exercise-history", "exercise-notes", "set-edit",
     "sets-bulk-edit", "body-weight", "settings-language",
     "graph-options", "graph-merge", "graph-empty-exercise",

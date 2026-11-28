@@ -9,7 +9,7 @@ class ResponsiveSettingsList extends StatelessWidget {
   const ResponsiveSettingsList({
     super.key,
     required this.children,
-    this.maxWidth = 800,
+    this.maxWidth = settingsMaxWidth,
     this.bottomPadding = 116,
   });
 
@@ -58,7 +58,7 @@ class ResponsiveSettingsList extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isDesktopLayout(context) ? 32 : 20,
+              horizontal: isDesktopLayout(context) ? 32 : pagePadding,
             ),
             child: ListView(
               padding: EdgeInsets.only(top: 12, bottom: bottomPadding),

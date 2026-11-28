@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-Future<void> appWrapper(
+Future<Setting> appWrapper(
   WidgetTester tester, {
   required String localeIdentifier,
 }) async {
@@ -50,6 +50,7 @@ Future<void> appWrapper(
   final settings = await (db.settings.select()..limit(1)).getSingle();
 
   await tester.pumpWidget(app.appProviders(settings));
+  return settings;
 }
 
 BuildContext getBuildContext(WidgetTester tester, String tabBarState) {

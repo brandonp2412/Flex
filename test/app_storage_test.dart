@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flex/settings/app_appearance.dart';
 import 'package:flex/storage/app_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
@@ -29,6 +30,28 @@ void main() {
   tearDown(() async {
     PathProviderPlatform.instance = originalProvider;
     await root.delete(recursive: true);
+  });
+
+  test('restores the last appearance independently of the database', () async {
+    expect(await loadAppAppearance(), defaultAppAppearance);
+
+    const light = (
+      themeMode: 'ThemeMode.light',
+      seedColor: 0xFF1976D2,
+      systemColors: false,
+    );
+    const amoled = (
+      themeMode: 'ThemeMode.amoled',
+      seedColor: 0xFF2B7A78,
+      systemColors: true,
+    );
+    await saveAppAppearance(light);
+    expect(await loadAppAppearance(), light);
+    await saveAppAppearance(amoled);
+    expect(await loadAppAppearance(), amoled);
+
+    await writeAppearanceCache('invalid');
+    expect(await loadAppAppearance(), defaultAppAppearance);
   });
 
   File databaseFile(Directory folder) =>

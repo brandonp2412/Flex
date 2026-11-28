@@ -86,3 +86,26 @@ Future<File> _resolveLockedDatabaseFile(Directory support) async {
   await marker.writeAsString('', flush: true);
   return staged.rename(destination.path);
 }
+
+Future<File> _appearanceCache() async {
+  final support = await getApplicationSupportDirectory();
+  return File(p.join(support.path, 'appearance.json'));
+}
+
+Future<String?> readAppearanceCache() async {
+  final file = await _appearanceCache();
+  return await file.exists() ? file.readAsString() : null;
+}
+
+Future<void> writeAppearanceCache(String value) async {
+  final file = await _appearanceCache();
+  await file.parent.create(recursive: true);
+  final staging = await file.parent.createTemp('.appearance-');
+  try {
+    final pending = File(p.join(staging.path, 'appearance.json'));
+    await pending.writeAsString(value, flush: true);
+    await pending.rename(file.path);
+  } finally {
+    await staging.delete(recursive: true);
+  }
+}

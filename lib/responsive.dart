@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 export 'package:flex/responsive_content.dart';
 export 'package:flex/responsive_settings_list.dart';
 
+const double pagePadding = 16;
+const double formFieldSpacing = 12;
+const double sectionSpacing = 24;
+const double editorMaxWidth = 720;
+const double settingsMaxWidth = 760 + 2 * pagePadding;
+
 const double desktopBreakpoint = 900;
 const double desktopMaxWidth = 1040;
 const double wideMaxWidth = 1240;

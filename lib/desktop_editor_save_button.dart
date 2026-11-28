@@ -6,18 +6,22 @@ class DesktopEditorSaveButton extends StatelessWidget {
     super.key,
     required this.onPressed,
     this.label,
+    this.icon = Icons.save_rounded,
+    this.actionKey = const Key('desktop-editor-save'),
   });
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String? label;
+  final IconData icon;
+  final Key actionKey;
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsetsDirectional.only(end: 16),
     child: FilledButton.icon(
-      key: const Key('desktop-editor-save'),
+      key: actionKey,
       onPressed: onPressed,
-      icon: const Icon(Icons.save_rounded),
+      icon: Icon(icon),
       label: Text(label ?? context.l10n.actionSave),
     ),
   );

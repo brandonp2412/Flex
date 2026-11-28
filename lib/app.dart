@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/database/failed_migrations_page.dart';
 import 'package:flex/home_page.dart';
 import 'package:flex/l10n/generated/app_localizations.dart';
 import 'package:flex/l10n/l10n.dart';
@@ -9,6 +10,7 @@ import 'package:flex/l10n/locale_preferences.dart';
 import 'package:flex/logging.dart';
 import 'package:flex/main.dart';
 import 'package:flex/no_animation_page_transitions_builder.dart';
+import 'package:flex/settings/app_appearance.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -95,46 +97,42 @@ class App extends StatelessWidget {
     };
   }
 
-  const App({super.key});
+  const App({super.key}) : _recovery = null;
+
+  const App.recovery({
+    super.key,
+    required Object error,
+    required AppAppearance appearance,
+  }) : _recovery = (error: error, appearance: appearance);
+
+  final ({Object error, AppAppearance appearance})? _recovery;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.select<Setting, bool>(
-      (settings) => settings.systemColors,
-    );
-    final seedColor = context.select<Setting, int>(
-      (settings) => settings.seedColor,
-    );
-    final amoledDark = context.select<Setting, bool>(
-      (settings) => settings.themeMode == 'ThemeMode.amoled',
-    );
-    final mode = context.select<Setting, ThemeMode>(
-      (settings) => settings.themeMode == 'ThemeMode.amoled'
-          ? ThemeMode.dark
-          : ThemeMode.values.byName(
-              settings.themeMode.replaceFirst('ThemeMode.', ''),
-            ),
-    );
-    final inputStyle = context.select<Setting, String>(
-      (settings) => settings.inputStyle,
-    );
-    final themeMode = context.select<Setting, String>(
-      (settings) => settings.themeMode,
-    );
-    final localeOverride = context.select<Setting, String?>(
-      (settings) => settings.localeOverride,
-    );
+    final recovery = _recovery;
+    final appearance =
+        recovery?.appearance ??
+        context.select<Setting, AppAppearance>(appearanceFromSettings);
+    final amoledDark = appearance.themeMode == 'ThemeMode.amoled';
+    final mode = switch (appearance.themeMode) {
+      'ThemeMode.light' => ThemeMode.light,
+      'ThemeMode.dark' || 'ThemeMode.amoled' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+    final inputStyle = recovery == null
+        ? context.select((Setting settings) => settings.inputStyle)
+        : 'line';
+    final localeOverride = recovery == null
+        ? context.select((Setting settings) => settings.localeOverride)
+        : null;
 
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
-        final brightness =
-            themeMode == 'ThemeMode.dark' ||
-                themeMode == 'ThemeMode.amoled' ||
-                (themeMode == 'ThemeMode.system' &&
-                    MediaQuery.of(context).platformBrightness ==
-                        Brightness.dark)
-            ? Brightness.dark
-            : Brightness.light;
+        final brightness = switch (mode) {
+          ThemeMode.dark => Brightness.dark,
+          ThemeMode.light => Brightness.light,
+          ThemeMode.system => MediaQuery.platformBrightnessOf(context),
+        };
 
         SystemChrome.setSystemUIOverlayStyle(
           SystemUiOverlayStyle(
@@ -147,9 +145,11 @@ class App extends StatelessWidget {
           ),
         );
 
-        final lightScheme = ColorScheme.fromSeed(seedColor: Color(seedColor));
+        final lightScheme = ColorScheme.fromSeed(
+          seedColor: Color(appearance.seedColor),
+        );
         final darkScheme = ColorScheme.fromSeed(
-          seedColor: Color(seedColor),
+          seedColor: Color(appearance.seedColor),
           brightness: Brightness.dark,
         );
 
@@ -162,6 +162,7 @@ class App extends StatelessWidget {
           locale: localeOverrideFromIdentifier(localeOverride),
           navigatorObservers: [UnfocusObserver()],
           builder: (context, child) {
+            if (recovery != null) return child ?? const SizedBox.shrink();
             _syncBackupLocalizations(context.l10n);
             context.read<TimerState>().setNotificationLocalizations(
               upTitle: context.l10n.timerUp,
@@ -182,7 +183,9 @@ class App extends StatelessWidget {
           },
           onGenerateTitle: (context) => context.l10n.appTitle,
           theme: ThemeData(
-            colorScheme: colors ? (lightDynamic ?? lightScheme) : lightScheme,
+            colorScheme: appearance.systemColors
+                ? (lightDynamic ?? lightScheme)
+                : lightScheme,
             fontFamily: 'Manrope',
             useMaterial3: true,
             sliderTheme: _sliderTheme,
@@ -191,8 +194,11 @@ class App extends StatelessWidget {
             pageTransitionsTheme: _pageTransitionsTheme(),
           ),
           darkTheme: ThemeData(
-            colorScheme: (colors ? (darkDynamic ?? darkScheme) : darkScheme)
-                .copyWith(surface: amoledDark ? Colors.black : null),
+            colorScheme:
+                (appearance.systemColors
+                        ? (darkDynamic ?? darkScheme)
+                        : darkScheme)
+                    .copyWith(surface: amoledDark ? Colors.black : null),
             fontFamily: 'Manrope',
             useMaterial3: true,
             sliderTheme: _sliderTheme,
@@ -201,7 +207,9 @@ class App extends StatelessWidget {
             pageTransitionsTheme: _pageTransitionsTheme(),
           ),
           themeMode: mode,
-          home: HomePage(),
+          home: recovery == null
+              ? const HomePage()
+              : FailedMigrationsPage(error: recovery.error),
         );
       },
     );

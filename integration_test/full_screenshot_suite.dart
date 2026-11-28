@@ -10,7 +10,7 @@ import 'package:flex/about_page.dart';
 import 'package:flex/permissions_page.dart';
 import 'package:flex/weight_page.dart';
 import 'package:flex/database/exercise_set_repository.dart';
-import 'package:flex/database/failed_migrations_page.dart';
+import 'package:flex/settings/app_appearance.dart';
 import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/graph/global_progress_page.dart';
 import 'package:flex/graph/graph_history_page.dart';
@@ -27,6 +27,7 @@ import 'package:flex/database/exercise_analytics.dart';
 import 'package:flex/graph/exercise_graph_page.dart';
 import 'package:flex/main.dart';
 import 'package:flex/plan/edit_plan_page.dart';
+import 'package:flex/plan/swap_workout.dart';
 import 'package:flex/settings/settings_page.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flutter/material.dart';
@@ -115,18 +116,11 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
       ).push(MaterialPageRoute(builder: (_) => const PermissionsPage()));
     });
     testWidgets('database-error', (tester) async {
-      tester.binding.platformDispatcher.platformBrightnessTestValue =
-          kIsWeb && Uri.base.queryParameters['theme'] == 'light'
-          ? Brightness.light
-          : Brightness.dark;
-      addTearDown(
-        tester.binding.platformDispatcher.clearPlatformBrightnessTestValue,
-      );
-      await appWrapper(tester, localeIdentifier: 'en');
-      await tester.pumpAndSettle();
+      final settings = await appWrapper(tester, localeIdentifier: 'en');
       await tester.pumpWidget(
-        const FailedMigrationsPage(
+        App.recovery(
           error: 'Example: database migration failed.',
+          appearance: appearanceFromSettings(settings),
         ),
       );
       await tester.pumpAndSettle();
@@ -137,6 +131,15 @@ void registerFullScreenshotSuite(IntegrationTestWidgetsFlutterBinding binding) {
       'plan-create',
       'PlansPage',
       () async => EditPlanPage(plan: PlansCompanion.insert(days: '')),
+    );
+    route(
+      'swap-workout',
+      'PlansPage',
+      () async => SwapWorkout(
+        planExerciseId: (await (db.select(
+          db.planExercises,
+        )..limit(1)).getSingle()).id,
+      ),
     );
     scene('plan-exercise-settings', 'PlansPage', (tester, context) async {
       showDialog<void>(

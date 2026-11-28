@@ -4,6 +4,7 @@ import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/responsive.dart';
+import 'package:flex/desktop_editor_save_button.dart';
 import 'package:flutter/material.dart';
 
 /// Review and name an irreversible, transactional merge of exercise graphs.
@@ -92,11 +93,27 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: Text(context.l10n.mergeGraphsTitle)),
+      appBar: AppBar(
+        title: Text(context.l10n.mergeGraphsTitle),
+        actions: [
+          if (desktop)
+            DesktopEditorSaveButton(
+              actionKey: const Key('confirm-merge-graphs'),
+              onPressed: _compatible && !_merging ? _merge : null,
+              icon: Icons.merge_type_rounded,
+              label: context.l10n.mergeGraphs,
+            ),
+        ],
+      ),
       body: ResponsiveContent(
         maxWidth: 680,
         child: ListView(
-          padding: EdgeInsets.fromLTRB(20, 12, 20, 20),
+          padding: EdgeInsets.fromLTRB(
+            pagePadding,
+            formFieldSpacing,
+            pagePadding,
+            sectionSpacing,
+          ),
           children: [
             Container(
               padding: const EdgeInsets.all(16),
@@ -213,14 +230,14 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
                     child: Text(
                       items.first.name,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelMedium,
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ),
                   Expanded(
                     child: Text(
                       context.l10n.mergeNewName,
                       textAlign: TextAlign.end,
-                      style: theme.textTheme.labelMedium,
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ),
                 ],
@@ -284,30 +301,32 @@ class _MergeGraphsPageState extends State<MergeGraphsPage> {
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        minimum: EdgeInsets.fromLTRB(
-          20,
-          12,
-          20,
-          dockVisible ? bottomNavHeight + 16 : 20,
-        ),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: FilledButton.icon(
-                key: const Key('confirm-merge-graphs'),
-                onPressed: _compatible && !_merging ? _merge : null,
-                icon: const Icon(Icons.merge_type_rounded),
-                label: Text(context.l10n.mergeGraphs),
+      bottomNavigationBar: desktop
+          ? null
+          : SafeArea(
+              minimum: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                dockVisible ? bottomNavHeight + 16 : 20,
+              ),
+              child: Center(
+                heightFactor: 1,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: FilledButton.icon(
+                      key: const Key('confirm-merge-graphs'),
+                      onPressed: _compatible && !_merging ? _merge : null,
+                      icon: const Icon(Icons.merge_type_rounded),
+                      label: Text(context.l10n.mergeGraphs),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }

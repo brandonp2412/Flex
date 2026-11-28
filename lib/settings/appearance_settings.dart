@@ -27,7 +27,7 @@ List<Widget> getAppearanceSettings(
   return [
     if (localeTerms.contains(normalizedTerm))
       Padding(
-        padding: const EdgeInsets.fromLTRB(4, 12, 4, 16),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           children: [
             ListTile(
@@ -95,7 +95,7 @@ List<Widget> getAppearanceSettings(
       l10n.themeLight,
     ]))
       Padding(
-        padding: const EdgeInsets.fromLTRB(4, 12, 4, 16),
+        padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
         child: SegmentedButton<String>(
           segments: [
             ButtonSegment(

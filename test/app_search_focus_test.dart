@@ -39,6 +39,54 @@ void main() {
     expect(editable.focusNode.hasFocus, isTrue);
   });
 
+  testWidgets(
+    'Search uses clear icon while typing and preserves selection behavior',
+    (tester) async {
+      final harness = await FlexTestHarness.create();
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      final selection = <String>{};
+      var query = '';
+      Widget search() => Scaffold(
+        body: AppSearch(
+          controller: selection,
+          textController: controller,
+          onChange: (value) => query = value,
+          onSelectAll: () {},
+          onDelete: () async {},
+          onEdit: () async {},
+          onShare: () async {},
+        ),
+      );
+      await harness.pump(tester, search(), surfaceSize: const Size(430, 600));
+      final bar = find.byType(SearchBar);
+      await tester.enterText(bar, 'Bench');
+      await tester.pumpAndSettle();
+      expect(query, 'Bench');
+      expect(
+        find.descendant(of: bar, matching: find.byIcon(Icons.close_rounded)),
+        findsOneWidget,
+      );
+      selection.add('entry');
+      await harness.pump(tester, search(), surfaceSize: const Size(430, 600));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(of: bar, matching: find.byIcon(Icons.arrow_back)),
+      );
+      await tester.pumpAndSettle();
+      expect(selection, isEmpty);
+      expect(controller.text, 'Bench');
+      await harness.pump(tester, search(), surfaceSize: const Size(430, 600));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(of: bar, matching: find.byIcon(Icons.close_rounded)),
+      );
+      await tester.pumpAndSettle();
+      expect(controller.text, isEmpty);
+      expect(query, isEmpty);
+    },
+  );
+
   testWidgets('Desktop search shows separate icon actions without overflow', (
     tester,
   ) async {

@@ -3,11 +3,11 @@ import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
+import 'package:flex/plan/plan_exercise_settings_dialog.dart';
 import 'package:flex/plan/swap_workout.dart';
+import 'package:flex/platform_page_route.dart';
 import 'package:flex/sets/edit_set_page.dart';
 import 'package:flex/timer/timer_state.dart';
-import 'package:flex/plan/plan_exercise_settings_dialog.dart';
-import 'package:flex/platform_page_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

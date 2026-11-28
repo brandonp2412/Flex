@@ -7,6 +7,7 @@ import 'package:flex/timer/timer_progress_style.dart';
 import 'package:flex/timer/timer_ring.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flex/utils.dart';
+import 'package:flex/responsive.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -34,7 +35,7 @@ class TimerFace extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      const maxSize = 280.0;
+      final maxSize = isDesktopLayout(context) ? 380.0 : 280.0;
       final controlsHeight = trailingControl == null ? 56.0 : 112.0;
       final size = math.min(
         maxSize,
@@ -51,7 +52,7 @@ class TimerFace extends StatelessWidget {
         child: TimeWithMilliseconds(
           time: time,
           duration: duration,
-          fontSize: timerFaceFontSize,
+          fontSize: timerFaceFontSize * size / 280,
           color: Theme.of(context).colorScheme.onSurface,
         ),
       );
@@ -81,6 +82,10 @@ class TimerFace extends StatelessWidget {
               else
                 TextButton(
                   onPressed: () => _addOneMinute(context),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(96, 48),
+                    textStyle: Theme.of(context).textTheme.bodyLarge,
+                  ),
                   child: Text(context.l10n.addOneMinute),
                 ),
               if (trailingControl != null) ...[

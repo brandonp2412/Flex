@@ -5,6 +5,7 @@ import 'package:flex/settings/settings_category_page.dart';
 import 'package:flex/audio/safe_audio_player.dart';
 import 'package:flex/database/database.dart';
 import 'package:flex/empty_state.dart';
+import 'package:flex/flex_search_bar.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
@@ -101,61 +102,18 @@ class _SettingsContentState extends State<SettingsContent>
               onTap: _focusNode.requestFocus,
               child: Padding(
                 padding: desktop
-                    ? const EdgeInsets.fromLTRB(32, 12, 32, 0)
-                    : const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: SearchBar(
+                    ? const EdgeInsets.fromLTRB(32, pagePadding, 32, 0)
+                    : const EdgeInsets.fromLTRB(
+                        pagePadding,
+                        pagePadding,
+                        pagePadding,
+                        0,
+                      ),
+                child: FlexSearchBar(
                   hintText: context.l10n.searchHint,
                   controller: _searchCtrl,
                   focusNode: _focusNode,
-                  onTap: () => _focusNode.requestFocus(),
-                  elevation: const WidgetStatePropertyAll(0),
-                  backgroundColor: WidgetStatePropertyAll(
-                    Theme.of(context).colorScheme.surfaceContainerLow,
-                  ),
-                  shape: WidgetStatePropertyAll(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  padding: WidgetStateProperty.all(
-                    const EdgeInsets.symmetric(horizontal: 16.0),
-                  ),
                   onChanged: (_) => setState(() {}),
-                  leading: SizedBox(
-                    width: 24,
-                    height: 48,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      tooltip: _searchCtrl.text.isEmpty
-                          ? context.l10n.searchHint
-                          : context.l10n.clearSearch,
-                      onPressed: () {
-                        if (_searchCtrl.text.isEmpty) {
-                          _focusNode.requestFocus();
-                        } else {
-                          _searchCtrl.clear();
-                          setState(() {});
-                        }
-                      },
-                      icon: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        transitionBuilder: (child, animation) => FadeTransition(
-                          opacity: animation,
-                          child: ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          ),
-                        ),
-                        child: Icon(
-                          _searchCtrl.text.isEmpty
-                              ? Icons.search
-                              : Icons.close_rounded,
-                          key: ValueKey(_searchCtrl.text.isEmpty),
-                        ),
-                      ),
-                    ),
-                  ),
                 ),
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flex/app_message.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flex/bottom_nav.dart';
 import 'package:flex/database/database.dart';
+import 'package:flex/error_state.dart';
 import 'package:flex/graph/graphs_page.dart';
 import 'package:flex/home_compact_layout.dart';
 import 'package:flex/home_wide_layout.dart';
@@ -301,7 +302,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       } else if (tab == 'SettingsPage') {
         return const SettingsPage();
       } else {
-        return ErrorWidget(context.l10n.tabContentError);
+        return AppErrorState(message: context.l10n.tabContentError);
       }
     }).toList();
 

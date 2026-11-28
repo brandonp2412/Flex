@@ -4,8 +4,8 @@ import 'package:drift/drift.dart';
 import 'package:flex/app.dart';
 import 'package:flex/crash_logger.dart';
 import 'package:flex/database/database.dart';
-import 'package:flex/database/failed_migrations_page.dart';
 import 'package:flex/logging.dart';
+import 'package:flex/settings/app_appearance.dart';
 import 'package:flex/timer/timer_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,17 +27,34 @@ Future<void> main() async {
 
       try {
         setting = await (db.settings.select()..limit(1)).getSingle();
-      } catch (error) {
+      } catch (error, stack) {
         CrashLogger.instance?.record(
           error,
-          StackTrace.current,
+          stack,
           context: 'database migration',
         );
-        return runApp(FailedMigrationsPage(error: error));
+        final appearance = await loadAppAppearance();
+        return runApp(App.recovery(error: error, appearance: appearance));
       }
 
       talker.info('Loaded application settings');
-      runApp(appProviders(setting));
+      var cachedAppearance = appearanceFromSettings(setting);
+      var appearanceWrite = saveAppAppearance(cachedAppearance);
+      await appearanceWrite;
+      runApp(
+        appProviders(
+          setting,
+          persistAppearance: (settings) async {
+            final appearance = appearanceFromSettings(settings);
+            if (appearance == cachedAppearance) return;
+            cachedAppearance = appearance;
+            appearanceWrite = appearanceWrite.then(
+              (_) => saveAppAppearance(appearance),
+            );
+            await appearanceWrite;
+          },
+        ),
+      );
     },
     (error, stack) =>
         CrashLogger.instance?.record(error, stack, context: 'zone'),
@@ -55,14 +72,24 @@ MethodChannel androidChannel = const MethodChannel(
   "com.presley.flexify/android",
 );
 
-Widget appProviders(Setting initialSettings) => ValueListenableBuilder<int>(
+Widget appProviders(
+  Setting initialSettings, {
+  Future<void> Function(Setting)? persistAppearance,
+}) => ValueListenableBuilder<int>(
   valueListenable: dbVersion,
   builder: (context, version, child) => MultiProvider(
     key: ValueKey(version),
     providers: [
       StreamProvider<Setting>(
         initialData: initialSettings,
-        create: (context) => db.watchSettings(),
+        create: (context) {
+          final settings = db.watchSettings();
+          if (persistAppearance == null) return settings;
+          return settings.asyncMap((value) async {
+            await persistAppearance(value);
+            return value;
+          });
+        },
       ),
       ChangeNotifierProxyProvider<Setting, TimerState>(
         create: (context) => TimerState(),

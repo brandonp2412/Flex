@@ -376,6 +376,58 @@ void main() {
     });
   }
 
+  for (final trailing in ['reorder', 'none']) {
+    testWidgets('desktop exercise list has no outer spacing ($trailing)', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1400, 800);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final harness = await FlexTestHarness.create();
+      final database = harness.database;
+      final id = await database.plans.insertOne(planFixture());
+      for (final (index, exercise) in [
+        'Bench press',
+        'Squat',
+        'Rows',
+      ].indexed) {
+        await insertPlanExerciseFixture(
+          database,
+          planId: id,
+          exercise: exercise,
+          sequence: index,
+        );
+      }
+      await database.settings.update().write(
+        SettingsCompanion(planTrailing: Value(trailing)),
+      );
+      final plan =
+          await (database.plans.select()..where((row) => row.id.equals(id)))
+              .getSingle();
+      await harness.pump(
+        tester,
+        StartPlanPage(plan: plan),
+        surfaceSize: const Size(1400, 800),
+      );
+      await tester.pumpAndSettle();
+
+      Rect card(String name) => tester.getRect(
+        find
+            .descendant(
+              of: find.byKey(Key(name)),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      final list = tester.getRect(find.byType(StartList));
+      expect(card('Bench press').top, list.top);
+      expect(card('Rows').bottom, list.bottom);
+      expect(card('Squat').top - card('Bench press').bottom, 8);
+      expect(card('Rows').top - card('Squat').bottom, 8);
+    });
+  }
+
   for (final cardio in [false, true]) {
     testWidgets(
       'desktop set preview stays in place after save and undo ($cardio)',

@@ -1,28 +1,50 @@
-import 'package:flex/database/failed_migrations_page.dart';
+import 'package:flex/app.dart';
+import 'package:flex/settings/app_appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  for (final brightness in Brightness.values) {
-    testWidgets('migration failure follows system brightness: $brightness', (
-      tester,
-    ) async {
-      tester.binding.platformDispatcher.platformBrightnessTestValue =
-          brightness;
-      addTearDown(
-        tester.binding.platformDispatcher.clearPlatformBrightnessTestValue,
-      );
+  testWidgets('Recovery uses the saved theme and accent', (tester) async {
+    final dispatcher = tester.binding.platformDispatcher;
+    addTearDown(dispatcher.clearPlatformBrightnessTestValue);
+    const seed = Colors.teal;
+
+    for (final (mode, deviceBrightness, expectedBrightness) in [
+      ('ThemeMode.light', Brightness.dark, Brightness.light),
+      ('ThemeMode.dark', Brightness.light, Brightness.dark),
+      ('ThemeMode.amoled', Brightness.light, Brightness.dark),
+      ('ThemeMode.system', Brightness.light, Brightness.light),
+      ('ThemeMode.system', Brightness.dark, Brightness.dark),
+    ]) {
+      dispatcher.platformBrightnessTestValue = deviceBrightness;
       await tester.pumpWidget(
-        const FailedMigrationsPage(error: 'Example error'),
+        App.recovery(
+          error: 'Database unavailable',
+          appearance: (
+            themeMode: mode,
+            seedColor: seed.toARGB32(),
+            systemColors: false,
+          ),
+        ),
       );
       await tester.pumpAndSettle();
-      expect(
-        Theme.of(tester.element(find.byType(Scaffold))).brightness,
-        brightness,
+
+      final context = tester.element(find.byType(Scaffold));
+      final theme = Theme.of(context);
+      final expected = ColorScheme.fromSeed(
+        seedColor: seed,
+        brightness: expectedBrightness,
       );
-    });
-  }
+      expect(theme.brightness, expectedBrightness);
+      expect(theme.colorScheme.primary, expected.primary);
+      expect(
+        theme.scaffoldBackgroundColor,
+        mode == 'ThemeMode.amoled' ? Colors.black : expected.surface,
+      );
+      expect(find.text('Database unavailable'), findsOneWidget);
+    }
+  });
   testWidgets('migration failure opens the releases page on a small screen', (
     tester,
   ) async {
@@ -41,7 +63,10 @@ void main() {
     addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
 
     await tester.pumpWidget(
-      const FailedMigrationsPage(error: 'Example database error'),
+      const App.recovery(
+        error: 'Example database error',
+        appearance: defaultAppAppearance,
+      ),
     );
     await tester.pumpAndSettle();
 

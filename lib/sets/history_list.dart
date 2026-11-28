@@ -192,8 +192,8 @@ class _HistoryListState extends HistoryListState<HistoryList> {
         return _buildListItem(_current[index], index);
       },
     );
-    return wide && bodyWeight
-        ? ResponsiveContent(maxWidth: 800, child: list)
+    return isDesktopLayout(context) && bodyWeight
+        ? ResponsiveContent(maxWidth: settingsMaxWidth, child: list)
         : list;
   }
 }

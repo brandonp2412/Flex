@@ -1,4 +1,5 @@
 import 'package:flex/app_confirmation.dart';
+import 'package:flex/flex_search_bar.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/platform_page_route.dart';
 import 'package:flex/responsive.dart';
@@ -279,39 +280,13 @@ class _AppSearchState extends State<AppSearch> {
         onTap: _focusNode.requestFocus,
         child: Padding(
           padding: searchPadding,
-          child: SearchBar(
+          child: FlexSearchBar(
             hintText: widget.hintText ?? context.l10n.searchHint,
             controller: _ctrl,
             focusNode: _focusNode,
-            onTap: () => _focusNode.requestFocus(),
-            padding: WidgetStateProperty.all(const EdgeInsets.only(right: 8.0)),
             textCapitalization: TextCapitalization.sentences,
             onChanged: widget.onChange,
-            leading: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 150),
-              transitionBuilder: (child, animation) =>
-                  ScaleTransition(scale: animation, child: child),
-              child: sel.isEmpty && _ctrl.text.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.only(left: 16.0, right: 8.0),
-                      child: Icon(Icons.search),
-                    )
-                  : IconButton(
-                      tooltip: sel.isNotEmpty
-                          ? context.l10n.clearSelection
-                          : context.l10n.clearSearch,
-                      onPressed: () {
-                        if (sel.isNotEmpty) {
-                          _clearSelection();
-                          return;
-                        }
-                        _ctrl.clear();
-                        widget.onChange('');
-                      },
-                      icon: const Icon(Icons.arrow_back),
-                      padding: const EdgeInsets.only(left: 16.0, right: 8.0),
-                    ),
-            ),
+            onClearSelection: sel.isNotEmpty ? _clearSelection : null,
             trailing: isDesktopLayout(context)
                 ? _desktopActions(context, trailingMain)
                 : [

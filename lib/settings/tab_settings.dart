@@ -59,11 +59,17 @@ class TabSettings extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.swipe),
             title: Text(context.l10n.swipeBetweenTabs),
-            trailing: Switch(
-              value: settings.scrollableTabs,
-              onChanged: (value) => db.settings.update().write(
-                SettingsCompanion(scrollableTabs: Value(value)),
-              ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Switch(
+                  value: settings.scrollableTabs,
+                  onChanged: (value) => db.settings.update().write(
+                    SettingsCompanion(scrollableTabs: Value(value)),
+                  ),
+                ),
+                const SizedBox(width: 36),
+              ],
             ),
             onTap: () => db.settings.update().write(
               SettingsCompanion(
@@ -75,7 +81,7 @@ class TabSettings extends StatelessWidget {
           ReorderableListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.zero,
             buildDefaultDragHandles: false,
             itemCount: tabs.length,
             onReorderItem: (oldIndex, newIndex) async {
@@ -117,8 +123,10 @@ class TabSettings extends StatelessWidget {
                     if (isEnabled)
                       ReorderableDragStartListener(
                         index: index,
-                        child: const Icon(Icons.drag_handle),
-                      ),
+                        child: const Icon(Icons.drag_handle, size: 24),
+                      )
+                    else
+                      const SizedBox(width: 24),
                   ],
                 ),
               );

@@ -1,4 +1,5 @@
 import 'package:flex/responsive.dart';
+import 'package:flex/desktop_editor_save_button.dart';
 import 'package:drift/drift.dart';
 import 'package:flex/app_fab.dart';
 import 'package:flex/database/database.dart';
@@ -24,15 +25,67 @@ class _PermissionsPageState extends State<PermissionsPage> {
   Widget build(BuildContext context) {
     final settings = context.watch<Setting>();
 
+    void confirm() {
+      if ((!_ignore || !_schedule) && settings.restTimers)
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(context.l10n.invalidPermissions),
+              content: Text(
+                context.l10n.insufficientTimerPermissionsConfirmation,
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text(context.l10n.actionCancel),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                TextButton(
+                  child: Text(context.l10n.actionOk),
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                    db.settings.update().write(
+                      const SettingsCompanion(
+                        explainedPermissions: Value(true),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      else {
+        Navigator.pop(context);
+        db.settings.update().write(
+          const SettingsCompanion(explainedPermissions: Value(true)),
+        );
+      }
+    }
+
+    final desktop = isDesktopLayout(context);
     return Scaffold(
       floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text(context.l10n.missingPermissions)),
+      appBar: AppBar(
+        title: Text(context.l10n.missingPermissions),
+        actions: [
+          if (desktop)
+            DesktopEditorSaveButton(
+              onPressed: confirm,
+              label: context.l10n.actionConfirm,
+              icon: Icons.check,
+            ),
+        ],
+      ),
       body: SafeArea(
         child: ResponsiveContent(
           maxWidth: 800,
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(pagePadding),
             child: ListView(
               children: [
                 ListTile(
@@ -95,50 +148,13 @@ class _PermissionsPageState extends State<PermissionsPage> {
           ),
         ),
       ),
-      floatingActionButton: AppFab(
-        onPressed: () {
-          if ((!_ignore || !_schedule) && settings.restTimers)
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Text(context.l10n.invalidPermissions),
-                  content: Text(
-                    context.l10n.insufficientTimerPermissionsConfirmation,
-                  ),
-                  actions: <Widget>[
-                    TextButton(
-                      child: Text(context.l10n.actionCancel),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    TextButton(
-                      child: Text(context.l10n.actionOk),
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                        db.settings.update().write(
-                          const SettingsCompanion(
-                            explainedPermissions: Value(true),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
-            );
-          else {
-            Navigator.pop(context);
-            db.settings.update().write(
-              const SettingsCompanion(explainedPermissions: Value(true)),
-            );
-          }
-        },
-        label: Text(context.l10n.actionConfirm),
-        icon: const Icon(Icons.check),
-      ),
+      floatingActionButton: desktop
+          ? null
+          : AppFab(
+              onPressed: confirm,
+              label: Text(context.l10n.actionConfirm),
+              icon: const Icon(Icons.check),
+            ),
     );
   }
 

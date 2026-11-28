@@ -7,7 +7,11 @@ import 'package:flutter/material.dart';
 export 'package:flex/desktop_editor_save_button.dart';
 
 class EditorContent extends StatelessWidget {
-  const EditorContent({super.key, required this.child, this.maxWidth = 720});
+  const EditorContent({
+    super.key,
+    required this.child,
+    this.maxWidth = editorMaxWidth,
+  });
 
   final Widget child;
   final double maxWidth;
@@ -15,8 +19,8 @@ class EditorContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ResponsiveContent(
     maxWidth: maxWidth,
-    mobilePadding: const EdgeInsets.all(16),
-    desktopPadding: const EdgeInsets.all(16),
+    mobilePadding: const EdgeInsets.all(pagePadding),
+    desktopPadding: const EdgeInsets.all(pagePadding),
     child: child,
   );
 }
@@ -61,7 +65,7 @@ Widget editorFields(
   BuildContext context, {
   required List<Widget> children,
   GlobalKey<FormState>? formKey,
-  double maxWidth = 720,
+  double maxWidth = editorMaxWidth,
   bool formOutside = false,
 }) {
   final desktop = isDesktopLayout(context);

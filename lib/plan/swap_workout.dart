@@ -2,6 +2,8 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flex/database/database.dart';
 import 'package:flex/database/exercise_catalog.dart';
 import 'package:flex/error_state.dart';
+import 'package:flex/flex_search_bar.dart';
+import 'package:flex/responsive.dart';
 import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
@@ -20,6 +22,7 @@ class SwapWorkout extends StatefulWidget {
 class _SwapWorkoutState extends State<SwapWorkout> {
   late Stream<List<Exercise>> _exercises;
   final TextEditingController _searchCtrl = TextEditingController();
+  final _searchFocus = FocusNode();
   String _searchQuery = '';
   Set<int> _usedIds = const {};
 
@@ -60,6 +63,7 @@ class _SwapWorkoutState extends State<SwapWorkout> {
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -113,14 +117,11 @@ class _SwapWorkoutState extends State<SwapWorkout> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
+            padding: const EdgeInsets.all(pagePadding),
+            child: FlexSearchBar(
               controller: _searchCtrl,
-              decoration: InputDecoration(
-                labelText: context.l10n.searchExercises,
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.search),
-              ),
+              focusNode: _searchFocus,
+              hintText: context.l10n.searchExercises,
             ),
           ),
           ListTile(

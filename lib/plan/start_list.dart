@@ -72,9 +72,7 @@ class _StartListState extends State<StartList> {
       ),
     );
     final desktop = isDesktopLayout(context);
-    final padding = EdgeInsets.only(
-      bottom: desktop ? (widget.exercises.length == 1 ? 0 : 8) : _bottomPadding,
-    );
+    final padding = EdgeInsets.only(bottom: desktop ? 0 : _bottomPadding);
 
     Widget list(double? width) {
       Widget item(BuildContext context, int index) =>
@@ -106,7 +104,6 @@ class _StartListState extends State<StartList> {
       }
       if (desktop) {
         return SingleChildScrollView(
-          padding: padding,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,9 +175,10 @@ class _StartListState extends State<StartList> {
     final content = desktop
         ? Padding(
             key: Key(exercise.exercise.name),
-            padding: widget.exercises.length == 1
-                ? EdgeInsets.zero
-                : const EdgeInsets.symmetric(vertical: 4),
+            padding: EdgeInsets.only(
+              top: index == 0 ? 0 : 4,
+              bottom: index == widget.exercises.length - 1 ? 0 : 4,
+            ),
             child: Material(
               color: selected
                   ? colors.primary.withValues(alpha: .12)
@@ -252,7 +250,7 @@ class _StartListState extends State<StartList> {
                         ],
                       ),
                       Padding(
-                        padding: EdgeInsets.only(left: compact ? 0 : 36),
+                        padding: EdgeInsets.only(top: 8),
                         child: actions(inline: true),
                       ),
                     ],

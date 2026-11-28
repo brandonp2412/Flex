@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
+import 'package:flex/responsive.dart';
 import 'package:flex/settings/changelog.dart';
 import 'package:flex/update_notice.dart';
 import 'package:flutter/material.dart';
@@ -213,82 +214,97 @@ class _WhatsNewState extends State<WhatsNew> {
   @override
   Widget build(BuildContext context) {
     final nestedTabRoute =
+        !isDesktopLayout(context) &&
         Navigator.of(context) != Navigator.of(context, rootNavigator: true);
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.whatsNewTitle)),
-      body: Column(
-        children: [
-          SwitchListTile.adaptive(
-            title: Text(context.l10n.showUpdateNotices),
-            value: _showUpdateNotices,
-            onChanged: _setUpdateNotices,
-          ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemBuilder: (context, index) => ListTile(
-                      title: Text(_changelogs[index].created),
-                      subtitle: Text(_changelogs[index].content),
+      body: ResponsiveContent(
+        maxWidth: settingsMaxWidth,
+        child: Column(
+          children: [
+            SwitchListTile.adaptive(
+              title: Text(context.l10n.showUpdateNotices),
+              value: _showUpdateNotices,
+              onChanged: _setUpdateNotices,
+            ),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemBuilder: (context, index) => ListTile(
+                        title: Text(_changelogs[index].created),
+                        subtitle: Text(_changelogs[index].content),
+                      ),
+                      itemCount: _changelogs.length,
                     ),
-                    itemCount: _changelogs.length,
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: SafeArea(
         top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 8, 16, nestedTabRoute ? 88 : 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (_files.isNotEmpty)
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          onPressed: _page > 0
-                              ? () => _setPage(_page - 1)
-                              : null,
-                          icon: const Icon(Icons.chevron_left),
-                          tooltip: MaterialLocalizations.of(
-                            context,
-                          ).previousPageTooltip,
-                        ),
-                        Text(
-                          '${_page + 1} / ${(_files.length / _pageSize).ceil()}',
-                        ),
-                        IconButton(
-                          onPressed:
-                              _page + 1 < (_files.length / _pageSize).ceil()
-                              ? () => _setPage(_page + 1)
-                              : null,
-                          icon: const Icon(Icons.chevron_right),
-                          tooltip: MaterialLocalizations.of(
-                            context,
-                          ).nextPageTooltip,
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                const Spacer(),
-              FloatingActionButton.extended(
-                heroTag: null,
-                icon: const Icon(Icons.favorite_outline),
-                onPressed: () async {
-                  const url = 'https://github.com/sponsors/brandonp2412';
-                  await launchUrlString(url);
-                },
-                label: Text(context.l10n.donate),
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: settingsMaxWidth),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                pagePadding,
+                8,
+                pagePadding,
+                nestedTabRoute ? 88 : pagePadding,
               ),
-            ],
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (_files.isNotEmpty)
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: _page > 0
+                                  ? () => _setPage(_page - 1)
+                                  : null,
+                              icon: const Icon(Icons.chevron_left),
+                              tooltip: MaterialLocalizations.of(
+                                context,
+                              ).previousPageTooltip,
+                            ),
+                            Text(
+                              '${_page + 1} / ${(_files.length / _pageSize).ceil()}',
+                            ),
+                            IconButton(
+                              onPressed:
+                                  _page + 1 < (_files.length / _pageSize).ceil()
+                                  ? () => _setPage(_page + 1)
+                                  : null,
+                              icon: const Icon(Icons.chevron_right),
+                              tooltip: MaterialLocalizations.of(
+                                context,
+                              ).nextPageTooltip,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    const Spacer(),
+                  FloatingActionButton.extended(
+                    heroTag: null,
+                    icon: const Icon(Icons.favorite_outline),
+                    onPressed: () async {
+                      const url = 'https://github.com/sponsors/brandonp2412';
+                      await launchUrlString(url);
+                    },
+                    label: Text(context.l10n.donate),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

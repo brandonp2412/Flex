@@ -10,6 +10,7 @@ import 'package:flex/database/bulk_edit_exercise_sets.dart';
 import 'package:flex/logging.dart';
 import 'package:flex/database/exercise_set_repository.dart';
 import 'package:flex/editor_content.dart';
+import 'package:flex/responsive.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/main.dart';
 import 'package:flex/unsaved_changes.dart';
@@ -74,6 +75,7 @@ class _EditSetsPageState extends State<EditSetsPage>
         .toSet()
         .join(', ');
     final l10n = context.l10n;
+    final settings = context.watch<Setting>();
     return guardUnsavedChanges(
       child: editorScaffold(
         context,
@@ -112,7 +114,7 @@ class _EditSetsPageState extends State<EditSetsPage>
               textCapitalization: TextCapitalization.sentences,
               onChanged: (_) => markDirty(),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: formFieldSpacing),
             exerciseKindSelector(context, cardio, (value) {
               markDirty();
               setState(() {
@@ -120,7 +122,7 @@ class _EditSetsPageState extends State<EditSetsPage>
                 _cardio = value;
               });
             }, allowEmpty: true),
-            const SizedBox(height: 12),
+            const SizedBox(height: formFieldSpacing),
             if (cardio == true) ...[
               if (isWeightUnit(unit))
                 _input.field(
@@ -136,14 +138,14 @@ class _EditSetsPageState extends State<EditSetsPage>
                   hint: hint((set) => set.distance),
                   onChanged: (_) => markDirty(),
                 ),
-              const SizedBox(height: 12),
+              const SizedBox(height: formFieldSpacing),
               _input.durationFields(
                 context,
                 minutesHint: hint((set) => set.duration.floor()),
                 secondsHint: hint((set) => ((set.duration * 60) % 60).floor()),
                 onChanged: (_) => markDirty(),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: formFieldSpacing),
               _input.field(
                 context,
                 WorkoutMetric.incline,
@@ -158,7 +160,7 @@ class _EditSetsPageState extends State<EditSetsPage>
                 hint: hint((set) => set.reps),
                 onChanged: (_) => markDirty(),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: formFieldSpacing),
               _input.field(
                 context,
                 WorkoutMetric.weight,
@@ -172,42 +174,43 @@ class _EditSetsPageState extends State<EditSetsPage>
                 onChanged: (_) => markDirty(),
               ),
             ],
-            const SizedBox(height: 12),
-            Selector<Setting, bool>(
-              builder: (context, showBodyWeight, child) => Visibility(
-                visible: showBodyWeight,
-                child: WorkoutNumberField(
-                  controller: _body,
-                  decoration: InputDecoration(
-                    labelText: l10n.bodyWeightLabel,
-                    hintText: hint((set) => set.bodyWeight),
-                  ),
-                  onChanged: (_) => markDirty(),
+            if (settings.showBodyWeight) ...[
+              const SizedBox(height: formFieldSpacing),
+              WorkoutNumberField(
+                controller: _body,
+                decoration: InputDecoration(
+                  labelText: l10n.bodyWeightLabel,
+                  hintText: hint((set) => set.bodyWeight),
                 ),
+                onChanged: (_) => markDirty(),
               ),
-              selector: (context, settings) => settings.showBodyWeight,
-            ),
-            const SizedBox(height: 12),
-            WorkoutUnitField(
-              unit: unit,
-              onChanged: (value) {
-                markDirty();
-                setState(() {
-                  _unitChanged = true;
-                  _unit = value;
-                });
-              },
-            ),
-            const SizedBox(height: 12),
-            WorkoutCategoryField(
-              initial: _category,
-              hint: hint((set) => set.category),
-              keepHidden: true,
-              onChanged: (value) {
-                markDirty();
-                setState(() => _category = value);
-              },
-            ),
+            ],
+            if (settings.showUnits) ...[
+              const SizedBox(height: formFieldSpacing),
+              WorkoutUnitField(
+                unit: unit,
+                onChanged: (value) {
+                  markDirty();
+                  setState(() {
+                    _unitChanged = true;
+                    _unit = value;
+                  });
+                },
+              ),
+            ],
+            if (settings.showCategories) ...[
+              const SizedBox(height: formFieldSpacing),
+              WorkoutCategoryField(
+                initial: _category,
+                hint: hint((set) => set.category),
+                keepHidden: true,
+                onChanged: (value) {
+                  markDirty();
+                  setState(() => _category = value);
+                },
+              ),
+            ],
+            const SizedBox(height: formFieldSpacing),
             workoutDateField(context, _created, _selectDate, hint: dates),
           ],
         ),

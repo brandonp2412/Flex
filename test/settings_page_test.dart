@@ -44,6 +44,8 @@ void main() {
             )
             .first,
       );
+      await tester.ensureVisible(find.text('Workouts'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Workouts'));
       await tester.pumpAndSettle();
       expect(find.text('Show body weight'), findsOneWidget);
@@ -96,6 +98,18 @@ void main() {
 
     final badge = find.byKey(const Key('made-in-new-zealand-branding'));
     expect(badge, findsOneWidget);
+    expect(
+      find.descendant(
+        of: badge,
+        matching: find.byKey(const Key('new-zealand-outline')),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: badge, matching: find.byIcon(Icons.public)),
+      findsNothing,
+    );
+
     expect(
       tester.getRect(badge).top,
       greaterThan(tester.getRect(find.byType(Image).first).bottom),

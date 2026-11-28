@@ -6,6 +6,7 @@ import 'package:flex/day_selector.dart';
 import 'package:flex/editor_content.dart';
 import 'package:flex/empty_state.dart';
 import 'package:flex/error_state.dart';
+import 'package:flex/flex_search_bar.dart';
 import 'package:flex/graph/exercise_editor_page.dart';
 import 'package:flex/l10n/l10n.dart';
 import 'package:flex/logging.dart';
@@ -140,14 +141,9 @@ class _EditPlanPageState extends State<EditPlanPage>
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
-            SearchBar(
+            FlexSearchBar(
               controller: _searchCtrl,
               focusNode: _node,
-              onTap: () => _node.requestFocus(),
-              leading: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Icon(Icons.search),
-              ),
               textCapitalization: TextCapitalization.sentences,
               hintText: context.l10n.searchExercises,
               onChanged: (value) => setState(() {

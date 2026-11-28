@@ -1,9 +1,9 @@
-import 'package:flex/database/database.dart';
-import 'package:flex/utils.dart';
-import 'package:provider/provider.dart';
-import 'package:flex/l10n/l10n.dart';
 import 'package:flex/constants.dart';
+import 'package:flex/database/database.dart';
+import 'package:flex/l10n/l10n.dart';
+import 'package:flex/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 List<DropdownMenuItem<String>> workoutUnitItems(BuildContext context) => [
   ...strengthUnitMenuItems(context.l10n),
@@ -36,7 +36,7 @@ Widget exerciseKindSelector(
   ValueChanged<bool?> onChanged, {
   bool allowEmpty = false,
 }) => SizedBox(
-  width: double.infinity,
+  width: 20,
   child: SegmentedButton<bool>(
     key: const Key('exercise-kind-selector'),
     showSelectedIcon: false,
